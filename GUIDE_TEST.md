@@ -31,7 +31,7 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier (12 points)
+## 5. Ce qu'il faut vérifier (14 points)
 
 Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
 
@@ -63,5 +63,13 @@ Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
 12. **Téléphone et sortie** : onglet **Test** > **Device**, choisis un téléphone : les
     7 onglets et les boutons restent lisibles. Pendant tout le test, la fenêtre
     **Sortie** ne doit montrer aucune ligne **rouge** ni orange commençant par `[Main]`.
+13. **Objectifs du jour** : dans **Accueil**, trois cartes s'affichent : **Cadeau du jour**
+    (série jour 1 / 7), **Missions du jour** (3 missions avec leur prime) et **Saison de
+    la semaine** (classement de 6 clubs). Lance un match : la mission « Joue … matchs »
+    avance d'un cran ; une mission accomplie affiche un message vert avec sa prime.
+14. **Retour au jeu** (seulement si la sauvegarde est active, voir le guide de
+    publication) : quitte le jeu, attends au moins **5 minutes**, relance-le. Une fenêtre
+    **« Pendant ton absence… »** indique ce que tes installations ont rapporté ; le
+    lendemain, elle montre aussi le **cadeau du jour 2 / 7**.
 
 Envoie ensuite ta liste (✅ / ❌ + captures + lignes rouges) dans le projet : on corrige.

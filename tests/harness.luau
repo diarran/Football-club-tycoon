@@ -649,6 +649,8 @@ function H.boot(modules)
 		MatchService = mock.run(modules.MatchService),
 		ChallengeService = mock.run(modules.ChallengeService),
 		TournamentService = mock.run(modules.TournamentService),
+		DailyService = mock.run(modules.DailyService),
+		Daily = mock.run(modules.Daily),
 		TutorialService = mock.run(modules.TutorialService),
 		CosmeticService = mock.run(modules.CosmeticService),
 		Cosmetics = mock.run(modules.Cosmetics),

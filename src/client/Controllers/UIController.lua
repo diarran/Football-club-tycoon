@@ -72,7 +72,8 @@ local state = {
 	settings = { managementCamera = true, showTutorial = true },
 }
 
-local gui, hud, crestBadge, panel, content, tabButtons, toast, resultPopup
+local gui, hud, crestBadge, panel, content, tabButtons, toast, resultPopup, welcomePopup
+local shownWelcome = nil -- dernier résumé « Pendant ton absence… » affiché
 local currentTab = "Home"
 
 -- Outils de construction ------------------------------------------------
@@ -181,6 +182,84 @@ local function clearContent()
 	end
 end
 
+-- Durée lisible (« 3 jours 4 heures », « 2 h 15 min », « 12 min »).
+local function formatDuration(seconds: number): string
+	seconds = math.max(0, math.floor(seconds or 0))
+	local d, h, m = seconds // 86400, (seconds % 86400) // 3600, (seconds % 3600) // 60
+	if d > 0 then
+		return T("time.dh", { d = d, h = h })
+	elseif h > 0 then
+		return T("time.hm", { h = h, m = m })
+	end
+	return T("time.m", { m = math.max(1, m) })
+end
+
+-- Objectifs quotidiens et saison (accueil). daily = instantané de DailyService.
+local function dailyCards(daily)
+	if type(daily) ~= "table" then
+		return
+	end
+	card({
+		label(T("daily.title"), { Font = Enum.Font.GothamBold }),
+		label(T("daily.streak", { day = daily.cycleDay }), { TextColor3 = COLORS.gold }),
+		label(T("daily.next", { coins = formatCoins(daily.nextReward or 0) }), { TextColor3 = COLORS.muted }),
+	}).Parent = content
+
+	local missionLines = {
+		label(T("daily.missionsTitle"), { Font = Enum.Font.GothamBold }),
+	}
+	for _, mission in daily.missions or {} do
+		local name = T("mission." .. mission.id, { n = mission.target })
+		local line = if mission.done
+			then T("mission.lineDone", { mission = name, coins = formatCoins(mission.reward) })
+			else T("mission.line", {
+				mission = name,
+				progress = mission.progress,
+				target = mission.target,
+				coins = formatCoins(mission.reward),
+			})
+		table.insert(missionLines, label(line, {
+			Name = "Mission_" .. mission.id,
+			TextColor3 = if mission.done then COLORS.accent else COLORS.text,
+		}))
+	end
+	table.insert(missionLines, label(T("daily.resetIn", { time = formatDuration(daily.resetIn) }), { TextColor3 = COLORS.muted }))
+	local missionsCard = card(missionLines)
+	missionsCard.Name = "Missions"
+	missionsCard.Parent = content
+
+	local season = daily.season
+	if type(season) == "table" then
+		local lines = {
+			label(T("season.title"), { Font = Enum.Font.GothamBold }),
+			label(T("season.status", {
+				rank = season.rank,
+				total = #(season.rows or {}),
+				points = season.points,
+				time = formatDuration(season.endsIn),
+			}), { TextColor3 = COLORS.gold }),
+		}
+		for index, row in season.rows or {} do
+			table.insert(lines, label(("%d. %s · %d pts"):format(index, row.name, row.points), {
+				TextSize = 16,
+				Font = if row.me then Enum.Font.GothamBold else Enum.Font.Gotham,
+				TextColor3 = if row.me then COLORS.accent else COLORS.muted,
+			}))
+		end
+		table.insert(lines, label(T("season.rewardNow", { coins = formatCoins(season.reward or 0) }), { TextColor3 = COLORS.muted }))
+		table.insert(lines, label(T("season.info"), { TextColor3 = COLORS.muted, TextSize = 16 }))
+		if type(season.last) == "table" then
+			table.insert(lines, label(T("season.last", { rank = season.last.rank, coins = formatCoins(season.last.reward) }), {
+				TextColor3 = COLORS.muted,
+				TextSize = 16,
+			}))
+		end
+		local seasonCard = card(lines)
+		seasonCard.Name = "Season"
+		seasonCard.Parent = content
+	end
+end
+
 -- Contenu des onglets ---------------------------------------------------
 
 local renderers = {}
@@ -237,6 +316,8 @@ function renderers.Home(profile)
 		),
 	}).Parent =
 		content
+
+	dailyCards(profile.daily)
 
 	local nameBox = create("TextBox", {
 		BackgroundColor3 = COLORS.panel,
@@ -1102,6 +1183,75 @@ local function buildResultPopup()
 	})
 end
 
+-- Fenêtre « Pendant ton absence… » (revenus hors ligne, cadeau, saison).
+local function buildWelcomePopup()
+	welcomePopup = create("Frame", {
+		Name = "Welcome",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromScale(0.85, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundColor3 = COLORS.background,
+		Visible = false,
+		ZIndex = 12,
+		Parent = gui,
+	}, {
+		corner(14),
+		padding(16),
+		create("UISizeConstraint", { MaxSize = Vector2.new(520, math.huge) }),
+		create("UIListLayout", {
+			Padding = UDim.new(0, 6),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		}),
+	})
+end
+
+function UIController.ShowWelcome(welcome)
+	if not welcomePopup or type(welcome) ~= "table" then
+		return
+	end
+	for _, child in welcomePopup:GetChildren() do
+		if child:IsA("GuiObject") then
+			child:Destroy()
+		end
+	end
+	local order = 0
+	local function add(instance)
+		order += 1
+		instance.LayoutOrder = order
+		instance.ZIndex = 13
+		instance.Parent = welcomePopup
+		return instance
+	end
+	local centered = { TextXAlignment = Enum.TextXAlignment.Center }
+	add(label(T("welcome.title"), {
+		Font = Enum.Font.GothamBold,
+		TextSize = 26,
+		TextColor3 = COLORS.gold,
+		TextXAlignment = Enum.TextXAlignment.Center,
+	}))
+	if welcome.offline then
+		add(label(T("welcome.offline", {
+			coins = formatCoins(welcome.offline.coins),
+			time = formatDuration(welcome.offline.away or welcome.offline.seconds),
+		}), centered))
+		if (welcome.offline.away or 0) > (welcome.offline.seconds or 0) then
+			add(label(T("welcome.offlineCap"), { TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = COLORS.muted, TextSize = 16 }))
+		end
+	end
+	if welcome.daily then
+		add(label(T("welcome.daily", { day = welcome.daily.day, coins = welcome.daily.coins }), centered))
+	end
+	if welcome.season then
+		add(label(T("welcome.season", { rank = welcome.season.rank, coins = formatCoins(welcome.season.reward) }), centered))
+	end
+	add(button(T("welcome.continue"), function()
+		welcomePopup.Visible = false
+	end, { Name = "WelcomeContinue" }))
+	welcomePopup.Visible = true
+end
+
 -- Échelle de l'interface selon la taille de l'écran (mobile, tablette, PC).
 local function setupScaling()
 	local uiScale = create("UIScale", { Parent = gui })
@@ -1128,6 +1278,7 @@ function UIController.Init()
 	buildPanel()
 	buildToast()
 	buildResultPopup()
+	buildWelcomePopup()
 	setupScaling()
 end
 
@@ -1211,6 +1362,11 @@ function UIController.SetProfile(profile)
 	state.profile = profile
 	state.cooldownEndsAt = os.clock() + (profile.matchCooldown or 0)
 	UIController.Refresh()
+	local welcome = type(profile.daily) == "table" and profile.daily.welcome
+	if type(welcome) == "table" and welcome.id ~= shownWelcome then
+		shownWelcome = welcome.id
+		UIController.ShowWelcome(welcome)
+	end
 end
 
 function UIController.SetChallenges(challenges)

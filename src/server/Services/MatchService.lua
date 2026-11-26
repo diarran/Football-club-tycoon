@@ -29,6 +29,7 @@ local EconomyService = require(script.Parent.EconomyService)
 local ClubService = require(script.Parent.ClubService)
 local SquadService = require(script.Parent.SquadService)
 local TutorialService = require(script.Parent.TutorialService)
+local DailyService = require(script.Parent.DailyService)
 
 local MatchService = {}
 
@@ -306,6 +307,11 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	end
 
 	SquadService.ApplyMatchEffects(data)
+	-- Saison et missions du jour (primes versées par DailyService).
+	DailyService.AddSeasonPoints(player, Config.DivisionPoints[outcome])
+	local missionReward = DailyService.Track(player, "play")
+		+ (if outcome == "Win" then DailyService.Track(player, "win") else 0)
+		+ DailyService.Track(player, "goals", score.homeGoals)
 	PlayerDataService.MarkChanged(player)
 	TutorialService.Complete(player, "FirstMatch")
 	ClubService.BroadcastClubs()
@@ -319,6 +325,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		outcome = outcome,
 		rewards = { match = matchReward, tickets = tickets, sponsor = sponsor, shop = shop, vip = vip, total = totalReward },
 		promotionReward = promotionReward,
+		missionReward = missionReward,
 		divisionPoints = data.club.divisionPoints,
 		division = data.club.division,
 		promoted = promoted,

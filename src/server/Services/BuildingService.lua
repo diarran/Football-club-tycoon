@@ -19,6 +19,7 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
 local ClubService = require(script.Parent.ClubService)
 local TutorialService = require(script.Parent.TutorialService)
+local DailyService = require(script.Parent.DailyService)
 
 local BuildingService = {}
 
@@ -51,6 +52,7 @@ function BuildingService.TryUpgrade(player: Player, buildingId): (boolean, strin
 	-- Aucun yield entre le débit et la montée de niveau.
 	data.buildings[buildingId] = level + 1
 	PlayerDataService.MarkChanged(player)
+	DailyService.Track(player, "upgrade")
 	local lang = Locale.ForPlayer(player)
 	return true,
 		Locale.T(lang, "building.upgraded", {

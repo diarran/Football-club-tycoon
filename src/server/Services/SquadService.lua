@@ -24,6 +24,7 @@ local PlayerConfig = require(Shared.PlayerConfig)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
 local ClubService = require(script.Parent.ClubService)
+local DailyService = require(script.Parent.DailyService)
 
 local SquadService = {}
 
@@ -135,6 +136,7 @@ function SquadService.TryRecruit(player: Player): (boolean, string)
 	)
 	table.insert(data.squad, footballer)
 	PlayerDataService.MarkChanged(player)
+	DailyService.Track(player, "recruit") -- mission du jour
 	local lang = Locale.ForPlayer(player)
 	return true,
 		Locale.T(lang, "squad.recruited", {
@@ -216,6 +218,7 @@ function SquadService.TrySignProspect(player: Player, prospectId): (boolean, str
 		youth = true, -- formé au club : progression accélérée
 	})
 	PlayerDataService.MarkChanged(player)
+	DailyService.Track(player, "recruit") -- mission du jour
 	local lang = Locale.ForPlayer(player)
 	return true,
 		Locale.T(lang, "academy.signed", {
@@ -300,6 +303,7 @@ function SquadService.TryTransfer(player: Player): (boolean, string)
 	local slot = table.find(data.squad, weakest)
 	data.squad[slot] = newcomer
 	PlayerDataService.MarkChanged(player)
+	DailyService.Track(player, "recruit") -- mission du jour
 	local lang = Locale.ForPlayer(player)
 	return true,
 		Locale.T(lang, "squad.transferred", {

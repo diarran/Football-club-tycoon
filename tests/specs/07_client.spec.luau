@@ -31,6 +31,7 @@ H.test("tous les onglets du menu s'affichent sans erreur", function()
 end)
 
 H.test("bouton Améliorer : le serveur débite et l'interface se met à jour", function()
+	data.missions.list = {} -- sans missions du jour (testées dans 16_daily)
 	UI.OpenTab("Stadium")
 	H.click(gui, "Améliorer")
 	H.eq(data.coins, S.Config.STARTING_COINS - S.Buildings.GetUpgradeCost("Pitch", 1), "solde serveur")

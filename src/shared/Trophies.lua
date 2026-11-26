@@ -37,6 +37,9 @@ Trophies.MILESTONES = {
 	{ id = "challenges_10", stat = "challengesWon", value = 10, tier = "silver" },
 	{ id = "tournaments_1", stat = "tournamentsWon", value = 1, tier = "gold" },
 	{ id = "tournaments_10", stat = "tournamentsWon", value = 10, tier = "gold" },
+	-- Saisons de 7 jours terminées à la 1re place (DailyService).
+	{ id = "seasons_1", stat = "seasonsWon", value = 1, tier = "gold" },
+	{ id = "seasons_5", stat = "seasonsWon", value = 5, tier = "gold" },
 }
 
 -- Liste des trophées gagnés par un club, dans l'ordre de la vitrine.

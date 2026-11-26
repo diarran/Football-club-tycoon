@@ -122,7 +122,7 @@ H.test("montée D7 → D1 validée par le serveur, une division à la fois, D1 e
 		result = result[#result][1]
 		H.ok(result.promoted, "montée annoncée")
 		H.eq(result.promotionReward, nextDivision.promotionReward, "prime de montée " .. nextDivision.id)
-		H.eq(data.coins, coins + result.rewards.total + nextDivision.promotionReward, "prime de montée versée une fois")
+		H.eq(data.coins, coins + result.rewards.total + nextDivision.promotionReward + (result.missionReward or 0), "prime de montée versée une fois")
 	end
 	H.eq(data.club.division, "D1", "D1 atteinte")
 	data.club.divisionPoints = 100000

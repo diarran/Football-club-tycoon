@@ -41,6 +41,7 @@ H.test("chaque installation, Boutique comprise, a 5 niveaux de prix croissants",
 end)
 
 H.test("monter une installation jusqu'au niveau 5 coûte la somme exacte des prix", function()
+	data.missions.list = {} -- sans missions du jour (testées dans 16_daily)
 	data.coins = 1000000
 	local total = 0
 	for level = 2, 5 do
