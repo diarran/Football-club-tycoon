@@ -24,6 +24,8 @@ Buildings.Definitions = {
 			{ cost = 0, effects = { homeBonus = 0 } },
 			{ cost = 2500, effects = { homeBonus = 1 } },
 			{ cost = 7500, effects = { homeBonus = 2 } },
+			{ cost = 16000, effects = { homeBonus = 3 } }, -- écrans géants
+			{ cost = 32000, effects = { homeBonus = 4 } }, -- 4 écrans, panneaux LED
 		},
 	},
 	Stands = {
@@ -33,6 +35,8 @@ Buildings.Definitions = {
 			{ cost = 0, effects = { capacity = 200, ticketPrice = 1 } },
 			{ cost = 3000, effects = { capacity = 500, ticketPrice = 1 } },
 			{ cost = 8000, effects = { capacity = 1000, ticketPrice = 1 } },
+			{ cost = 18000, effects = { capacity = 1600, ticketPrice = 1 } }, -- 4 tribunes couvertes
+			{ cost = 36000, effects = { capacity = 2500, ticketPrice = 1 } }, -- grand stade, loges VIP
 		},
 	},
 	Training = {
@@ -42,6 +46,8 @@ Buildings.Definitions = {
 			{ cost = 0, effects = { teamBonus = 0, energyRecovery = 1.0 } },
 			{ cost = 2000, effects = { teamBonus = 1, energyRecovery = 1.25 } },
 			{ cost = 6000, effects = { teamBonus = 2, energyRecovery = 1.5 } },
+			{ cost = 14000, effects = { teamBonus = 3, energyRecovery = 1.75 } }, -- éclairage, mur de frappe
+			{ cost = 28000, effects = { teamBonus = 4, energyRecovery = 2.0 } }, -- centre de performance
 		},
 	},
 	Offices = {
@@ -50,6 +56,9 @@ Buildings.Definitions = {
 		levels = {
 			{ cost = 0, effects = { sponsorIncome = 50 } },
 			{ cost = 2500, effects = { sponsorIncome = 150 } },
+			{ cost = 7000, effects = { sponsorIncome = 250 } },
+			{ cost = 15000, effects = { sponsorIncome = 400 } }, -- immeuble de 3 étages
+			{ cost = 30000, effects = { sponsorIncome = 600 } }, -- siège du club, 4 étages
 		},
 	},
 	LockerRoom = {
@@ -58,6 +67,22 @@ Buildings.Definitions = {
 		levels = {
 			{ cost = 0, effects = {} },
 			{ cost = 1500, effects = {} },
+			{ cost = 4000, effects = {} },
+			{ cost = 9000, effects = {} }, -- bain froid, tables de soin
+			{ cost = 18000, effects = {} }, -- 2 étages, salle de récupération
+		},
+	},
+	-- Boutique (document de conception, section 4 « Après MVP ») : ventes de
+	-- maillots et d'écharpes, versées à chaque match joué.
+	Shop = {
+		id = "Shop",
+		order = 6,
+		levels = {
+			{ cost = 0, effects = { shopIncome = 25 } }, -- kiosque
+			{ cost = 4000, effects = { shopIncome = 100 } }, -- petite boutique
+			{ cost = 10000, effects = { shopIncome = 200 } }, -- magasin vitré
+			{ cost = 20000, effects = { shopIncome = 350 } }, -- grand magasin
+			{ cost = 38000, effects = { shopIncome = 550 } }, -- boutique officielle
 		},
 	},
 }

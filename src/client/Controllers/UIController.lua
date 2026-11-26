@@ -827,6 +827,7 @@ function UIController.ShowMatchResult(result)
 				match = rewards.match,
 				tickets = rewards.tickets,
 				sponsor = rewards.sponsor,
+				shop = rewards.shop or 0,
 			}),
 			{ TextColor3 = COLORS.gold, TextXAlignment = Enum.TextXAlignment.Center }
 		)

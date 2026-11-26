@@ -5,6 +5,8 @@
 	Niveau 1 : petit bâtiment en briques avec une porte.
 	Niveau 2 : bâtiment enduit plus grand, fenêtres, auvent au-dessus de l'entrée.
 	Niveau 3 : immeuble moderne sur 2 étages, façade vitrée, enseigne au nom du club.
+	Niveau 4 : immeuble de 3 étages, bandeau aux couleurs secondaires, salle de réunion.
+	Niveau 5 : siège du club sur 4 étages, écusson géant sur le toit, antenne.
 
 	Un ProximityPrompt « Gérer le club » (nommé ManageClubPrompt) est placé à la porte.
 	Pour l'instant il ne déclenche RIEN : la logique sera branchée plus tard par
@@ -27,6 +29,8 @@ local SIZES = {
 	[1] = Vector3.new(18, 10, 14),
 	[2] = Vector3.new(26, 12, 16),
 	[3] = Vector3.new(34, 18, 18),
+	[4] = Vector3.new(36, 24, 18),
+	[5] = Vector3.new(38, 30, 18),
 }
 
 function Offices.build(parent: Instance, origin: CFrame, level: number, ctx: BuildContext): Model
@@ -55,7 +59,7 @@ function Offices.build(parent: Instance, origin: CFrame, level: number, ctx: Bui
 			glassFront = true,
 			accent = ctx.primary,
 			roofOverhang = 1.5,
-			floors = 2,
+			floors = if level >= 5 then 4 elseif level == 4 then 3 else 2,
 			doorWidth = 6,
 		}
 	end
@@ -90,7 +94,46 @@ function Offices.build(parent: Instance, origin: CFrame, level: number, ctx: Bui
 		)
 	end
 
-	local signText = if level >= 3 then string.upper(ctx.clubName) else "world.offices"
+	-- Niveau 4 : table de réunion au premier étage.
+	if level >= 4 then
+		PartUtil.block(
+			model,
+			origin,
+			"MeetingTable",
+			Vector3.new(10, 3, 4),
+			Vector3.new(-size.X / 4, 0.4 + size.Y / (if level >= 5 then 4 else 3), 0),
+			C.WoodDark,
+			Enum.Material.Wood
+		)
+	end
+	-- Niveau 5 : écusson géant (disque + bord) sur le toit et antenne.
+	if level >= 5 then
+		local roofTop = 0.4 + size.Y + 0.6
+		PartUtil.block(model, origin, "CrestStand", Vector3.new(1, 3, 1), Vector3.new(0, roofTop, 0), C.MetalDark, Enum.Material.Metal)
+		PartUtil.box(
+			model,
+			origin,
+			"CrestRim",
+			Vector3.new(1, 9, 9),
+			Vector3.new(0, roofTop + 7, 0),
+			ctx.secondary,
+			Enum.Material.SmoothPlastic,
+			{ shape = Enum.PartType.Cylinder, rotY = 90 }
+		)
+		PartUtil.box(
+			model,
+			origin,
+			"Crest",
+			Vector3.new(1.2, 7.4, 7.4),
+			Vector3.new(0, roofTop + 7, 0),
+			ctx.primary,
+			Enum.Material.SmoothPlastic,
+			{ shape = Enum.PartType.Cylinder, rotY = 90 }
+		)
+		PartUtil.cylinder(model, origin, "Antenna", 0.4, 10, Vector3.new(size.X / 2 - 3, roofTop, size.Z / 2 - 3), C.Metal, Enum.Material.Metal)
+	end
+
+		local signText = if level >= 3 then string.upper(ctx.clubName) else "world.offices"
 	local sign = PartUtil.frontSign(
 		model,
 		origin,

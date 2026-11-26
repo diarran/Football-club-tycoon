@@ -12,8 +12,7 @@
 	     (via WorldBuilder), et l'aperçu s'efface pour éviter une double construction.
 
 	Terrains de démonstration (noms de clubs fictifs) :
-	  terrain 1 = tout au niveau 1, terrain 2 = niveau 2, terrain 3 = niveau 3,
-	  terrains 4 à 6 = niveau 1.
+	  terrains 1 à 5 = toutes les installations au niveau 1 à 5, terrain 6 = niveau 1.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -57,7 +56,7 @@ end
 
 WorldBuilder.buildDistrict()
 for slotIndex = 1, WorldConfig.MAX_PLOTS do
-	local level = if slotIndex <= 3 then slotIndex else 1
+	local level = if slotIndex <= WorldConfig.MAX_LEVEL then slotIndex else 1
 	local plot = WorldBuilder.buildPlot(slotIndex, uniformLevels(level), DEMO_CLUBS[slotIndex])
 	print(
 		string.format(

@@ -36,12 +36,12 @@ WorldConfig.PREVIEW_ON_START = true
 --------------------------------------------------------------------------------
 
 -- Identifiants des installations (contrat partagé avec BuildingService / ClubService).
-WorldConfig.FACILITY_IDS = { "Pitch", "Stands", "LockerRoom", "Training", "Offices" }
+WorldConfig.FACILITY_IDS = { "Pitch", "Stands", "LockerRoom", "Training", "Offices", "Shop" }
 
 -- Noms affichés des installations : clés « building.<id>.label » de Locale.
 
--- Nombre de niveaux visuels par installation pour le MVP.
-WorldConfig.MAX_LEVEL = 3
+-- Nombre de niveaux visuels par installation (doit suivre Buildings.lua).
+WorldConfig.MAX_LEVEL = 5
 
 -- Niveaux de départ d'un nouveau club (GDD §7 : stade 1, entraînement 1…).
 WorldConfig.START_LEVELS = {
@@ -50,13 +50,16 @@ WorldConfig.START_LEVELS = {
 	LockerRoom = 1,
 	Training = 1,
 	Offices = 1,
+	Shop = 1,
 }
 
--- Capacité des tribunes par niveau (valeurs PROVISOIRES, à équilibrer en test).
+-- Capacité des tribunes par niveau (mêmes valeurs que Buildings.lua, utilisées par l'économie).
 WorldConfig.STANDS_CAPACITY = {
 	[1] = 200,
-	[2] = 1500,
-	[3] = 5000,
+	[2] = 500,
+	[3] = 1000,
+	[4] = 1600,
+	[5] = 2500,
 }
 
 --------------------------------------------------------------------------------
@@ -136,13 +139,19 @@ WorldConfig.STAND_ROW_RISE = 1.5
 -- (L'empreinte sert à l'aperçu et à vérifier qu'il n'y a aucun chevauchement.)
 WorldConfig.LAYOUT = {
 	-- Le stade (terrain + tribunes) partage le même centre.
-	Pitch = { x = -40, z = 10, footprint = Vector2.new(130, 104) }, -- pylônes d'angle compris
-	Stands = { x = -40, z = 10, footprint = Vector2.new(144, 122) }, -- toit compris
-	LockerRoom = { x = 78, z = -18, footprint = Vector2.new(36, 22) }, -- débord du toit compris
-	Training = { x = 88, z = 40, footprint = Vector2.new(60, 44) },
-	Offices = { x = 82, z = -70, footprint = Vector2.new(37, 24) }, -- toit, auvent, aileron compris
+	Pitch = { x = -40, z = 10, footprint = Vector2.new(130, 104) }, -- pylônes et écrans d'angle compris
+	Stands = { x = -40, z = 10, footprint = Vector2.new(158, 138) }, -- niveau 5 et toits compris
+	LockerRoom = { x = 78, z = -18, footprint = Vector2.new(40, 26) }, -- débord du toit compris
+	-- Zone d'entraînement : terrain 60 × 44 (TRAINING_FIELD) + centre de performance
+	-- du niveau 5 à l'arrière (+Z) ; l'empreinte reste centrée sur le terrain.
+	Training = { x = 88, z = 40, footprint = Vector2.new(60, 72) },
+	Offices = { x = 82, z = -70, footprint = Vector2.new(44, 26) }, -- toit, auvent, aileron compris
+	Shop = { x = -62, z = -74, footprint = Vector2.new(42, 22) }, -- boutique, à gauche de l'entrée
 	Entrance = { x = 0, z = -96, footprint = Vector2.new(30, 4) },
 }
+
+-- Taille du terrain de la zone d'entraînement (clôture du niveau 3), centré sur LAYOUT.Training.
+WorldConfig.TRAINING_FIELD = Vector2.new(60, 44)
 
 -- Point d'arrivée du joueur sur son terrain (juste derrière le portique d'entrée).
 WorldConfig.PLOT_SPAWN = Vector3.new(0, 3, -86)

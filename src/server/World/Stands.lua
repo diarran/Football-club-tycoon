@@ -5,6 +5,8 @@
 	Niveau 1 : petit gradin en bois sur un côté (côté opposé à l'entrée).
 	Niveau 2 : tribunes en béton sur les deux grands côtés, sièges colorés.
 	Niveau 3 : tribunes sur les 4 côtés ; grands côtés plus hauts et couverts d'un toit.
+	Niveau 4 : les 4 tribunes sont couvertes, virages plus hauts, loges vitrées en tribune nord.
+	Niveau 5 : grand stade : tribunes plus hautes partout, loges VIP sur les deux grands côtés.
 
 	La capacité de chaque niveau est définie dans WorldConfig.STANDS_CAPACITY et
 	recopiée dans l'attribut « Capacity » du Model.
@@ -30,6 +32,7 @@ type StandSpec = {
 	rows: number,
 	segments: number, -- nombre de blocs de sièges séparés par des escaliers
 	roof: boolean,
+	vip: boolean?, -- loges vitrées en haut de la tribune
 }
 
 -- Repère d'une tribune : X = longueur, +Z = vers l'arrière (on monte en s'éloignant du terrain).
@@ -90,6 +93,32 @@ local function concreteStand(parent: Instance, frame: CFrame, name: string, spec
 				Enum.Material.SmoothPlastic
 			)
 		end
+	end
+
+	if spec.vip then
+		-- Rangée de loges vitrées posée sur les derniers rangs, bandeau aux couleurs du club.
+		local depth = spec.rows * ROW_D
+		local topY = spec.rows * ROW_H
+		local vipLength = spec.length * 0.6
+		PartUtil.block(
+			stand,
+			frame,
+			"VipBox",
+			Vector3.new(vipLength, 4, 3),
+			Vector3.new(0, topY, depth - 1.5),
+			C.Glass,
+			Enum.Material.Glass,
+			{ transparency = 0.3 }
+		)
+		PartUtil.block(
+			stand,
+			frame,
+			"VipBand",
+			Vector3.new(vipLength + 0.4, 0.8, 3.2),
+			Vector3.new(0, topY + 4, depth - 1.5),
+			ctx.secondary,
+			Enum.Material.SmoothPlastic
+		)
 	end
 
 	if spec.roof then
@@ -184,11 +213,28 @@ function Stands.build(parent: Instance, origin: CFrame, level: number, ctx: Buil
 		concreteStand(model, standFrame(origin, "South"), "StandSouth", spec, ctx)
 	else
 		-- Les grands côtés font exactement la longueur du terrain : les angles restent
-		-- libres pour les pylônes d'éclairage du terrain niveau 3.
-		local long: StandSpec = { length = L, rows = 8, segments = 4, roof = true }
-		local short: StandSpec = { length = W, rows = 6, segments = 3, roof = false }
-		concreteStand(model, standFrame(origin, "North"), "StandNorth", long, ctx)
-		concreteStand(model, standFrame(origin, "South"), "StandSouth", long, ctx)
+		-- libres pour les pylônes d'éclairage et les écrans géants du terrain.
+		local long: StandSpec, short: StandSpec
+		local northVip, southVip = false, false
+		if level == 3 then
+			long = { length = L, rows = 8, segments = 4, roof = true }
+			short = { length = W, rows = 6, segments = 3, roof = false }
+		elseif level == 4 then
+			long = { length = L, rows = 9, segments = 4, roof = true }
+			short = { length = W, rows = 7, segments = 3, roof = true }
+			northVip = true
+		else
+			-- Moins de blocs de sièges par rang pour rester dans le budget mobile.
+			long = { length = L, rows = 10, segments = 3, roof = true }
+			short = { length = W, rows = 8, segments = 2, roof = true }
+			northVip, southVip = true, true
+		end
+		local north = table.clone(long)
+		north.vip = northVip
+		local south = table.clone(long)
+		south.vip = southVip
+		concreteStand(model, standFrame(origin, "North"), "StandNorth", north, ctx)
+		concreteStand(model, standFrame(origin, "South"), "StandSouth", south, ctx)
 		concreteStand(model, standFrame(origin, "East"), "StandEast", short, ctx)
 		concreteStand(model, standFrame(origin, "West"), "StandWest", short, ctx)
 	end
