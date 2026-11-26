@@ -28,6 +28,8 @@ local CosmeticService = require(Services.CosmeticService)
 local MonetizationService = require(Services.MonetizationService)
 local ChallengeService = require(Services.ChallengeService)
 local TournamentService = require(Services.TournamentService)
+local AdminService = require(Services.AdminService)
+local CommunityService = require(Services.CommunityService)
 local StaffService = require(Services.StaffService)
 local DailyService = require(Services.DailyService)
 
@@ -45,6 +47,8 @@ local ORDERED_SERVICES = {
 	{ name = "MonetizationService", module = MonetizationService },
 	{ name = "ChallengeService", module = ChallengeService },
 	{ name = "TournamentService", module = TournamentService },
+	{ name = "AdminService", module = AdminService },
+	{ name = "CommunityService", module = CommunityService },
 	{ name = "DailyService", module = DailyService },
 }
 
@@ -112,6 +116,7 @@ local function onPlayerRemoving(player: Player)
 	step("ChallengeService.OnPlayerLeaving", ChallengeService.OnPlayerLeaving, player)
 	step("TournamentService.OnPlayerLeaving", TournamentService.OnPlayerLeaving, player)
 	step("ClubService.OnPlayerLeaving", ClubService.OnPlayerLeaving, player)
+	step("AdminService.OnPlayerLeaving", AdminService.OnPlayerLeaving, player)
 	step("PlayerDataService.Release", PlayerDataService.Release, player)
 	Net.ForgetPlayer(player)
 end
