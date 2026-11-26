@@ -39,9 +39,10 @@ Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
 3. **Menu** : le bouton **Club** ouvre le menu et la caméra montre ton club d'en haut.
    Le **X** rouge ferme le menu et la caméra revient derrière ton personnage.
 4. **Tutoriel** : le bandeau en haut au centre change quand tu fais ce qu'il demande.
-5. **Stade** : « Améliorer » le terrain fait baisser le solde et le terrain change
-   d'aspect (bancs de touche, panneaux publicitaires).
-6. **Effectif** : « Recruter » ajoute un joueur à l'effectif.
+5. **Stade** : « Améliorer » les **Vestiaires** (le moins cher, 1 500 FC) fait baisser
+   le solde et le bâtiment change d'aspect.
+6. **Effectif** : « Recruter » (1 500 FC) ajoute un joueur. S'il manque des FC, joue
+   d'abord un ou deux matchs : un message « pas assez de FC » est normal.
 7. **Matchs** : lance un match. Une fenêtre de résultat s'affiche avec des FC gagnés.
 8. **Nom** : dans **Accueil**, renomme le club. Le nouveau nom apparaît en haut à
    gauche et sur le portique.
