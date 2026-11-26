@@ -75,6 +75,12 @@ for _, def in Buildings.List() do
 		table.insert(ITEMS, { key = def.id .. " " .. level, building = def.id, level = level, cost = def.levels[level].cost })
 	end
 end
+-- Staff du club (Staff.lua) : chaque niveau est un achat de plus.
+for _, def in S.Staff.List() do
+	for level = 1, #def.levels do
+		table.insert(ITEMS, { key = "Staff " .. def.id .. " " .. level, staff = def.id, level = level, cost = def.levels[level].cost })
+	end
+end
 local RECRUITS = Config.MAX_SQUAD_SIZE - Config.STARTING_PLAYERS
 for n = 1, RECRUITS do
 	table.insert(ITEMS, { key = "Recrue " .. n, recruit = n, cost = PlayerConfig.RECRUIT_COST })
@@ -114,6 +120,9 @@ local function playRun(profil)
 		postSessions = 0,
 		titlesAtEnd = 0,
 		tournamentGains = {}, -- gains versés par le tournoi du serveur
+		sponsorPerMatch = {}, -- prime fixe des contrats à chaque match
+		sponsorBonuses = 0, -- total des bonus d'objectif
+		sponsorSigned = 0,
 	}
 	local function stamp()
 		return { minutes = run.playSeconds / 60, matches = run.matches, session = run.sessions }
@@ -130,7 +139,9 @@ local function playRun(profil)
 			local best = nil
 			for _, item in ITEMS do
 				local available
-				if item.recruit then
+				if item.staff then
+					available = (data.staff[item.staff] or 0) == item.level - 1
+				elseif item.recruit then
 					available = #data.squad < Config.MAX_SQUAD_SIZE
 						and not run.bought[item.key]
 						and (item.recruit == 1 or run.bought["Recrue " .. (item.recruit - 1)])
@@ -179,6 +190,8 @@ local function playRun(profil)
 				end
 			elseif best.recruit then
 				ok = S.SquadService.TryRecruit(player)
+			elseif best.staff then
+				ok = S.StaffService.TryHire(player, best.staff)
 			else
 				ok = S.BuildingService.TryUpgrade(player, best.building)
 			end
@@ -213,6 +226,21 @@ local function playRun(profil)
 				table.insert(run.tournamentGains, data.coins - beforeWait)
 			end
 			shop(player, data)
+			-- Sponsors : le joueur signe l'offre la plus payante dès qu'il a une place.
+			while #data.sponsors.contracts < S.Sponsors.MaxActive(Divisions.Get(data.club.division).tier) do
+				S.StaffService.RefreshOffers(data)
+				local pick = nil
+				for _, offer in data.sponsors.offers do
+					local value = offer.perMatch * offer.matches + offer.bonus
+					if not pick or value > pick.value then
+						pick = { id = offer.id, value = value }
+					end
+				end
+				if not pick or not S.StaffService.TrySignSponsor(player, pick.id) then
+					break
+				end
+				run.sponsorSigned += 1
+			end
 			local coins = data.coins
 			local divisionBefore = data.club.division
 			local result, err = S.MatchService.TryStartMatch(player, "ai", "Balanced")
@@ -225,11 +253,19 @@ local function playRun(profil)
 				dw.matches += 1
 				dw.wins += if result.outcome == "Win" then 1 else 0
 				run.divisionWins[divisionBefore] = dw
-				local income = data.coins - coins - (result.promotionReward or 0)
+				local bonus = 0
+				for _, b in result.sponsorBonuses do
+					bonus += b.coins
+				end
+				run.sponsorBonuses += bonus
+				table.insert(run.sponsorPerMatch, result.rewards.contracts)
+				-- Bonus d'objectif des sponsors : versement unique, compté à part.
+				local income = data.coins - coins - (result.promotionReward or 0) - bonus
 				table.insert(run.incomes, income)
 				-- Contrôle des sources anormales : hors bonus voulu de la division
 				-- (prime de match ×1 à ×3), le gain doit rester sous 5 000.
-				table.insert(run.baseIncomes, income - (result.rewards.match - Config.Rewards[result.outcome]))
+				-- Les contrats de sponsoring sont contrôlés à part (plafond ci-dessous).
+				table.insert(run.baseIncomes, income - (result.rewards.match - Config.Rewards[result.outcome]) - result.rewards.contracts)
 				if result.promoted then
 					run.reach[result.division] = stamp()
 				end
@@ -467,6 +503,28 @@ for _, profil in PROFILS do
 	))
 	if (percentile(gains, 1) or 0) > tournamentCap then
 		table.insert(problems, profil.label .. " : une récompense de tournoi dépasse le plafond (source anormale)")
+	end
+
+	local perMatchAll, bonusPerHour, signed = {}, {}, {}
+	for _, run in runs do
+		for _, v in run.sponsorPerMatch do
+			table.insert(perMatchAll, v)
+		end
+		table.insert(bonusPerHour, run.sponsorBonuses / math.max(1, run.playSeconds / 3600))
+		table.insert(signed, run.sponsorSigned)
+	end
+	print(("Sponsors : prime des contrats par match médiane %s, max %s · bonus d'objectif %s FC Coins par heure de jeu (médiane) · %s contrats signés (médiane)"):format(
+		fmt(median(perMatchAll)),
+		fmt(percentile(perMatchAll, 1)),
+		fmt(median(bonusPerHour)),
+		fmt(median(signed))
+	))
+
+	-- Plafond des contrats : 2 contrats de D1 au maximum (tirage, prestige, directeur commercial).
+	local sponsorCap = 2 * S.Sponsors.BASE_PER_MATCH.D1 * 1.2 * (1 + S.Sponsors.PRESTIGE_BONUS_MAX)
+		* (1 + S.Staff.Effect({ Commercial = S.Staff.MaxLevel("Commercial") }, "sponsorBonus")) + 10
+	if (percentile(perMatchAll, 1) or 0) > sponsorCap then
+		table.insert(problems, profil.label .. " : les contrats de sponsoring dépassent leur plafond (source anormale)")
 	end
 
 	-- Contrôles : sources infinies et blocages
