@@ -38,15 +38,7 @@ WorldConfig.PREVIEW_ON_START = true
 -- Identifiants des installations (contrat partagé avec BuildingService / ClubService).
 WorldConfig.FACILITY_IDS = { "Pitch", "Stands", "LockerRoom", "Training", "Offices", "Shop" }
 
--- Noms affichés (français) des installations.
-WorldConfig.FACILITY_NAMES = {
-	Pitch = "Terrain principal",
-	Stands = "Tribunes",
-	LockerRoom = "Vestiaires",
-	Training = "Zone d'entraînement",
-	Offices = "Bureaux",
-	Shop = "Boutique",
-}
+-- Noms affichés des installations : clés « building.<id>.label » de Locale.
 
 -- Nombre de niveaux visuels par installation (doit suivre Buildings.lua).
 WorldConfig.MAX_LEVEL = 5
@@ -223,13 +215,14 @@ WorldConfig.CLUB_COLORS = {
 }
 
 -- Textes des panneaux publicitaires (tous fictifs, aucune marque réelle).
+-- Clés Locale des textes (« FC COINS » reste tel quel dans toutes les langues).
 WorldConfig.AD_TEXTS = {
 	"FC COINS",
-	"VOTRE PUB ICI",
-	"BOULANGERIE DU STADE",
-	"AUTO-ÉCOLE DU QUARTIER",
-	"ALLEZ LE CLUB !",
-	"FRITERIE CENTRALE",
+	"world.ad.yourAdHere",
+	"world.ad.bakery",
+	"world.ad.drivingSchool",
+	"world.ad.cheer",
+	"world.ad.chipShop",
 }
 
 -- Nom affiché quand aucun nom de club n'est fourni.

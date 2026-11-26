@@ -19,7 +19,9 @@ local Buildings = require(Shared.Buildings)
 local ClubNames = require(Shared.ClubNames)
 local Config = require(Shared.Config)
 local Divisions = require(Shared.Divisions)
+local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
+local PlayerConfig = require(Shared.PlayerConfig)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
@@ -99,7 +101,7 @@ local function pickScorer(squad)
 		total += weights[footballer.position] or 1
 	end
 	if total == 0 then
-		return squad[1] and squad[1].name or "Inconnu"
+		return squad[1] and squad[1].name or "?"
 	end
 	local roll = rng:NextNumber() * total
 	for _, footballer in squad do
@@ -117,7 +119,8 @@ local function buildAiTeam(divisionId: string)
 	local positions = { "GK", "DEF", "DEF", "MID", "ATT" }
 	for index = 1, AI_SQUAD_SIZE do
 		table.insert(squad, {
-			name = "Joueur " .. index,
+			-- Nom fictif fixe (pas de tirage : ne change pas les résultats des matchs).
+			name = PlayerConfig.FirstNames[index] .. " " .. PlayerConfig.LastNames[#PlayerConfig.LastNames + 1 - index],
 			position = positions[index],
 			rating = division.opponentRating + rng:NextInteger(-3, 3),
 			energy = 80,
@@ -165,10 +168,10 @@ end
 function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	local data = PlayerDataService.GetData(player)
 	if not data then
-		return nil, "Profil non chargé."
+		return nil, Locale.TP(player, "error.profileNotLoaded")
 	end
 	if type(opponentId) ~= "string" then
-		return nil, "Adversaire invalide."
+		return nil, Locale.TP(player, "error.invalidOpponent")
 	end
 	if type(tactic) ~= "string" or not Config.Tactics[tactic] then
 		tactic = data.tactic
@@ -177,10 +180,10 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	local now = os.time()
 	local waitLeft = Config.MATCH_COOLDOWN_SECONDS - (now - data.lastMatchAt)
 	if waitLeft > 0 then
-		return nil, ("Tes joueurs récupèrent : prochain match dans %d s."):format(waitLeft)
+		return nil, Locale.TP(player, "error.matchCooldown", { seconds = waitLeft })
 	end
 	if #data.squad == 0 then
-		return nil, "Ton effectif est vide."
+		return nil, Locale.TP(player, "error.emptySquad")
 	end
 
 	-- Adversaire
@@ -190,11 +193,11 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	else
 		local opponent = ClubService.FindPlayerByClubId(opponentId)
 		if not opponent or opponent == player then
-			return nil, "Cet adversaire n'est pas disponible."
+			return nil, Locale.TP(player, "error.opponentUnavailable")
 		end
 		local opponentData = PlayerDataService.GetData(opponent)
 		if not opponentData or #opponentData.squad == 0 then
-			return nil, "Cet adversaire n'est pas disponible."
+			return nil, Locale.TP(player, "error.opponentUnavailable")
 		end
 		local trainingBonus = Buildings.GetEffects("Training", opponentData.buildings.Training or 1).teamBonus
 			or 0

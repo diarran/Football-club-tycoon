@@ -19,6 +19,7 @@ local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
 local ClubNames = require(Shared.ClubNames)
 local Divisions = require(Shared.Divisions)
+local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
@@ -106,7 +107,11 @@ local function buildFallbackPlot(slotIndex: number, clubName: string?)
 	label.Font = Enum.Font.GothamBold
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.TextStrokeTransparency = 0.4
-	label.Text = clubName or "Terrain libre"
+	if clubName then
+		label.Text = clubName
+	else
+		Locale.Tag(label, "world.freePlot")
+	end
 	label.Parent = billboard
 
 	model.PrimaryPart = ground
@@ -242,7 +247,7 @@ function ClubService.OnPlayerReady(player: Player, profile)
 		end
 	end
 	if not slotIndex then
-		player:Kick("Ce serveur est complet (6 clubs maximum). Rejoins un autre serveur.")
+		player:Kick(Locale.TP(player, "kick.serverFull", { max = Config.MAX_CLUBS_PER_SERVER }))
 		return false
 	end
 	slots[slotIndex] = player
@@ -313,10 +318,10 @@ local function handleRename(player: Player, newName)
 		Net.FireClient(
 			"Notify",
 			player,
-			("Le nom doit faire entre %d et %d caractères."):format(
-				Config.CLUB_NAME_MIN_LENGTH,
-				Config.CLUB_NAME_MAX_LENGTH
-			),
+			Locale.TP(player, "club.nameLength", {
+				min = Config.CLUB_NAME_MIN_LENGTH,
+				max = Config.CLUB_NAME_MAX_LENGTH,
+			}),
 			"error"
 		)
 		return
@@ -329,7 +334,7 @@ local function handleRename(player: Player, newName)
 		return
 	end
 	if not filtered or filtered ~= newName then
-		Net.FireClient("Notify", player, "Ce nom n'est pas autorisé. Essaie un autre nom.", "error")
+		Net.FireClient("Notify", player, Locale.TP(player, "club.nameRejected"), "error")
 		return
 	end
 
@@ -338,7 +343,7 @@ local function handleRename(player: Player, newName)
 	PlayerDataService.MarkChanged(player)
 	ClubService.RefreshPlot(player)
 	ClubService.BroadcastClubs()
-	Net.FireClient("Notify", player, "Ton club s'appelle désormais « " .. filtered .. " ».", "success")
+	Net.FireClient("Notify", player, Locale.TP(player, "club.renamed", { name = filtered }), "success")
 end
 
 function ClubService.Init()
@@ -380,6 +385,12 @@ function ClubService.Init()
 	end
 
 	Net.Handle("RequestRename", handleRename)
+	-- Langue choisie dans les Paramètres : les messages du serveur la suivent.
+	Net.Handle("RequestLanguage", function(player, lang)
+		if Locale.IsSupported(lang) then
+			player:SetAttribute("Language", lang)
+		end
+	end)
 end
 
 return ClubService

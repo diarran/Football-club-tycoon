@@ -2,6 +2,9 @@
 	Buildings
 	Définition des installations du club (document de conception, section 4).
 
+	Nom et description affichés : clés « building.<id>.label » et
+	« building.<id>.description » de Lang/fr.lua et Lang/en.lua (module Locale).
+
 	Chaque installation a des niveaux. Le niveau 1 est possédé au départ.
 	levels[n].cost = prix pour PASSER au niveau n (le niveau 1 est gratuit).
 	Les effets sont lus par le serveur (billetterie, entraînement, etc.).
@@ -16,8 +19,6 @@ local Buildings = {}
 Buildings.Definitions = {
 	Pitch = {
 		id = "Pitch",
-		label = "Terrain principal",
-		description = "Lieu des matchs et identité du club.",
 		order = 1,
 		levels = {
 			{ cost = 0, effects = { homeBonus = 0 } },
@@ -29,8 +30,6 @@ Buildings.Definitions = {
 	},
 	Stands = {
 		id = "Stands",
-		label = "Tribunes",
-		description = "Capacité d'accueil et revenus de billetterie.",
 		order = 2,
 		levels = {
 			{ cost = 0, effects = { capacity = 200, ticketPrice = 1 } },
@@ -42,8 +41,6 @@ Buildings.Definitions = {
 	},
 	Training = {
 		id = "Training",
-		label = "Zone d'entraînement",
-		description = "Améliore la progression et l'énergie des joueurs.",
 		order = 3,
 		levels = {
 			{ cost = 0, effects = { teamBonus = 0, energyRecovery = 1.0 } },
@@ -55,8 +52,6 @@ Buildings.Definitions = {
 	},
 	Offices = {
 		id = "Offices",
-		label = "Bureaux",
-		description = "Accès aux menus de gestion et aux sponsors.",
 		order = 4,
 		levels = {
 			{ cost = 0, effects = { sponsorIncome = 50 } },
@@ -68,8 +63,6 @@ Buildings.Definitions = {
 	},
 	LockerRoom = {
 		id = "LockerRoom",
-		label = "Vestiaires",
-		description = "Amélioration visuelle du club (progression future).",
 		order = 5,
 		levels = {
 			{ cost = 0, effects = {} },
@@ -83,8 +76,6 @@ Buildings.Definitions = {
 	-- maillots et d'écharpes, versées à chaque match joué.
 	Shop = {
 		id = "Shop",
-		label = "Boutique",
-		description = "Vend maillots et écharpes : revenus à chaque match.",
 		order = 6,
 		levels = {
 			{ cost = 0, effects = { shopIncome = 25 } }, -- kiosque

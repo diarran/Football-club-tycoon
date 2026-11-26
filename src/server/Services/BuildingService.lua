@@ -12,6 +12,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
+local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
@@ -33,24 +34,29 @@ end
 
 function BuildingService.TryUpgrade(player: Player, buildingId): (boolean, string)
 	if type(buildingId) ~= "string" or not Buildings.Get(buildingId) then
-		return false, "Installation inconnue."
+		return false, Locale.TP(player, "error.unknownBuilding")
 	end
 	local data = PlayerDataService.GetData(player)
 	if not data then
-		return false, "Profil non chargé."
+		return false, Locale.TP(player, "error.profileNotLoaded")
 	end
 	local level = data.buildings[buildingId] or 1
 	local cost = Buildings.GetUpgradeCost(buildingId, level)
 	if not cost then
-		return false, "Niveau maximum déjà atteint."
+		return false, Locale.TP(player, "error.maxLevel")
 	end
 	if not EconomyService.TrySpend(player, cost, "upgrade:" .. buildingId) then
-		return false, ("Il te manque des %s."):format(Config.CURRENCY_NAME)
+		return false, Locale.TP(player, "error.notEnoughCoins", { currency = Config.CURRENCY_NAME })
 	end
 	-- Aucun yield entre le débit et la montée de niveau.
 	data.buildings[buildingId] = level + 1
 	PlayerDataService.MarkChanged(player)
-	return true, ("%s : niveau %d !"):format(Buildings.Get(buildingId).label, level + 1)
+	local lang = Locale.ForPlayer(player)
+	return true,
+		Locale.T(lang, "building.upgraded", {
+			name = Locale.T(lang, "building." .. buildingId .. ".label"),
+			level = level + 1,
+		})
 end
 
 function BuildingService.Init()

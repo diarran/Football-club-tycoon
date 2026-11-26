@@ -141,7 +141,7 @@ function LockerRoom.build(parent: Instance, origin: CFrame, level: number, ctx: 
 	PartUtil.frontSign(
 		model,
 		origin,
-		"VESTIAIRES",
+		"world.lockerRoom",
 		Vector2.new(math.min(size.X * 0.5, 12), 1.6),
 		Vector3.new(0, 0.4 + size.Y - 1.6, -size.Z / 2 - 0.4),
 		C.SignText,

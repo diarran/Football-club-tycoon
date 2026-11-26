@@ -262,8 +262,6 @@ function WorldBuilder.setClubName(plot: Model, clubName: string)
 	for _, descendant in plot:GetDescendants() do
 		if descendant:IsA("TextLabel") and descendant.Name == "ClubNameText" then
 			descendant.Text = string.upper(clubName)
-		elseif descendant:IsA("TextLabel") and descendant.Name == "ClubShopText" then
-			descendant.Text = string.upper(clubName) .. " · BOUTIQUE"
 		elseif descendant:IsA("TextLabel") and descendant.Name == "ClubTagText" then
 			descendant.Text = Brand.Tag(clubName)
 		elseif descendant:IsA("ProximityPrompt") and descendant.Name == "ManageClubPrompt" then

@@ -5,7 +5,7 @@
 	Niveau 1 : kiosque en bois avec auvent rayé aux couleurs du club.
 	Niveau 2 : petite boutique enduite, vitrine et auvent.
 	Niveau 3 : magasin à façade vitrée, mannequins portant le maillot du club.
-	Niveau 4 : grand magasin sur 2 étages, enseigne au nom du club.
+	Niveau 4 : grand magasin sur 2 étages.
 	Niveau 5 : boutique officielle : maillot géant sur le toit, bandeau lumineux.
 
 	Placée à gauche de l'entrée du club ; la porte donne sur l'avant (-Z), vers
@@ -97,7 +97,7 @@ function Shop.build(parent: Instance, origin: CFrame, level: number, ctx: BuildC
 		PartUtil.frontSign(
 			model,
 			origin,
-			"BOUTIQUE",
+			"world.shop",
 			Vector2.new(6, 1.2),
 			Vector3.new(0, 8.4, -4.6),
 			C.SignText,
@@ -167,24 +167,15 @@ function Shop.build(parent: Instance, origin: CFrame, level: number, ctx: BuildC
 		)
 	end
 
-	local signText = if level >= 4 then string.upper(ctx.clubName) .. " · BOUTIQUE" else "BOUTIQUE"
-	local sign = PartUtil.frontSign(
+	PartUtil.frontSign(
 		model,
 		origin,
-		signText,
+		"world.shop",
 		Vector2.new(math.min(size.X * 0.6, 18), 1.8),
 		Vector3.new(0, 0.4 + size.Y - 1.8, -size.Z / 2 - 0.4),
 		C.SignText,
 		C.SignBack
 	)
-	if level >= 4 then
-		-- Le nom suit les renommages (voir WorldBuilder.setClubName).
-		local gui = sign:FindFirstChildWhichIsA("SurfaceGui")
-		local label = gui and gui:FindFirstChildWhichIsA("TextLabel")
-		if label then
-			label.Name = "ClubShopText"
-		end
-	end
 	return model
 end
 

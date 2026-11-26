@@ -200,7 +200,7 @@ function TrainingZone.build(parent: Instance, origin: CFrame, level: number, ctx
 		PartUtil.frontSign(
 			centre,
 			co,
-			"CENTRE DE PERFORMANCE",
+			"world.performanceCentre",
 			Vector2.new(16, 1.6),
 			Vector3.new(0, 0.4 + size.Y - 1.6, -size.Z / 2 - 0.4),
 			C.SignText,
