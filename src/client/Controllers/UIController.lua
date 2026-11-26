@@ -18,6 +18,8 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Brand = require(Shared.Brand)
 local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
+local Cosmetics = require(Shared.Cosmetics)
+local Trophies = require(Shared.Trophies)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
@@ -55,7 +57,7 @@ local COLORS = {
 }
 
 -- Nom affiché : clé « tab.<id> » de Locale.
-local TABS = { "Home", "Stadium", "Squad", "Matches", "Ranking", "Settings" }
+local TABS = { "Home", "Stadium", "Squad", "Matches", "Ranking", "Prestige", "Settings" }
 
 local state = {
 	profile = nil,
@@ -183,7 +185,7 @@ function renderers.Home(profile)
 	local division = Divisions.Get(club.division)
 	local progress = if division and division.pointsToPromote
 		then T("home.pointsToPromote", { points = club.divisionPoints, needed = division.pointsToPromote })
-		else T("home.topDivision")
+		else T("prestige.titleProgress", { points = club.divisionPoints, needed = Trophies.TITLE_POINTS })
 	local nextDivision = Divisions.GetNext(club.division)
 	if nextDivision and (nextDivision.promotionReward or 0) > 0 then
 		progress ..= " · " .. T("home.promotionReward", { coins = formatCoins(nextDivision.promotionReward) })
@@ -552,8 +554,103 @@ function renderers.Ranking(profile)
 				}),
 				{ TextColor3 = COLORS.muted, TextSize = 16 }
 			),
+			label(T("ranking.trophies", { count = club.trophies or 0 }), { TextColor3 = COLORS.gold, TextSize = 16 }),
 		}).Parent =
 			content
+	end
+end
+
+-- Prestige : salle des trophées et personnalisation (purement visuelle).
+function renderers.Prestige(profile)
+	local trophies = profile.trophies or {}
+	local cosmetics = profile.cosmetics or { owned = {}, equipped = {} }
+	local titles = profile.titles or 0
+	local top = Divisions.List[#Divisions.List].id
+
+	local trophyLines = {
+		label(T("prestige.trophiesTitle", { count = #trophies }), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
+		label(
+			if profile.club.division == top
+				then T("prestige.titleProgress", { points = profile.club.divisionPoints, needed = Trophies.TITLE_POINTS })
+				else T("prestige.titleLocked"),
+			{ TextColor3 = COLORS.muted, TextSize = 16 }
+		),
+		label(T("prestige.titlesCount", { titles = titles }), { TextColor3 = COLORS.muted, TextSize = 16 }),
+	}
+	if #trophies == 0 then
+		table.insert(trophyLines, label(T("prestige.noTrophy"), { TextSize = 16 }))
+	else
+		local names = {}
+		for _, trophy in trophies do
+			-- Les titres sont résumés par le compteur ci-dessus.
+			if trophy.kind ~= "title" then
+				table.insert(names, T(trophy.key, trophy.params))
+			end
+		end
+		if #names > 0 then
+			table.insert(trophyLines, label(table.concat(names, " · "), { TextSize = 16 }))
+		end
+	end
+	card(trophyLines).Parent = content
+
+	local ownedCount = 0
+	for _ in cosmetics.owned do
+		ownedCount += 1
+	end
+	card({
+		label(T("prestige.intro"), { TextSize = 16 }),
+		label(T("prestige.progress", { owned = ownedCount, total = #Cosmetics.List }), { TextColor3 = COLORS.muted, TextSize = 16 }),
+	}).Parent =
+		content
+
+	for _, category in Cosmetics.CATEGORIES do
+		label(T("cosmeticCategory." .. category), { Font = Enum.Font.GothamBold }).Parent = content
+		local single = Cosmetics.SINGLE[category]
+		if single then
+			local isDefault = cosmetics.equipped[category] == nil
+			card({
+				label(T("prestige.default"), { Font = Enum.Font.GothamBold }),
+				if isDefault
+					then label(T("prestige.equipped"), { TextColor3 = COLORS.gold })
+					else button(T("prestige.equip"), function()
+						Net.Get("RequestEquipCosmetic"):FireServer(category, "default")
+					end),
+			}).Parent =
+				content
+		end
+		for _, item in Cosmetics.ByCategory(category) do
+			local action
+			if cosmetics.owned[item.id] then
+				if not single then
+					action = label(T("prestige.shown"), { TextColor3 = COLORS.gold })
+				elseif cosmetics.equipped[category] == item.id then
+					action = label(T("prestige.equipped"), { TextColor3 = COLORS.gold })
+				else
+					action = button(T("prestige.equip"), function()
+						Net.Get("RequestEquipCosmetic"):FireServer(category, item.id)
+					end)
+				end
+			else
+				local unlocked, reason = Cosmetics.IsUnlocked(item, profile.club.division, titles)
+				if unlocked then
+					local affordable = profile.coins >= item.cost
+					action = button(T("prestige.buy", { cost = formatCoins(item.cost) }), function()
+						Net.Get("RequestBuyCosmetic"):FireServer(item.id)
+					end, {
+						Size = UDim2.new(0, 240, 0, 44),
+						BackgroundColor3 = if affordable then COLORS.accent else COLORS.disabled,
+					})
+				elseif reason == "titles" then
+					action = label(T("prestige.lockedTitles", { titles = item.requires.titles }), { TextColor3 = COLORS.muted, TextSize = 16 })
+				else
+					action = label(
+						T("prestige.lockedDivision", { division = divisionLabel(item.requires.division) }) .. " · " .. formatCoins(item.cost),
+						{ TextColor3 = COLORS.muted, TextSize = 16 }
+					)
+				end
+			end
+			card({ label(T("cosmetic." .. item.id), { Font = Enum.Font.GothamBold }), action }).Parent = content
+		end
 	end
 end
 

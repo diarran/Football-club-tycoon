@@ -16,6 +16,12 @@
 	      clé absente vaut 1, les valeurs sont bornées entre 1 et MAX_LEVEL.
 	      Forme alternative acceptée : buildPlot(slotIndex, { clubName = "…", levels = {…} }).
 
+	  WorldBuilder.buildPlot(slotIndex, levels, clubName, style: Style?)
+	      style (facultatif) = personnalisation et trophées du club :
+	      { colors, lighting, statue, kit = id d'objet de Cosmetics, decor = { [id] = true },
+	        trophies = Trophies.Earned(...), titles = nombre de titres de D1 }.
+	      Sans style : couleurs de l'emplacement et salle des trophées vide.
+
 	  WorldBuilder.setFacilityLevel(plot: Model, facilityId: string, level: number): Model?
 	      Détruit puis reconstruit UNIQUEMENT l'installation indiquée.
 
@@ -29,7 +35,7 @@
 	  PrimaryPart : « Ground » (sol du terrain).
 	  « Spawn » : Part invisible, sans collision, juste derrière l'entrée (téléportation).
 	  Enfants installations : Pitch, Stands, LockerRoom, Training, Offices, Shop, Academy, VIP
-	  (+ Entrance, Paths). Chaque installation est un Model avec les Attributes
+	  (+ Entrance, Paths, TrophyRoom, et selon le style Statue et Decor). Chaque installation est un Model avec les Attributes
 	  Facility et Level et une PrimaryPart invisible « Root » (son empreinte au sol).
 ]]
 
@@ -50,9 +56,20 @@ local Shop = require(World:WaitForChild("Shop"))
 local Academy = require(World:WaitForChild("Academy"))
 local VipLounge = require(World:WaitForChild("VipLounge"))
 local Entrance = require(World:WaitForChild("Entrance"))
+local Prestige = require(World:WaitForChild("Prestige"))
+local Cosmetics = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Cosmetics"))
 
 type BuildContext = PartUtil.BuildContext
 export type Levels = { [string]: number }
+export type Style = {
+	colors: string?,
+	lighting: string?,
+	statue: string?,
+	kit: string?,
+	decor: { [string]: any }?,
+	trophies: { any }?,
+	titles: number?,
+}
 type FacilityBuilder = (parent: Instance, origin: CFrame, level: number, ctx: BuildContext) -> Model
 
 local WorldBuilder = {}
@@ -96,8 +113,18 @@ local function plotName(slotIndex: number): string
 	return WorldConfig.PLOT_NAME_PREFIX .. tostring(slotIndex)
 end
 
-local function makeContext(slotIndex: number, clubName: string): BuildContext
-	local colors = WorldConfig.CLUB_COLORS[slotIndex] or WorldConfig.CLUB_COLORS[1]
+-- Objet de Cosmetics, seulement s'il appartient bien à la catégorie attendue.
+local function cosmetic(id: any, category: string): any
+	local item = Cosmetics.Get(id)
+	if item and item.category == category then
+		return item
+	end
+	return nil
+end
+
+-- Couleurs du club : celles de l'emplacement, ou la palette achetée (attribut « Colors »).
+local function makeContext(slotIndex: number, clubName: string, colorsId: any): BuildContext
+	local colors = cosmetic(colorsId, "colors") or WorldConfig.CLUB_COLORS[slotIndex] or WorldConfig.CLUB_COLORS[1]
 	return {
 		slotIndex = slotIndex,
 		clubName = clubName,
@@ -166,6 +193,7 @@ local function buildGround(plot: Model, slotIndex: number)
 	path(-62, -88, -107, -88, 6) -- allée du centre de formation
 	path(-107, -88, -107, -85, 4) -- porte du centre de formation
 	path(30, -88, 30, -83, 4) -- porte de l'espace VIP
+	path(-23, -88, -23, -79, 4) -- porte de la salle des trophées
 
 	local spawn = PartUtil.box(
 		plot,
@@ -179,6 +207,28 @@ local function buildGround(plot: Model, slotIndex: number)
 	)
 	spawn.CanQuery = false
 	spawn.CanTouch = false
+end
+
+-- Salle des trophées, statue, décorations, éclairage et tenue (purement visuels).
+local function buildPrestige(plot: Model, slotIndex: number, look: Style, ctx: BuildContext)
+	local kit = Prestige.resolveKit(cosmetic(look.kit, "kit"), ctx)
+	Prestige.buildTrophyRoom(plot, facilityOrigin(slotIndex, "TrophyRoom"), look.trophies or {}, look.titles or 0, kit, ctx)
+	local statue = cosmetic(look.statue, "statue")
+	if statue then
+		Prestige.buildStatue(plot, facilityOrigin(slotIndex, "Statue"), statue, ctx)
+	end
+	local decor = {}
+	for id in look.decor or {} do
+		if cosmetic(id, "decor") then
+			decor[id] = true
+		end
+	end
+	Prestige.buildDecor(plot, WorldConfig.getPlotCFrame(slotIndex), decor, ctx)
+	local lighting = cosmetic(look.lighting, "lighting")
+	if lighting then
+		Prestige.applyLighting(plot, if lighting.club then ctx.primary else lighting.color)
+	end
+	Prestige.applyKit(plot, kit)
 end
 
 --------------------------------------------------------------------------------
@@ -209,7 +259,7 @@ function WorldBuilder.destroyPlot(slotIndex: number)
 	end
 end
 
-function WorldBuilder.buildPlot(slotIndex: number, levelsOrOptions: { [string]: any }?, clubName: string?): Model
+function WorldBuilder.buildPlot(slotIndex: number, levelsOrOptions: { [string]: any }?, clubName: string?, style: Style?): Model
 	assert(
 		typeof(slotIndex) == "number" and WorldConfig.SLOTS[slotIndex] ~= nil,
 		"WorldBuilder.buildPlot : slotIndex doit être entre 1 et " .. WorldConfig.MAX_PLOTS
@@ -221,7 +271,9 @@ function WorldBuilder.buildPlot(slotIndex: number, levelsOrOptions: { [string]: 
 	if levelsOrOptions and (typeof(levelsOrOptions.levels) == "table" or typeof(levelsOrOptions.clubName) == "string") then
 		levels = levelsOrOptions.levels
 		name = name or levelsOrOptions.clubName
+		style = style or levelsOrOptions.style
 	end
+	local look: Style = style or {}
 	local finalName: string = if name and name ~= "" then name else WorldConfig.DEFAULT_CLUB_NAME
 	local finalLevels = normalizeLevels(levels)
 
@@ -231,14 +283,16 @@ function WorldBuilder.buildPlot(slotIndex: number, levelsOrOptions: { [string]: 
 	local plot = PartUtil.model(nil, plotName(slotIndex), {
 		SlotIndex = slotIndex,
 		ClubName = finalName,
+		Colors = if cosmetic(look.colors, "colors") then look.colors else nil,
 	})
-	local ctx = makeContext(slotIndex, finalName)
+	local ctx = makeContext(slotIndex, finalName, look.colors)
 
 	buildGround(plot, slotIndex)
 	Entrance.build(plot, facilityOrigin(slotIndex, "Entrance"), ctx)
 	for _, id in WorldConfig.FACILITY_IDS do
 		buildFacility(plot, slotIndex, id, finalLevels[id], ctx)
 	end
+	buildPrestige(plot, slotIndex, look, ctx)
 
 	plot.Parent = Workspace
 	return plot
@@ -255,7 +309,7 @@ function WorldBuilder.setFacilityLevel(plot: Model, facilityId: string, level: n
 		return nil
 	end
 	local clubName = plot:GetAttribute("ClubName")
-	local ctx = makeContext(slotIndex, if typeof(clubName) == "string" then clubName else WorldConfig.DEFAULT_CLUB_NAME)
+	local ctx = makeContext(slotIndex, if typeof(clubName) == "string" then clubName else WorldConfig.DEFAULT_CLUB_NAME, plot:GetAttribute("Colors"))
 
 	local old = plot:FindFirstChild(facilityId)
 	if old then

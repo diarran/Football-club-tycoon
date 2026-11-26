@@ -21,6 +21,7 @@ local ClubNames = require(Shared.ClubNames)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
+local Trophies = require(Shared.Trophies)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
 local ClubService = {}
@@ -119,11 +120,32 @@ local function buildFallbackPlot(slotIndex: number, clubName: string?)
 	return model
 end
 
-local function buildPlot(slotIndex: number, levels, clubName: string?)
+-- Personnalisation et trophées du club, lus par WorldBuilder (purement visuels).
+local function styleOf(data)
+	if not data then
+		return nil
+	end
+	local equipped, owned = data.cosmetics.equipped, data.cosmetics.owned
+	local decor = {}
+	for id in owned do
+		decor[id] = true
+	end
+	return {
+		colors = equipped.colors,
+		lighting = equipped.lighting,
+		statue = equipped.statue,
+		kit = equipped.kit,
+		decor = decor, -- WorldBuilder ne garde que les décorations
+		trophies = Trophies.Earned(data.club.division, data.club.stats, data.trophies.titles),
+		titles = data.trophies.titles,
+	}
+end
+
+local function buildPlot(slotIndex: number, levels, clubName: string?, data)
 	levels = levels or Buildings.DefaultLevels() -- terrain libre : niveaux de départ
 	local model
 	if WorldBuilder then
-		local ok, result = pcall(WorldBuilder.buildPlot, slotIndex, levels, clubName)
+		local ok, result = pcall(WorldBuilder.buildPlot, slotIndex, levels, clubName, styleOf(data))
 		if ok and result then
 			model = result
 		else
@@ -181,6 +203,8 @@ function ClubService.GetClubList()
 				squadSize = #data.squad,
 				slot = slotIndex,
 				buildings = table.clone(data.buildings),
+				trophies = #Trophies.Earned(data.club.division, data.club.stats, data.trophies.titles),
+				titles = data.trophies.titles,
 			})
 		end
 	end
@@ -226,7 +250,7 @@ function ClubService.RefreshPlot(player: Player)
 	local slotIndex = slotByPlayer[player]
 	local data = PlayerDataService.GetData(player)
 	if slotIndex and data then
-		buildPlot(slotIndex, data.buildings, data.club.name)
+		buildPlot(slotIndex, data.buildings, data.club.name, data)
 	end
 end
 
@@ -255,7 +279,7 @@ function ClubService.OnPlayerReady(player: Player, profile)
 	player:SetAttribute("ClubSlot", slotIndex)
 	player:SetAttribute("ClubName", data.club.name)
 
-	buildPlot(slotIndex, data.buildings, data.club.name)
+	buildPlot(slotIndex, data.buildings, data.club.name, data)
 
 	player.CharacterAdded:Connect(function(character)
 		character:WaitForChild("HumanoidRootPart", 10)

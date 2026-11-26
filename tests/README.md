@@ -36,6 +36,7 @@ Le test `07_client` démarre aussi le vrai client (HUD, menus) et clique sur les
 | `11_divisions` | D7 → D1, clubs fictifs, primes croissantes, transferts validés par le serveur, classement de division |
 | `10_progression` | 5 niveaux par installation, prix exacts, modèles 3D au niveau 5, Boutique |
 | `11_academy_vip` | centre de formation (jeunes repérés hors ligne, signature, libération, progression), espace VIP, anciens profils |
+| `12_prestige` | personnalisation du club (achat validé par le serveur, conditions de division et de titres, porter/retirer, terrain 3D), salle des trophées (montées, titres de D1, records, tournois), sauvegarde, anciens profils, écran Prestige |
 
 ## Lancer les tests sur son ordinateur
 

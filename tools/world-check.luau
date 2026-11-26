@@ -163,7 +163,7 @@ for _, d in (district and district:GetDescendants() or {}) do
 end
 
 -- Empreintes des installations (hors couple Pitch/Stands, concentriques par conception).
-local keys = { "Stands", "LockerRoom", "Training", "Offices", "Shop", "Academy", "VIP", "Entrance" }
+local keys = { "Stands", "LockerRoom", "Training", "Offices", "Shop", "Academy", "VIP", "Entrance", "TrophyRoom", "Statue" }
 for i = 1, #keys do
 	for j = i + 1, #keys do
 		local a, b = WorldConfig.LAYOUT[keys[i]], WorldConfig.LAYOUT[keys[j]]

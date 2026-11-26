@@ -15,11 +15,16 @@
 	Le simulateur ne lit les installations et leurs niveaux que dans
 	Buildings.Definitions : ajouter des niveaux ne demande aucun changement ici.
 
+	Fin de partie : une fois en D1 avec tout acheté, le joueur continue et
+	achète la personnalisation (Cosmetics.lua, la moins chère d'abord). Le
+	rapport dit combien d'heures après la D1 il reste des choses à acheter.
+
 	Variables fournies par economy-sim.js : SIM_RUNS (parties par profil).
 ]]
 
 local S = H.boot(MODULES)
 local Config, Buildings, Divisions, PlayerConfig = S.Config, S.Buildings, S.Divisions, S.PlayerConfig
+local Cosmetics = S.Cosmetics
 local RUNS = SIM_RUNS or 40
 local print = H.realPrint -- les print du jeu restent dans le journal du harnais
 
@@ -28,8 +33,9 @@ local print = H.realPrint -- les print du jeu restent dans le journal du harnais
 -- matchEvery : secondes entre deux matchs (le joueur ne joue pas forcément dès
 -- la fin du délai : il regarde le résultat, se promène, achète…).
 local PROFILS = {
-	{ id = "actif", label = "Joueur actif", sessionMinutes = 40, pauseHours = 6, matchEvery = 75, maxSessions = 200 },
-	{ id = "occasionnel", label = "Joueur occasionnel", sessionMinutes = 15, pauseHours = 24, matchEvery = 120, maxSessions = 365 },
+-- postSessions : sessions jouées au plus après la D1 (phase de fin de partie).
+	{ id = "actif", label = "Joueur actif", sessionMinutes = 40, pauseHours = 6, matchEvery = 75, maxSessions = 200, postSessions = 200 },
+	{ id = "occasionnel", label = "Joueur occasionnel", sessionMinutes = 15, pauseHours = 24, matchEvery = 120, maxSessions = 365, postSessions = 60 },
 }
 
 -- Outils --------------------------------------------------------------------
@@ -73,6 +79,9 @@ local RECRUITS = Config.MAX_SQUAD_SIZE - Config.STARTING_PLAYERS
 for n = 1, RECRUITS do
 	table.insert(ITEMS, { key = "Recrue " .. n, recruit = n, cost = PlayerConfig.RECRUIT_COST })
 end
+-- Fin de partie : seuil d'alerte (heures de jeu après la D1 avant de tout posséder).
+local MIN_ENDGAME_HOURS = 15
+local CHECK_HOURS = 10 -- « objets achetés N heures après la D1 »
 local TOTAL_COST = 0
 for _, item in ITEMS do
 	TOTAL_COST += item.cost
@@ -100,6 +109,10 @@ local function playRun(profil)
 		transferSpent = 0,
 		divisionWins = {}, -- [division] = { wins, matches }
 		baseIncomes = {},
+		cosmeticMinutes = {}, -- minutes de jeu de chaque achat de personnalisation
+		allCosmeticsAt = nil,
+		postSessions = 0,
+		titlesAtEnd = 0,
 	}
 	local function stamp()
 		return { minutes = run.playSeconds / 60, matches = run.matches, session = run.sessions }
@@ -136,6 +149,24 @@ local function playRun(profil)
 				end
 			end
 			if not best then
+				-- Fin de partie : tout est acheté et le club est en D1 → personnalisation.
+				if run.allBoughtAt and data.club.division == TOP then
+					local pick = nil
+					for _, item in Cosmetics.List do
+						if not data.cosmetics.owned[item.id] and item.cost <= data.coins
+							and Cosmetics.IsUnlocked(item, data.club.division, data.trophies.titles)
+							and (not pick or item.cost < pick.cost) then
+							pick = item
+						end
+					end
+					if pick and S.CosmeticService.TryBuy(player, pick.id) then
+						table.insert(run.cosmeticMinutes, run.playSeconds / 60)
+						if #run.cosmeticMinutes == #Cosmetics.List then
+							run.allCosmeticsAt = stamp()
+						end
+						continue
+					end
+				end
 				return
 			end
 			local ok
@@ -159,8 +190,11 @@ local function playRun(profil)
 		end
 	end
 
-	while run.sessions < profil.maxSessions and not (run.reach[TOP] and run.allBoughtAt) do
+	while run.sessions < profil.maxSessions and not run.allCosmeticsAt and run.postSessions < profil.postSessions do
 		run.sessions += 1
+		if run.reach[TOP] and run.allBoughtAt then
+			run.postSessions += 1
+		end
 		local player = H.join(userId)
 		local data = S.PlayerDataService.GetData(player)
 		assert(data, "profil non chargé")
@@ -210,6 +244,7 @@ local function playRun(profil)
 			wait = math.max(profil.matchEvery, Config.MATCH_COOLDOWN_SECONDS)
 		end
 		run.coinsAtEnd = data.coins
+		run.titlesAtEnd = data.trophies.titles
 		H.leave(player)
 		H.advance(profil.pauseHours * 3600)
 		H.clearSent()
@@ -342,6 +377,43 @@ for _, profil in PROFILS do
 		table.insert(transferSpent, run.transferSpent)
 	end
 	print(("Transferts : médiane %s (dépense %s FC Coins)"):format(fmt(median(transfers)), fmt(median(transferSpent))))
+
+	-- Fin de partie : personnalisation achetée après la D1.
+	local endHours, ownedLater, titlesEnd, unfinished = {}, {}, {}, 0
+	for _, run in runs do
+		local r = run.reach[TOP]
+		if r then
+			if run.allCosmeticsAt then
+				table.insert(endHours, (run.allCosmeticsAt.minutes - r.minutes) / 60)
+			else
+				unfinished += 1
+			end
+			local count = 0
+			for _, m in run.cosmeticMinutes do
+				if m <= r.minutes + CHECK_HOURS * 60 then
+					count += 1
+				end
+			end
+			table.insert(ownedLater, count)
+			table.insert(titlesEnd, run.titlesAtEnd)
+		end
+	end
+	print(("Fin de partie : personnalisation complète (%d objets, %s FC Coins) %s h de jeu après la D1 (médiane)%s"):format(
+		#Cosmetics.List,
+		fmt(Cosmetics.TotalCost()),
+		fmt(median(endHours)),
+		if unfinished > 0 then (" · pas finie après %d sessions en D1 dans %d partie(s)"):format(profil.postSessions, unfinished) else ""
+	))
+	print(("Objets possédés %d h après la D1 : médiane %s / %d · titres de champion en fin de simulation : médiane %s"):format(
+		CHECK_HOURS,
+		fmt(median(ownedLater)),
+		#Cosmetics.List,
+		fmt(median(titlesEnd))
+	))
+	local h = median(endHours)
+	if h and h < MIN_ENDGAME_HOURS then
+		table.insert(problems, ("%s : tout est acheté %s h après la D1 (moins de %d h : plus rien à acheter)"):format(profil.label, fmt(h), MIN_ENDGAME_HOURS))
+	end
 
 	local incomes, baseIncomes, winRates, minEnergy, endCoins = {}, {}, {}, {}, {}
 	for _, run in runs do

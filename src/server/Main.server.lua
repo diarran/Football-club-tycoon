@@ -24,6 +24,7 @@ local TutorialService = require(Services.TutorialService)
 local BuildingService = require(Services.BuildingService)
 local SquadService = require(Services.SquadService)
 local MatchService = require(Services.MatchService)
+local CosmeticService = require(Services.CosmeticService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
 local ORDERED_SERVICES = {
@@ -34,6 +35,7 @@ local ORDERED_SERVICES = {
 	{ name = "BuildingService", module = BuildingService },
 	{ name = "SquadService", module = SquadService },
 	{ name = "MatchService", module = MatchService },
+	{ name = "CosmeticService", module = CosmeticService },
 }
 
 for _, entry in ORDERED_SERVICES do

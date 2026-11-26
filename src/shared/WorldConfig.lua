@@ -152,6 +152,10 @@ WorldConfig.LAYOUT = {
 	Academy = { x = -107, z = -74, footprint = Vector2.new(40, 22) }, -- centre de formation, à gauche de la boutique
 	VIP = { x = 30, z = -72, footprint = Vector2.new(30, 22) }, -- espace VIP, à droite de l'entrée, face au stade
 	Entrance = { x = 0, z = -96, footprint = Vector2.new(30, 4) },
+	-- Salle des trophées (toujours présente), entre la boutique et l'allée d'entrée.
+	TrophyRoom = { x = -23, z = -73, footprint = Vector2.new(26, 20) },
+	-- Statue achetée (Cosmetics), à droite de l'allée, devant l'espace VIP.
+	Statue = { x = 10, z = -74, footprint = Vector2.new(7, 7) },
 }
 
 -- Taille du terrain de la zone d'entraînement (clôture du niveau 3), centré sur LAYOUT.Training.

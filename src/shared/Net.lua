@@ -29,6 +29,8 @@ Net.Requests = {
 	"RequestRename", -- (newName: string)
 	"RequestTutorialStep", -- (stepId: string) étapes purement informatives (menu ouvert…)
 	"RequestLanguage", -- (lang: string) langue choisie dans les Paramètres ("fr" ou "en")
+	"RequestBuyCosmetic", -- (itemId: string) acheter un objet de personnalisation (Cosmetics)
+	"RequestEquipCosmetic", -- (category: string, itemId: string) porter un objet, ou "default"
 }
 
 -- Serveur -> client (notifications)
