@@ -15,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Audio = require(Shared.Audio)
 local Brand = require(Shared.Brand)
 local Community = require(Shared.Community)
 local Buildings = require(Shared.Buildings)
@@ -24,6 +25,7 @@ local Trophies = require(Shared.Trophies)
 local Divisions = require(Shared.Divisions)
 local Daily = require(Shared.Daily)
 local Leaderboard = require(Shared.Leaderboard)
+local Friends = require(Shared.Friends)
 local Locale = require(Shared.Locale)
 local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
@@ -75,7 +77,7 @@ local state = {
 	tournamentEndsAt = 0,
 	leaderboard = nil, -- classement mondial (LeaderboardService)
 	leaderboardBoard = "week", -- tableau affiché : week, club ou trophies
-	settings = { managementCamera = true, showTutorial = true },
+	settings = { managementCamera = true, showTutorial = true, volume = Audio.DEFAULT_VOLUME, music = true },
 }
 
 local gui, hud, crestBadge, panel, content, tabButtons, toast, resultPopup, welcomePopup
@@ -781,15 +783,31 @@ local function tournamentCard()
 	card(children).Parent = content
 end
 
+-- Club dirigé par un ami Roblox du joueur (liste calculée par le serveur).
+local function isFriendClub(profile, clubId: string): boolean
+	return profile.friends ~= nil and table.find(profile.friends.clubIds or {}, clubId) ~= nil
+end
+
 -- Défis reçus (accepter / refuser) et défi envoyé en attente.
 local function challengeCards()
 	for _, challenge in state.challenges.incoming do
 		card({
-			label(T("challenge.incomingTitle", { club = challenge.clubName, owner = challenge.ownerName }), {
-				Font = Enum.Font.GothamBold,
-				TextColor3 = COLORS.gold,
-			}),
-			label(T("challenge.incomingLine", { stake = challenge.stake }), { TextSize = 16 }),
+			label(
+				T(
+					if challenge.friendly then "friends.friendlyIncomingTitle" else "challenge.incomingTitle",
+					{ club = challenge.clubName, owner = challenge.ownerName }
+				),
+				{
+					Font = Enum.Font.GothamBold,
+					TextColor3 = COLORS.gold,
+				}
+			),
+			label(
+				if challenge.friendly
+					then T("friends.friendlyIncomingLine", { coins = Friends.FRIENDLY_BONUS })
+					else T("challenge.incomingLine", { stake = challenge.stake }),
+				{ TextSize = 16 }
+			),
 			buttonRow({
 				{
 					text = T("challenge.accept"),
@@ -905,7 +923,9 @@ function renderers.Matches(profile)
 	for _, club in state.clubs do
 		if club.id ~= myId then
 			card({
-				label(club.clubName, { Font = Enum.Font.GothamBold }),
+				label(club.clubName .. (if isFriendClub(profile, club.id) then "  · " .. T("friends.tag") else ""), {
+					Font = Enum.Font.GothamBold,
+				}),
 				label(T("matches.clubSubtitle", {
 					owner = club.ownerName,
 					division = divisionLabel(club.division),
@@ -984,6 +1004,50 @@ local function divisionTable(profile)
 	card(children).Parent = content
 end
 
+-- Fenêtre officielle de Roblox pour inviter des amis (elle attend le joueur).
+local function promptInvite()
+	task.spawn(function()
+		local SocialService = game:GetService("SocialService")
+		local ok, canSend = pcall(function()
+			return SocialService:CanSendGameInviteAsync(player)
+		end)
+		if not ok or canSend ~= true then
+			UIController.Notify(T("friends.cannotInvite"), "error")
+			return
+		end
+		local options = nil
+		pcall(function()
+			options = Instance.new("ExperienceInviteOptions")
+			options.PromptMessage = T("friends.invitePrompt")
+		end)
+		pcall(function()
+			SocialService:PromptGameInvite(player, options)
+		end)
+	end)
+end
+
+-- Carte « Amis » : invitation, primes de parrainage, matchs amicaux du jour.
+local function friendsCard(profile)
+	local friends = profile.friends or { clubIds = {}, friendlyLeft = Friends.FRIENDLY_BONUS_PER_DAY, rewardsGiven = 0 }
+	card({
+		label(T("friends.title"), { Font = Enum.Font.GothamBold }),
+		label(
+			T("friends.inviteHelp", { coins = formatCoins(Friends.INVITER_REWARD), welcome = formatCoins(Friends.INVITEE_WELCOME) }),
+			{ TextColor3 = COLORS.muted, TextSize = 16 }
+		),
+		label(T("friends.invitedCount", { count = friends.rewardsGiven, max = Friends.MAX_INVITER_REWARDS }), {
+			TextSize = 16,
+		}),
+		label(T("friends.friendlyLeft", {
+			count = friends.friendlyLeft,
+			max = Friends.FRIENDLY_BONUS_PER_DAY,
+			coins = Friends.FRIENDLY_BONUS,
+		}), { TextSize = 16 }),
+		button(T("friends.invite"), promptInvite, { Name = "InviteButton", Size = UDim2.new(1, 0, 0, 44) }),
+	}).Parent =
+		content
+end
+
 -- Classement mondial : tous les serveurs (ou ce serveur seulement en mode test).
 local function globalLeaderboardCard(profile)
 	local lb = state.leaderboard
@@ -1053,6 +1117,7 @@ end
 
 function renderers.Ranking(profile)
 	globalLeaderboardCard(profile)
+	friendsCard(profile)
 	divisionTable(profile)
 	label(T("ranking.serverTitle"), { Font = Enum.Font.GothamBold }).Parent = content
 	if #state.clubs == 0 then
@@ -1061,8 +1126,20 @@ function renderers.Ranking(profile)
 	end
 	local myId = "player:" .. player.UserId
 	for rank, club in state.clubs do
+		local friend = isFriendClub(profile, club.id)
+		local friendRow = nil
+		if friend then
+			friendRow = buttonRow({
+				{
+					text = T("friends.friendlyButton"),
+					onClick = function()
+						Net.Get("RequestChallenge"):FireServer(club.id, 0)
+					end,
+				},
+			})
+		end
 		card({
-			label(("%d. %s"):format(rank, club.clubName), {
+			label(("%d. %s"):format(rank, club.clubName) .. (if friend then "  · " .. T("friends.tag") else ""), {
 				Font = Enum.Font.GothamBold,
 				TextColor3 = if club.id == myId then COLORS.gold else COLORS.text,
 			}),
@@ -1078,6 +1155,7 @@ function renderers.Ranking(profile)
 				{ TextColor3 = COLORS.muted, TextSize = 16 }
 			),
 			label(T("ranking.trophies", { count = club.trophies or 0 }), { TextColor3 = COLORS.gold, TextSize = 16 }),
+			friendRow,
 		}).Parent =
 			content
 	end
@@ -1218,6 +1296,36 @@ function renderers.Prestige(profile)
 	end
 end
 
+-- Son : volume général par paliers (0 = muet) et musique de fond.
+local function renderSoundSettings(toggle)
+	local row = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, {
+		create("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			Padding = UDim.new(0, 6),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	})
+	local steps = #Audio.VOLUME_STEPS
+	for index, value in Audio.VOLUME_STEPS do
+		local selected = math.abs((state.settings.volume or 0) - value) < 0.01
+		button(if value == 0 then T("settings.mute") else ("%d%%"):format(math.floor(value * 100 + 0.5)), function()
+			state.settings.volume = value
+			if UIController.OnSettingChanged then
+				UIController.OnSettingChanged("volume", value)
+			end
+			UIController.Refresh()
+		end, {
+			Name = "Volume_" .. index,
+			LayoutOrder = index,
+			Size = UDim2.new(1 / steps, -6, 0, 44),
+			BackgroundColor3 = if selected then COLORS.accent else COLORS.disabled,
+			Parent = row,
+		})
+	end
+	card({ label(T("settings.volume"), { Font = Enum.Font.GothamBold }), row }).Parent = content
+	toggle("music", T("settings.music"))
+end
+
 function renderers.Settings(profile)
 	local function toggle(settingId: string, text: string)
 		local value = state.settings[settingId]
@@ -1235,6 +1343,7 @@ function renderers.Settings(profile)
 	end
 	toggle("managementCamera", T("settings.managementCamera"))
 	toggle("showTutorial", T("settings.showTutorial"))
+	renderSoundSettings(toggle)
 
 	-- Langue : un bouton par langue gérée, celle en cours en surbrillance.
 	local current = Locale.ForPlayer(player)
@@ -1765,9 +1874,16 @@ function UIController.ShowMatchResult(result)
 			if change > 0
 				then T("challenge.resultWon", { coins = formatCoins(change) })
 				elseif change < 0 then T("challenge.resultLost", { coins = formatCoins(-change) })
+				elseif result.friendly then T("friends.friendlyResult")
 				else T("challenge.resultDraw"),
 			{ TextColor3 = COLORS.gold, TextXAlignment = Enum.TextXAlignment.Center }
 		))
+		if (result.friendlyBonus or 0) > 0 then
+			add(label(T("friends.friendlyBonus", { coins = formatCoins(result.friendlyBonus) }), {
+				TextColor3 = COLORS.accent,
+				TextXAlignment = Enum.TextXAlignment.Center,
+			}))
+		end
 		add(button(T("result.continue"), function()
 			resultPopup.Visible = false
 		end))

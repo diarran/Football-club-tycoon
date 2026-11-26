@@ -91,6 +91,9 @@ local function defaultData()
 		admin = { unlimited = false, savedCoins = 0 },
 		-- Groupe Roblox (CommunityService) : bonus unique déjà reçu ?
 		community = { groupRewardClaimed = false },
+		-- Amis (FriendService) : bonus de bienvenue reçu, amis déjà comptés
+		-- pour la prime d'invitation ({ ["UserId"] = true }), matchs amicaux du jour.
+		friends = { welcomeClaimed = false, referred = {}, rewardsGiven = 0, friendlyDay = -1, friendlyCount = 0 },
 		tutorial = { step = 1, completed = false },
 		-- Objectifs quotidiens et saisons (DailyService, shared/Daily.lua).
 		-- Le jour de la création, le solde de départ tient lieu de cadeau du jour 1.

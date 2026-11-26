@@ -9,6 +9,9 @@
 	  on déplace seulement les pièces, et uniquement pendant le replay.
 	- Le joueur hôte a la caméra de match, « Passer » et le mode accéléré ;
 	  les visiteurs proches voient le match se jouer et le tableau d'affichage.
+	- À chaque but : confettis aux couleurs de l'équipe derrière le but, public
+	  debout, bannière qui pulse, légère secousse de la caméra (hôte) et sons
+	  (via les rappels OnStart / OnGoal / OnEnd branchés par Main.client.lua).
 ]]
 
 local Players = game:GetService("Players")
@@ -23,6 +26,14 @@ local WorldConfig = require(Shared:WaitForChild("WorldConfig"))
 local player = Players.LocalPlayer
 
 local MatchReplayController = {}
+
+-- Rappels branchés par Main.client.lua (sons de l'ambiance).
+MatchReplayController.OnStart = nil -- function(crowdLevel, spectator)
+MatchReplayController.OnGoal = nil -- function(side, spectator)
+MatchReplayController.OnEnd = nil -- function()
+
+local CONFETTI_HOST = 60 -- particules par but (hôte)
+local CONFETTI_SPECTATOR = 30 -- moins pour un match de voisin
 
 local HALF_L = WorldConfig.PITCH_SIZE.X / 2 -- 50 studs
 local HALF_W = WorldConfig.PITCH_SIZE.Y / 2 -- 32 studs
@@ -110,6 +121,27 @@ local function getPool()
 	boardLabel.Text = ""
 	boardLabel.Parent = billboard
 	pool.board, pool.boardLabel = board, boardLabel
+	-- Confettis : un canon invisible derrière chaque but, éteint hors des buts.
+	pool.confetti = {}
+	for _, side in { "home", "away" } do
+		local cannon = newPart(folder, "ReplayConfetti", Vector3.new(1, 1, 1))
+		cannon.Transparency = 1
+		local emitter = Instance.new("ParticleEmitter")
+		emitter.Name = "Confetti"
+		emitter.Enabled = false
+		emitter.Rate = 0
+		emitter.EmissionDirection = Enum.NormalId.Top
+		emitter.Lifetime = NumberRange.new(1.6, 2.6)
+		emitter.Speed = NumberRange.new(20, 30)
+		emitter.SpreadAngle = Vector2.new(40, 40)
+		emitter.Acceleration = Vector3.new(0, -14, 0)
+		emitter.Drag = 1.5
+		emitter.Size = NumberSequence.new(0.45)
+		emitter.RotSpeed = NumberRange.new(-180, 180)
+		emitter.LightEmission = 0.2
+		emitter.Parent = cannon
+		pool.confetti[side] = { part = cannon, emitter = emitter }
+	end
 	return pool
 end
 
@@ -336,6 +368,11 @@ local function updateTexts(state)
 		state.bannerText = T("replay.goal", { scorer = scorer, minute = state.lastAction and state.lastAction.minute or minute })
 		state.bannerUntil = state.t + 2.5
 		state.bannerFrom = nil
+		state.goalBannerUntil = state.t + 2.5
+		state.shakeUntil = state.t + 0.6
+		local side = (state.lastAction and state.lastAction.side) or (if home > (state.lastHome or 0) then "home" else "away")
+		state.lastHome = home
+		MatchReplayController.GoalEffects(state, side)
 	end
 	if state.hud then
 		local showBanner = state.bannerUntil and state.t < state.bannerUntil and state.t >= (state.bannerFrom or -1)
@@ -343,6 +380,12 @@ local function updateTexts(state)
 		if showBanner then
 			state.hud.banner.Text = state.bannerText
 		end
+		-- La bannière « BUT ! » pulse pendant la célébration.
+		local scale = 1
+		if showBanner and state.goalBannerUntil and state.t < state.goalBannerUntil then
+			scale = 1 + 0.12 * math.abs(math.sin(state.t * 8))
+		end
+		state.hud.banner.Size = UDim2.new(0, math.floor(520 * scale), 0, math.floor(56 * scale))
 	end
 end
 
@@ -438,7 +481,11 @@ local function step(dt: number)
 	-- Caméra de match (hôte) : vue haute depuis le côté entrée, qui suit le ballon.
 	if state.camera then
 		state.camX = state.camX + (bx * 0.6 - state.camX) * math.min(1, dt * 2)
-		local eye = state.origin * Vector3.new(state.camX, 34, -HALF_W - 34)
+		local shake = 0
+		if state.shakeUntil and state.t < state.shakeUntil then
+			shake = math.sin(state.t * 60) * 0.35 * (state.shakeUntil - state.t) / 0.6
+		end
+		local eye = state.origin * Vector3.new(state.camX + shake, 34 + shake, -HALF_W - 34)
 		local focus = state.origin * Vector3.new(state.camX + (bx - state.camX) * 0.5, 0, bz * 0.4)
 		state.camera.CFrame = CFrame.lookAt(eye, focus)
 	end
@@ -455,6 +502,9 @@ local function finish(callDone: boolean)
 		connection = nil
 	end
 	state.pool.folder.Parent = nil
+	if MatchReplayController.OnEnd then
+		pcall(MatchReplayController.OnEnd)
+	end
 	if state.hud then
 		state.hud.gui.Enabled = false
 	end
@@ -546,8 +596,23 @@ function MatchReplayController.Play(replay, options): boolean
 				state.camera.CameraType = Enum.CameraType.Scriptable
 			end
 		end
+		for side, cannon in p.confetti do
+			local x = (HALF_L + 2) * (if side == "home" then 1 else -1)
+			cannon.part.CFrame = origin * CFrame.new(x, TURF_Y + 0.5, 0)
+			local color = if side == "home" then state.homeColor else state.awayColor
+			pcall(function()
+				cannon.emitter.Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, color),
+					ColorSequenceKeypoint.new(0.5, Color3.new(1, 1, 1)),
+					ColorSequenceKeypoint.new(1, color),
+				})
+			end)
+		end
 		p.folder.Parent = workspace
 		active = state
+		if MatchReplayController.OnStart then
+			pcall(MatchReplayController.OnStart, replay.crowdLevel, state.spectator)
+		end
 		step(0)
 	end)
 	if not ok then
@@ -568,6 +633,21 @@ function MatchReplayController.Play(replay, options): boolean
 		end)
 	end
 	return true
+end
+
+-- Effets d'un but : confettis derrière le but marqué, puis rappel (sons).
+-- side = équipe qui marque ("home" tire vers +X, "away" vers -X).
+function MatchReplayController.GoalEffects(state, side: string)
+	state.goals = (state.goals or 0) + 1
+	local cannon = state.pool.confetti and state.pool.confetti[side]
+	if cannon then
+		pcall(function()
+			cannon.emitter:Emit(if state.spectator then CONFETTI_SPECTATOR else CONFETTI_HOST)
+		end)
+	end
+	if MatchReplayController.OnGoal then
+		pcall(MatchReplayController.OnGoal, side, state.spectator)
+	end
 end
 
 -- Termine le replay tout de suite (bouton « Passer », ou fin normale).
@@ -605,7 +685,7 @@ function MatchReplayController.Debug()
 		return nil
 	end
 	local home, away = MatchReplay.ScoreAt(active.timeline, active.t)
-	return { t = active.t, home = home, away = away, fans = #active.fans, speed = active.speed }
+	return { t = active.t, home = home, away = away, fans = #active.fans, speed = active.speed, goals = active.goals or 0 }
 end
 
 return MatchReplayController
