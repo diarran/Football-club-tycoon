@@ -19,11 +19,17 @@ local Brand = require(Shared.Brand)
 local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
 local Divisions = require(Shared.Divisions)
+local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
 local WorldConfig = require(Shared.WorldConfig)
 
 local player = Players.LocalPlayer
+
+-- Texte dans la langue du joueur (voir Locale : français ou anglais).
+local function T(key: string, params: { [string]: any }?): string
+	return Locale.T(Locale.ForPlayer(player), key, params)
+end
 
 local UIController = {}
 
@@ -33,6 +39,7 @@ UIController.OnMenuClosed = nil -- function()
 UIController.OnTabOpened = nil -- function(tabId)
 UIController.OnMatchResultClosed = nil -- function()
 UIController.OnSettingChanged = nil -- function(settingId, value)
+UIController.OnLanguageChanged = nil -- function(lang)
 
 local COLORS = {
 	background = Color3.fromRGB(18, 24, 38),
@@ -47,14 +54,8 @@ local COLORS = {
 	disabled = Color3.fromRGB(80, 86, 100),
 }
 
-local TABS = {
-	{ id = "Home", label = "Accueil" },
-	{ id = "Stadium", label = "Stade" },
-	{ id = "Squad", label = "Effectif" },
-	{ id = "Matches", label = "Matchs" },
-	{ id = "Ranking", label = "Classement" },
-	{ id = "Settings", label = "Paramètres" },
-}
+-- Nom affiché : clé « tab.<id> » de Locale.
+local TABS = { "Home", "Stadium", "Squad", "Matches", "Ranking", "Settings" }
 
 local state = {
 	profile = nil,
@@ -129,7 +130,14 @@ local function button(text: string, onClick, props)
 	for key, value in props or {} do
 		base[key] = value
 	end
-	local instance = create("TextButton", base, { corner(8) })
+	-- Le texte rétrécit s'il est trop long (langues plus longues, petits écrans),
+	-- sans dépasser sa taille normale.
+	base.TextScaled = true
+	local instance = create("TextButton", base, {
+		corner(8),
+		create("UITextSizeConstraint", { MaxTextSize = base.TextSize, MinTextSize = 10 }),
+		create("UIPadding", { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6) }),
+	})
 	instance.Activated:Connect(onClick)
 	return instance
 end
@@ -155,7 +163,7 @@ end
 
 local function divisionLabel(id: string): string
 	local division = Divisions.Get(id)
-	return division and division.label or id
+	return division and T("division.label", { tier = division.tier }) or id
 end
 
 local function clearContent()
@@ -174,8 +182,8 @@ function renderers.Home(profile)
 	local club = profile.club
 	local division = Divisions.Get(club.division)
 	local progress = if division and division.pointsToPromote
-		then ("%d / %d points pour monter"):format(club.divisionPoints, division.pointsToPromote)
-		else "Division la plus haute du MVP atteinte !"
+		then T("home.pointsToPromote", { points = club.divisionPoints, needed = division.pointsToPromote })
+		else T("home.topDivision")
 	local stats = club.stats
 
 	-- Logo du jeu en tête de l'accueil (image importée si disponible, sinon titre).
@@ -203,17 +211,17 @@ function renderers.Home(profile)
 		label(club.name, { Font = Enum.Font.GothamBold, TextSize = 24 }),
 		label(divisionLabel(club.division) .. " · " .. progress, { TextColor3 = COLORS.muted }),
 		label(
-			"Solde : " .. formatCoins(profile.coins),
+			T("home.balance", { coins = formatCoins(profile.coins) }),
 			{ TextColor3 = COLORS.gold, Font = Enum.Font.GothamBold }
 		),
 		label(
-			("Bilan : %d matchs · %d V · %d N · %d D · %d buts marqués"):format(
-				stats.played,
-				stats.wins,
-				stats.draws,
-				stats.losses,
-				stats.goalsFor
-			),
+			T("home.record", {
+				played = stats.played,
+				wins = stats.wins,
+				draws = stats.draws,
+				losses = stats.losses,
+				goals = stats.goalsFor,
+			}),
 			{ TextColor3 = COLORS.muted }
 		),
 	}).Parent =
@@ -223,18 +231,18 @@ function renderers.Home(profile)
 		BackgroundColor3 = COLORS.panel,
 		ClearTextOnFocus = false,
 		Font = Enum.Font.Gotham,
-		PlaceholderText = "Nouveau nom du club",
+		PlaceholderText = T("home.newNamePlaceholder"),
 		Text = "",
 		TextColor3 = COLORS.text,
 		TextSize = 18,
 		Size = UDim2.new(1, -170, 0, 44),
 	}, { corner(8) })
-	local renameButton = button("Renommer", function()
+	local renameButton = button(T("home.rename"), function()
 		Net.Get("RequestRename"):FireServer(nameBox.Text)
 	end, { Position = UDim2.new(1, -160, 0, 0) })
 
 	card({
-		label("Nom du club", { Font = Enum.Font.GothamBold }),
+		label(T("home.clubNameTitle"), { Font = Enum.Font.GothamBold }),
 		create(
 			"Frame",
 			{ BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) },
@@ -252,21 +260,21 @@ function renderers.Stadium(profile)
 		local action
 		if cost then
 			local affordable = profile.coins >= cost
-			action = button("Améliorer · " .. formatCoins(cost), function()
+			action = button(T("stadium.upgrade", { cost = formatCoins(cost) }), function()
 				Net.Get("RequestUpgrade"):FireServer(def.id)
 			end, {
 				Size = UDim2.new(0, 240, 0, 44),
 				BackgroundColor3 = if affordable then COLORS.accent else COLORS.disabled,
 			})
 		else
-			action = label("Niveau maximum", { TextColor3 = COLORS.gold })
+			action = label(T("stadium.maxLevel"), { TextColor3 = COLORS.gold })
 		end
 		card({
 			label(
-				("%s · niveau %d / %d"):format(def.label, level, maxLevel),
+				T("stadium.levelLine", { name = T("building." .. def.id .. ".label"), level = level, max = maxLevel }),
 				{ Font = Enum.Font.GothamBold }
 			),
-			label(def.description, { TextColor3 = COLORS.muted, TextSize = 16 }),
+			label(T("building." .. def.id .. ".description"), { TextColor3 = COLORS.muted, TextSize = 16 }),
 			action,
 		}).Parent =
 			content
@@ -278,12 +286,12 @@ function renderers.Squad(profile)
 	local full = #squad >= Config.MAX_SQUAD_SIZE
 	card({
 		label(
-			("Effectif : %d / %d joueurs"):format(#squad, Config.MAX_SQUAD_SIZE),
+			T("squad.count", { count = #squad, max = Config.MAX_SQUAD_SIZE }),
 			{ Font = Enum.Font.GothamBold }
 		),
 		if full
-			then label("Effectif complet.", { TextColor3 = COLORS.muted })
-			else button("Recruter · " .. formatCoins(PlayerConfig.RECRUIT_COST), function()
+			then label(T("squad.full"), { TextColor3 = COLORS.muted })
+			else button(T("squad.recruit", { cost = formatCoins(PlayerConfig.RECRUIT_COST) }), function()
 				Net.Get("RequestRecruit"):FireServer()
 			end, {
 				Size = UDim2.new(0, 240, 0, 44),
@@ -295,17 +303,19 @@ function renderers.Squad(profile)
 		content
 
 	for _, footballer in squad do
-		local position = PlayerConfig.Positions[footballer.position]
+		local position = if PlayerConfig.Positions[footballer.position]
+			then T("position." .. footballer.position)
+			else footballer.position
 		card({
 			label(footballer.name, { Font = Enum.Font.GothamBold }),
 			label(
-				("%s · %d ans · Note %d · Potentiel %d · Énergie %d%%"):format(
-					position and position.label or footballer.position,
-					footballer.age,
-					footballer.rating,
-					footballer.potential,
-					math.floor(footballer.energy)
-				),
+				T("squad.playerLine", {
+					position = position,
+					age = footballer.age,
+					rating = footballer.rating,
+					potential = footballer.potential,
+					energy = math.floor(footballer.energy),
+				}),
 				{ TextColor3 = COLORS.muted, TextSize = 16 }
 			),
 		}).Parent =
@@ -323,9 +333,8 @@ function renderers.Matches(profile)
 		}),
 	})
 	for index, tacticId in { "Defensive", "Balanced", "Offensive" } do
-		local tactic = Config.Tactics[tacticId]
 		local selected = state.selectedTactic == tacticId
-		button(tactic.label, function()
+		button(T("tactic." .. tacticId), function()
 			state.selectedTactic = tacticId
 			UIController.Refresh()
 		end, {
@@ -335,11 +344,11 @@ function renderers.Matches(profile)
 		}).Parent =
 			tacticRow
 	end
-	card({ label("Tactique", { Font = Enum.Font.GothamBold }), tacticRow }).Parent = content
+	card({ label(T("matches.tactic"), { Font = Enum.Font.GothamBold }), tacticRow }).Parent = content
 
 	local cooldown = math.max(0, math.ceil(state.cooldownEndsAt - os.clock()))
 	if cooldown > 0 then
-		card({ label(("Prochain match possible dans %d s."):format(cooldown), { TextColor3 = COLORS.gold }) }).Parent =
+		card({ label(T("matches.cooldown", { seconds = cooldown }), { TextColor3 = COLORS.gold }) }).Parent =
 			content
 	end
 
@@ -347,7 +356,7 @@ function renderers.Matches(profile)
 		card({
 			label(title, { Font = Enum.Font.GothamBold }),
 			label(subtitle, { TextColor3 = COLORS.muted, TextSize = 16 }),
-			button("Jouer", function()
+			button(T("matches.play"), function()
 				Net.Get("RequestMatch"):FireServer(opponentId, state.selectedTactic)
 			end, { BackgroundColor3 = if cooldown > 0 then COLORS.disabled else COLORS.accent }),
 		}).Parent =
@@ -356,8 +365,8 @@ function renderers.Matches(profile)
 
 	local division = Divisions.Get(profile.club.division)
 	opponentCard(
-		"Club amical",
-		("Adversaire généré · %s · note ~%d"):format(division.label, division.opponentRating),
+		T("matches.friendly"),
+		T("matches.aiSubtitle", { division = divisionLabel(division.id), rating = division.opponentRating }),
 		"ai"
 	)
 	local myId = "player:" .. player.UserId
@@ -365,12 +374,12 @@ function renderers.Matches(profile)
 		if club.id ~= myId then
 			opponentCard(
 				club.clubName,
-				("%s · %s · note %d · %d joueurs"):format(
-					club.ownerName,
-					divisionLabel(club.division),
-					club.rating,
-					club.squadSize
-				),
+				T("matches.clubSubtitle", {
+					owner = club.ownerName,
+					division = divisionLabel(club.division),
+					rating = club.rating,
+					count = club.squadSize,
+				}),
 				club.id
 			)
 		end
@@ -379,7 +388,7 @@ end
 
 function renderers.Ranking(_profile)
 	if #state.clubs == 0 then
-		card({ label("Aucun club sur le serveur.") }).Parent = content
+		card({ label(T("ranking.empty")) }).Parent = content
 		return
 	end
 	local myId = "player:" .. player.UserId
@@ -390,14 +399,14 @@ function renderers.Ranking(_profile)
 				TextColor3 = if club.id == myId then COLORS.gold else COLORS.text,
 			}),
 			label(
-				("%s · %d pts · %d V %d N %d D · dirigé par %s"):format(
-					divisionLabel(club.division),
-					club.divisionPoints,
-					club.stats.wins,
-					club.stats.draws,
-					club.stats.losses,
-					club.ownerName
-				),
+				T("ranking.line", {
+					division = divisionLabel(club.division),
+					points = club.divisionPoints,
+					wins = club.stats.wins,
+					draws = club.stats.draws,
+					losses = club.stats.losses,
+					owner = club.ownerName,
+				}),
 				{ TextColor3 = COLORS.muted, TextSize = 16 }
 			),
 		}).Parent =
@@ -410,7 +419,7 @@ function renderers.Settings(_profile)
 		local value = state.settings[settingId]
 		card({
 			label(text, { Font = Enum.Font.GothamBold }),
-			button(if value then "Activé" else "Désactivé", function()
+			button(if value then T("settings.on") else T("settings.off"), function()
 				state.settings[settingId] = not state.settings[settingId]
 				if UIController.OnSettingChanged then
 					UIController.OnSettingChanged(settingId, state.settings[settingId])
@@ -420,8 +429,29 @@ function renderers.Settings(_profile)
 		}).Parent =
 			content
 	end
-	toggle("managementCamera", "Vue du club quand le menu est ouvert")
-	toggle("showTutorial", "Afficher le tutoriel")
+	toggle("managementCamera", T("settings.managementCamera"))
+	toggle("showTutorial", T("settings.showTutorial"))
+
+	-- Langue : un bouton par langue gérée, celle en cours en surbrillance.
+	local current = Locale.ForPlayer(player)
+	local row = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, {
+		create("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			Padding = UDim.new(0, 8),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	})
+	for index, lang in Locale.SUPPORTED do
+		button(Locale.NativeNames[lang], function()
+			UIController.SetLanguage(lang)
+		end, {
+			Name = "Language_" .. lang,
+			LayoutOrder = index,
+			BackgroundColor3 = if lang == current then COLORS.accent else COLORS.disabled,
+			Parent = row,
+		})
+	end
+	card({ label(T("settings.language"), { Font = Enum.Font.GothamBold }), row }).Parent = content
 end
 
 -- Construction de l'interface -------------------------------------------
@@ -487,7 +517,7 @@ local function buildHud()
 		corner(10),
 		padding(10),
 		create("UIListLayout", { Padding = UDim.new(0, 2), SortOrder = Enum.SortOrder.LayoutOrder }),
-		label("Chargement du club…", { Name = "ClubName", Font = Enum.Font.GothamBold, LayoutOrder = 1 }),
+		label(T("hud.loadingClub"), { Name = "ClubName", Font = Enum.Font.GothamBold, LayoutOrder = 1 }),
 		label("", { Name = "Division", TextColor3 = COLORS.muted, TextSize = 16, LayoutOrder = 2 }),
 		label("", {
 			Name = "Coins",
@@ -498,7 +528,7 @@ local function buildHud()
 		}),
 	})
 
-	button("Club", function()
+	button(T("hud.menuButton"), function()
 		UIController.SetMenuOpen(not panel.Visible)
 	end, {
 		Name = "MenuButton",
@@ -542,9 +572,9 @@ local function buildPanel()
 		}),
 	})
 	tabButtons = {}
-	for index, tab in TABS do
-		tabButtons[tab.id] = button(tab.label, function()
-			UIController.OpenTab(tab.id)
+	for index, tabId in TABS do
+		tabButtons[tabId] = button(T("tab." .. tabId), function()
+			UIController.OpenTab(tabId)
 		end, { LayoutOrder = index, Size = UDim2.fromOffset(120, 44), TextSize = 16, Parent = tabBar })
 	end
 
@@ -674,12 +704,31 @@ function UIController.OpenTab(tabId: string)
 	end
 end
 
+-- Change la langue de l'interface (Paramètres). Le serveur l'enregistre aussi
+-- sur le joueur pour que ses messages suivent la même langue.
+function UIController.SetLanguage(lang: string)
+	if not Locale.IsSupported(lang) then
+		return
+	end
+	player:SetAttribute("Language", lang)
+	Net.Get("RequestLanguage"):FireServer(lang)
+	UIController.Refresh()
+	if UIController.OnLanguageChanged then
+		UIController.OnLanguageChanged(lang)
+	end
+end
+
 function UIController.Refresh()
 	local profile = state.profile
+	-- Textes fixes (boutons du HUD et onglets), dans la langue en cours.
+	gui.MenuButton.Text = T("hud.menuButton")
+	for tabId, tabButton in tabButtons do
+		tabButton.Text = T("tab." .. tabId)
+	end
 	if profile then
-		hud.ClubName.Text = profile.club.name or "Mon club"
+		hud.ClubName.Text = profile.club.name or T("hud.myClub")
 		hud.Division.Text = divisionLabel(profile.club.division)
-			.. (if profile.temporary then " · mode test" else "")
+			.. (if profile.temporary then " · " .. T("hud.testMode") else "")
 		hud.Coins.Text = formatCoins(profile.coins)
 		refreshCrestBadge(profile)
 	end
@@ -688,7 +737,7 @@ function UIController.Refresh()
 	end
 	clearContent()
 	if not profile then
-		label("Chargement…").Parent = content
+		label(T("hud.loading")).Parent = content
 		return
 	end
 	local renderer = renderers[currentTab]
@@ -736,7 +785,7 @@ function UIController.ShowMatchResult(result)
 			child:Destroy()
 		end
 	end
-	local outcomeText = ({ Win = "Victoire !", Draw = "Match nul", Loss = "Défaite" })[result.outcome]
+	local outcomeText = T("result." .. tostring(result.outcome))
 	local order = 0
 	local function add(instance)
 		order += 1
@@ -773,27 +822,27 @@ function UIController.ShowMatchResult(result)
 	local rewards = result.rewards
 	add(
 		label(
-			("Récompenses : %s (match %d + billetterie %d + sponsors %d)"):format(
-				formatCoins(rewards.total),
-				rewards.match,
-				rewards.tickets,
-				rewards.sponsor
-			),
+			T("result.rewards", {
+				total = formatCoins(rewards.total),
+				match = rewards.match,
+				tickets = rewards.tickets,
+				sponsor = rewards.sponsor,
+			}),
 			{ TextColor3 = COLORS.gold, TextXAlignment = Enum.TextXAlignment.Center }
 		)
 	)
 	if result.promoted then
-		add(label(("Montée ! Bienvenue en %s."):format(divisionLabel(result.division)), {
+		add(label(T("result.promoted", { division = divisionLabel(result.division) }), {
 			Font = Enum.Font.GothamBold,
 			TextColor3 = COLORS.gold,
 			TextXAlignment = Enum.TextXAlignment.Center,
 		}))
 	else
 		add(
-			label(("%s · %d points"):format(divisionLabel(result.division), result.divisionPoints), centered)
+			label(T("result.points", { division = divisionLabel(result.division), points = result.divisionPoints }), centered)
 		)
 	end
-	add(button("Continuer", function()
+	add(button(T("result.continue"), function()
 		resultPopup.Visible = false
 		if UIController.OnMatchResultClosed then
 			UIController.OnMatchResultClosed()

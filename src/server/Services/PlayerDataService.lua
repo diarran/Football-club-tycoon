@@ -22,6 +22,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared.Config)
 local Buildings = require(Shared.Buildings)
 local Divisions = require(Shared.Divisions)
+local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 
 local PlayerDataService = {}
@@ -256,9 +257,9 @@ function PlayerDataService.Load(player: Player)
 
 	if not data then
 		if reason == "locked" then
-			player:Kick("Ta partie est encore ouverte sur un autre serveur. Réessaie dans une minute.")
+			player:Kick(Locale.TP(player, "kick.sessionLocked"))
 		elseif reason == "datastore" then
-			player:Kick("Impossible de charger ta progression pour le moment. Réessaie dans un instant.")
+			player:Kick(Locale.TP(player, "kick.loadFailed"))
 		end
 		return nil
 	end

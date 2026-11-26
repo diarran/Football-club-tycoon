@@ -31,10 +31,11 @@ Config.HOME_ADVANTAGE = 3 -- points de note ajoutés au club hôte
 Config.ENERGY_COST_PER_MATCH = 10
 Config.ENERGY_RECOVERY_PER_MINUTE = 8
 
+-- Nom affiché : clé « tactic.<id> » de Locale.
 Config.Tactics = {
-	Balanced = { label = "Équilibrée", attack = 0, defense = 0 },
-	Offensive = { label = "Offensive", attack = 4, defense = -3 },
-	Defensive = { label = "Défensive", attack = -3, defense = 4 },
+	Balanced = { attack = 0, defense = 0 },
+	Offensive = { attack = 4, defense = -3 },
+	Defensive = { attack = -3, defense = 4 },
 }
 Config.DEFAULT_TACTIC = "Balanced"
 

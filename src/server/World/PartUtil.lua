@@ -10,6 +10,9 @@
 	Toutes les Parts créées sont ancrées (Anchored = true).
 ]]
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Locale = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Locale"))
+
 local PartUtil = {}
 
 export type BoxOptions = {
@@ -193,12 +196,15 @@ function PartUtil.arc(
 end
 
 -- Ajoute un texte (SurfaceGui + TextLabel) sur une face d'une Part.
+-- `text` peut être une clé de Locale (ex. "world.offices") : le texte est alors
+-- traduit dans la langue de chaque joueur (params remplit les {noms}).
 function PartUtil.label(
 	part: BasePart,
 	face: Enum.NormalId,
 	text: string,
 	textColor: Color3,
-	backgroundColor: Color3?
+	backgroundColor: Color3?,
+	params: { [string]: any }?
 ): TextLabel
 	local gui = Instance.new("SurfaceGui")
 	gui.Name = "Label" .. face.Name
@@ -214,7 +220,11 @@ function PartUtil.label(
 	label.BackgroundTransparency = if backgroundColor then 0 else 1
 	label.BackgroundColor3 = backgroundColor or Color3.new(0, 0, 0)
 	label.BorderSizePixel = 0
-	label.Text = text
+	if Locale.Strings[Locale.DEFAULT][text] then
+		Locale.Tag(label, text, params)
+	else
+		label.Text = text
+	end
 	label.TextColor3 = textColor
 	label.TextScaled = true
 	label.Font = Enum.Font.GothamBold

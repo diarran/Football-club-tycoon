@@ -85,9 +85,9 @@ local function slotSign(parent: Instance, slotCFrame: CFrame, index: number)
 		C.SignBack,
 		Enum.Material.SmoothPlastic
 	)
-	local text = "TERRAIN " .. index
-	PartUtil.label(panel, Enum.NormalId.Front, text, C.SignText)
-	PartUtil.label(panel, Enum.NormalId.Back, text, C.SignText)
+	local params = { index = index }
+	PartUtil.label(panel, Enum.NormalId.Front, "world.plot", C.SignText, nil, params)
+	PartUtil.label(panel, Enum.NormalId.Back, "world.plot", C.SignText, nil, params)
 end
 
 -- Construit le quartier sous `parent` et renvoie son Model.

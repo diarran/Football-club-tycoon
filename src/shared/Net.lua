@@ -25,6 +25,7 @@ Net.Requests = {
 	"RequestMatch", -- (opponentId: string, tactic: string)
 	"RequestRename", -- (newName: string)
 	"RequestTutorialStep", -- (stepId: string) étapes purement informatives (menu ouvert…)
+	"RequestLanguage", -- (lang: string) langue choisie dans les Paramètres ("fr" ou "en")
 }
 
 -- Serveur -> client (notifications)

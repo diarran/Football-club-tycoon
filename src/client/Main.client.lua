@@ -13,10 +13,12 @@ local Controllers = script.Parent:WaitForChild("Controllers")
 local UIController = require(Controllers.UIController)
 local CameraController = require(Controllers.CameraController)
 local TutorialController = require(Controllers.TutorialController)
+local WorldTextController = require(Controllers.WorldTextController)
 
 UIController.Init()
 CameraController.Init()
 TutorialController.Init(UIController.GetScreenGui())
+WorldTextController.Init()
 
 -- Liens entre les contrôleurs ---------------------------------------------
 
@@ -45,6 +47,11 @@ UIController.OnSettingChanged = function(settingId, value)
 	elseif settingId == "showTutorial" then
 		TutorialController.SetVisible(value)
 	end
+end
+
+UIController.OnLanguageChanged = function()
+	TutorialController.RefreshLanguage()
+	WorldTextController.RefreshAll()
 end
 
 -- Messages du serveur ------------------------------------------------------

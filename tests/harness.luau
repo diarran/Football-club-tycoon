@@ -446,8 +446,10 @@ function H.leave(player)
 end
 
 -- Connexion d'un joueur (PlayerAdded, puis chargement du profil).
-function H.join(userId: number, name: string?)
+-- localeId : langue du compte Roblox (par défaut "fr-fr" : les tests vérifient les textes français).
+function H.join(userId: number, name: string?, localeId: string?)
 	local player = baseNew("Player")
+	player.LocaleId = localeId or "fr-fr"
 	player.Name = name or ("Joueur" .. userId)
 	player.DisplayName = player.Name
 	player.UserId = userId
@@ -478,6 +480,7 @@ camera.ViewportSize = env.Vector2.new(1280, 720)
 camera.CFrame = env.CFrame.new()
 camera.Parent = env.workspace
 env.workspace.CurrentCamera = camera
+env.workspace.DescendantAdded = env.workspace.DescendantAdded or H.newSignal()
 
 H.TweenInfo = {
 	new = function(...)
