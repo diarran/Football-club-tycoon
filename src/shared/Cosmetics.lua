@@ -76,9 +76,23 @@ Cosmetics.List = {
 	{ id = "decor_walk", category = "decor", cost = 1500000, requires = { division = "D1", titles = 5 } },
 }
 
+-- Objets exclusifs, achetés en Robux (voir Monetization.lua et MonetizationService).
+-- Ils ne sont PAS dans Cosmetics.List : jamais vendus en FC Coins, hors du
+-- catalogue Prestige et du simulateur d'économie. Purement visuels eux aussi.
+Cosmetics.EXCLUSIVE = {
+	{ id = "colors_vip_neon", category = "colors", robux = true, requires = {}, primary = rgb(255, 40, 150), secondary = rgb(20, 230, 230) },
+	{ id = "lighting_vip_ruby", category = "lighting", robux = true, requires = {}, color = rgb(255, 60, 80) },
+	{ id = "statue_vip_crystal", category = "statue", robux = true, requires = {}, color = rgb(170, 220, 255), material = "Glass" },
+	{ id = "kit_vip_carbon", category = "kit", robux = true, requires = {}, pattern = "stripes", shirt = rgb(30, 30, 34), detail = rgb(0, 200, 255) },
+}
+
 local byId = {}
 for index, item in Cosmetics.List do
 	item.order = index
+	byId[item.id] = item
+end
+for index, item in Cosmetics.EXCLUSIVE do
+	item.order = #Cosmetics.List + index
 	byId[item.id] = item
 end
 

@@ -22,6 +22,7 @@ local Cosmetics = require(Shared.Cosmetics)
 local Trophies = require(Shared.Trophies)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
+local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
 local WorldConfig = require(Shared.WorldConfig)
@@ -770,14 +771,39 @@ function renderers.Prestige(profile)
 	card(trophyLines).Parent = content
 
 	local ownedCount = 0
-	for _ in cosmetics.owned do
-		ownedCount += 1
+	for id in cosmetics.owned do
+		local item = Cosmetics.Get(id)
+		if item and not item.robux then
+			ownedCount += 1
+		end
 	end
 	card({
 		label(T("prestige.intro"), { TextSize = 16 }),
 		label(T("prestige.progress", { owned = ownedCount, total = #Cosmetics.List }), { TextColor3 = COLORS.muted, TextSize = 16 }),
 	}).Parent =
 		content
+
+	-- Boutique Robux : cachée tant qu'aucun ID de produit n'est rempli (Monetization.lua).
+	if Monetization.AnyAvailable() then
+		local shopLines = {
+			label(T("shop.title"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
+			label(T("shop.intro"), { TextSize = 16 }),
+		}
+		local boost = Monetization.Get("boost_income")
+		if Monetization.IsAvailable(boost) then
+			local seconds = profile.boostSeconds or 0
+			table.insert(
+				shopLines,
+				if seconds > 0
+					then label(T("shop.boostActive", { minutes = math.ceil(seconds / 60) }), { TextColor3 = COLORS.gold, TextSize = 16 })
+					else label(T("shop.boostInfo", { percent = math.floor((boost.boost.multiplier - 1) * 100 + 0.5), minutes = boost.boost.minutes }), { TextSize = 16 })
+			)
+			table.insert(shopLines, button(T("shop.buyBoost"), function()
+				Net.Get("RequestBuyExclusive"):FireServer(boost.key)
+			end, { Size = UDim2.new(0, 260, 0, 44) }))
+		end
+		card(shopLines).Parent = content
+	end
 
 	for _, category in Cosmetics.CATEGORIES do
 		label(T("cosmeticCategory." .. category), { Font = Enum.Font.GothamBold }).Parent = content
@@ -794,7 +820,14 @@ function renderers.Prestige(profile)
 			}).Parent =
 				content
 		end
-		for _, item in Cosmetics.ByCategory(category) do
+		local items = Cosmetics.ByCategory(category)
+		-- Objets exclusifs : visibles une fois possédés, ou si leur achat Robux est ouvert.
+		for _, item in Cosmetics.EXCLUSIVE do
+			if item.category == category and (cosmetics.owned[item.id] or Monetization.IsAvailable(Monetization.ForCosmetic(item.id))) then
+				table.insert(items, item)
+			end
+		end
+		for _, item in items do
 			local action
 			if cosmetics.owned[item.id] then
 				if not single then
@@ -806,6 +839,11 @@ function renderers.Prestige(profile)
 						Net.Get("RequestEquipCosmetic"):FireServer(category, item.id)
 					end)
 				end
+			elseif item.robux then
+				local product = Monetization.ForCosmetic(item.id)
+				action = button(T("shop.buyRobux"), function()
+					Net.Get("RequestBuyExclusive"):FireServer(product.key)
+				end, { Size = UDim2.new(0, 240, 0, 44), BackgroundColor3 = COLORS.gold })
 			else
 				local unlocked, reason = Cosmetics.IsUnlocked(item, profile.club.division, titles)
 				if unlocked then
@@ -825,7 +863,11 @@ function renderers.Prestige(profile)
 					)
 				end
 			end
-			card({ label(T("cosmetic." .. item.id), { Font = Enum.Font.GothamBold }), action }).Parent = content
+			local name = T("cosmetic." .. item.id)
+			if item.robux then
+				name = T("shop.exclusiveTag", { name = name })
+			end
+			card({ label(name, { Font = Enum.Font.GothamBold }), action }).Parent = content
 		end
 	end
 end

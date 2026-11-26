@@ -27,6 +27,7 @@ Le test `07_client` démarre aussi le vrai client (HUD, menus) et clique sur les
 | `02_economy` | débit unique, prix serveur, valeurs client invalides, limite de fréquence, recrutement |
 | `03_save` | sauvegarde, reconnexion, autosave, verrou de session, pannes du DataStore, fermeture |
 | `04_temporary` | mode test sans DataStore (Studio) |
+| `15_monetization` | boutique Robux : cachée sans ID, objets exclusifs purement visuels jamais vendus en FC Coins, fenêtre d'achat validée par le serveur, un reçu = un seul octroi (reçu rejoué, panne de sauvegarde, reconnexion, panne totale), boost coupé par défaut et plafonné, écran Prestige |
 | `13_published` | jeu publié : vraie sauvegarde, même après une panne au démarrage |
 | `05_match` | match validé par le serveur, délai, récompenses, montée D7 → D1, matchs entre clubs |
 | `06_tutorial` | étapes du tutoriel, renommage filtré, instantané client |
