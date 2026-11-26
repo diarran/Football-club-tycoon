@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1700 640" width="1700" height="640"><g transform="translate(20 20) scale(2.75)"><defs>
+    <linearGradient id="gNavy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2A3652"/><stop offset="1" stop-color="#121826"/></linearGradient>
+    <linearGradient id="gGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset=".5" stop-color="#F5C442"/><stop offset="1" stop-color="#C9971E"/></linearGradient>
+    <linearGradient id="gGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2EAA5A"/><stop offset="1" stop-color="#1E7840"/></linearGradient>
+    <clipPath id="shieldClip"><path d="M100,4 L196,32 V118 C196,180 152,216 100,236 C48,216 4,180 4,118 V32 Z"/></clipPath>
+  </defs>
+  <path d="M100,4 L196,32 V118 C196,180 152,216 100,236 C48,216 4,180 4,118 V32 Z" fill="url(#gNavy)" stroke="url(#gGold)" stroke-width="9" stroke-linejoin="round"/>
+  <g clip-path="url(#shieldClip)">
+    <rect x="0" y="150" width="200" height="100" fill="url(#gGreen)"/>
+    <rect x="0" y="150" width="200" height="5" fill="#fff" opacity=".85"/>
+    <rect x="0" y="174" width="200" height="14" fill="#fff" opacity=".07"/>
+    <rect x="0" y="202" width="200" height="14" fill="#fff" opacity=".07"/>
+  </g>
+  <path d="M100,4 L196,32 V118 C196,180 152,216 100,236 C48,216 4,180 4,118 V32 Z" fill="none" stroke="url(#gGold)" stroke-width="9" stroke-linejoin="round"/>
+  <g fill="url(#gGold)"><path d="M70.0,29.0L72.9,36.0L80.5,36.6L74.7,41.5L76.5,48.9L70.0,45.0L63.5,48.9L65.3,41.5L59.5,36.6L67.1,36.0Z"/><path d="M100.0,18.0L103.7,26.9L113.3,27.7L106.0,33.9L108.2,43.3L100.0,38.3L91.8,43.3L94.0,33.9L86.7,27.7L96.3,26.9Z"/><path d="M130.0,29.0L132.9,36.0L140.5,36.6L134.7,41.5L136.5,48.9L130.0,45.0L123.5,48.9L125.3,41.5L119.5,36.6L127.1,36.0Z"/></g>
+  <g fill="url(#gGold)" stroke="#121826" stroke-width="2">
+    <rect x="44" y="150" width="20" height="34" rx="3"/><rect x="136" y="132" width="20" height="52" rx="3"/>
+  </g>
+  <clipPath id="b5"><circle cx="100" cy="112" r="50"/></clipPath><circle cx="100" cy="112" r="50" fill="#fff"/><g clip-path="url(#b5)" fill="#121826" stroke="#121826" stroke-width="2.5" stroke-linejoin="round"><path d="M100.0,94.0L117.1,106.4L110.6,126.6L89.4,126.6L82.9,106.4Z"/><line x1="100" y1="94" x2="100" y2="78"/><path d="M100.0,78.0L83.8,66.3L90.0,47.2L110.0,47.2L116.2,66.3Z"/><line x1="117.11901729331277" y1="106.43769410125094" x2="132.33592155403522" y2="101.4934221912518"/><path d="M132.3,101.5L138.5,82.5L158.5,82.5L164.7,101.5L148.5,113.2Z"/><line x1="110.58013454126451" y1="126.56230589874906" x2="119.98469857794409" y2="139.5065778087482"/><path d="M120.0,139.5L140.0,139.5L146.1,158.5L130.0,170.3L113.8,158.5Z"/><line x1="89.41986545873549" y1="126.56230589874906" x2="80.01530142205591" y2="139.5065778087482"/><path d="M80.0,139.5L86.2,158.5L70.0,170.3L53.9,158.5L60.0,139.5Z"/><line x1="82.88098270668723" y1="106.43769410125095" x2="67.66407844596478" y2="101.4934221912518"/><path d="M67.7,101.5L51.5,113.2L35.3,101.5L41.5,82.5L61.5,82.5Z"/></g><circle cx="100" cy="112" r="50" fill="none" stroke="#121826" stroke-width="3"/>
+  <path d="M150,96 L176,70 M176,70 H160 M176,70 V86" stroke="url(#gGold)" stroke-width="8" stroke-linecap="round" fill="none"/></g>
+  <g font-family="'Inter Display','Inter',Arial,sans-serif" font-weight="900">
+    <text x="620" y="250" font-size="104" letter-spacing="14" fill="#F0F4FA" stroke="#121826" stroke-width="16" paint-order="stroke" stroke-linejoin="round">FOOTBALL CLUB</text>
+    <text x="606" y="500" font-size="272" letter-spacing="4" fill="url(#gGold)" stroke="#121826" stroke-width="22" paint-order="stroke" stroke-linejoin="round" transform="skewX(-6) translate(56 0)">TYCOON</text>
+    <rect x="626" y="548" width="1010" height="16" rx="8" fill="#2EAA5A"/>
+  </g></svg>

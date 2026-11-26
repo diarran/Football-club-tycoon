@@ -1,0 +1,65 @@
+{
+  "hud": {
+    "background": "#121826",
+    "panel": "#1C2436",
+    "card": "#283248",
+    "accent": "#2EAA5A",
+    "accentDark": "#1E7840",
+    "gold": "#F5C442",
+    "goldDark": "#C9971E",
+    "text": "#F0F4FA",
+    "muted": "#A0AABE",
+    "error": "#DC5050",
+    "disabled": "#505664"
+  },
+  "clubs": [
+    {
+      "name": "FC Roquerouge",
+      "tag": "FCR",
+      "p": "#C82832",
+      "s": "#F5F5F5",
+      "shape": "classic",
+      "emblem": "tower"
+    },
+    {
+      "name": "Bleuval Olympique",
+      "tag": "BVO",
+      "p": "#1E50B4",
+      "s": "#FAD228",
+      "shape": "round",
+      "emblem": "star"
+    },
+    {
+      "name": "AS Verdaine",
+      "tag": "ASV",
+      "p": "#1E8C50",
+      "s": "#F5F5F5",
+      "shape": "flat",
+      "emblem": "wing"
+    },
+    {
+      "name": "Racing Violaine",
+      "tag": "RCV",
+      "p": "#6E2896",
+      "s": "#F0AA28",
+      "shape": "heater",
+      "emblem": "crown"
+    },
+    {
+      "name": "Sporting Noircastel",
+      "tag": "SNC",
+      "p": "#141418",
+      "s": "#F0C83C",
+      "shape": "octagon",
+      "emblem": "bolt"
+    },
+    {
+      "name": "US Azurport",
+      "tag": "AZP",
+      "p": "#28AAD2",
+      "s": "#14285A",
+      "shape": "pointed",
+      "emblem": "wave"
+    }
+  ]
+}
