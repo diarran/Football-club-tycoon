@@ -91,29 +91,52 @@ H.test("match contre un autre club : ses données ne sont jamais modifiées", fu
 	H.eq(kind, "error", "club parti : match refusé")
 end)
 
-H.test("montée D7 → D6 → D5 validée par le serveur, D5 est le plafond", function()
+H.test("montée D7 → D1 validée par le serveur, une division à la fois, D1 est le plafond", function()
+	-- Renvoie le solde juste avant le dernier match joué.
 	local function playUntilWin()
 		for _ = 1, 200 do
-			local before, division = data.club.stats.wins, data.club.division
+			local before, division, coins = data.club.stats.wins, data.club.division, data.coins
 			play("ai", "Offensive")
 			-- S'arrête aussi à la montée : 3 nuls d'affilée suffisent pour monter.
 			if data.club.stats.wins > before or data.club.division ~= division then
-				return
+				return coins
 			end
 		end
 		error("aucune victoire en 200 matchs")
 	end
+	local saved = {}
+	for i, f in data.squad do
+		saved[i] = f.rating
+		f.rating = 99 -- équipe très forte : le test porte sur les règles de montée
+	end
 	data.club.division = "D7"
-	data.club.divisionPoints = S.Divisions.Get("D7").pointsToPromote - 3
-	playUntilWin()
-	H.eq(data.club.division, "D6", "montée en D6")
-	H.eq(data.club.divisionPoints, 0, "points remis à zéro")
-	data.club.divisionPoints = S.Divisions.Get("D6").pointsToPromote - 3
-	playUntilWin()
-	H.eq(data.club.division, "D5", "montée en D5")
-	data.club.divisionPoints = 100
-	playUntilWin()
-	H.eq(data.club.division, "D5", "pas de division au-delà de D5 dans le MVP")
+	for index = 1, #S.Divisions.List - 1 do
+		local division = S.Divisions.List[index]
+		local nextDivision = S.Divisions.List[index + 1]
+		H.eq(data.club.division, division.id, "division de départ " .. division.id)
+		data.club.divisionPoints = division.pointsToPromote - 3
+		local coins = playUntilWin()
+		H.eq(data.club.division, nextDivision.id, "montée en " .. nextDivision.id)
+		H.eq(data.club.divisionPoints, 0, "points remis à zéro")
+		local result = H.received(p, "MatchResult")
+		result = result[#result][1]
+		H.ok(result.promoted, "montée annoncée")
+		H.eq(result.promotionReward, nextDivision.promotionReward, "prime de montée " .. nextDivision.id)
+		H.eq(data.coins, coins + result.rewards.total + nextDivision.promotionReward, "prime de montée versée une fois")
+	end
+	H.eq(data.club.division, "D1", "D1 atteinte")
+	data.club.divisionPoints = 100000
+	local coins = playUntilWin()
+	H.eq(data.club.division, "D1", "pas de division au-delà de D1")
+	local result = H.received(p, "MatchResult")
+	result = result[#result][1]
+	H.ok(not result.promoted, "pas de montée en D1")
+	H.eq(data.coins, coins + result.rewards.total, "pas de prime de montée en D1")
+	for i, f in data.squad do
+		f.rating = saved[i]
+	end
+	data.club.division = "D7"
+	data.club.divisionPoints = 0
 end)
 
 H.test("les matchs fatiguent les joueurs et l'énergie remonte avec le temps", function()

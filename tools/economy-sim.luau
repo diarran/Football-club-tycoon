@@ -28,8 +28,8 @@ local print = H.realPrint -- les print du jeu restent dans le journal du harnais
 -- matchEvery : secondes entre deux matchs (le joueur ne joue pas forcément dès
 -- la fin du délai : il regarde le résultat, se promène, achète…).
 local PROFILS = {
-	{ id = "actif", label = "Joueur actif", sessionMinutes = 40, pauseHours = 6, matchEvery = 75, maxSessions = 30 },
-	{ id = "occasionnel", label = "Joueur occasionnel", sessionMinutes = 15, pauseHours = 24, matchEvery = 120, maxSessions = 60 },
+	{ id = "actif", label = "Joueur actif", sessionMinutes = 40, pauseHours = 6, matchEvery = 75, maxSessions = 200 },
+	{ id = "occasionnel", label = "Joueur occasionnel", sessionMinutes = 15, pauseHours = 24, matchEvery = 120, maxSessions = 365 },
 }
 
 -- Outils --------------------------------------------------------------------
@@ -52,6 +52,8 @@ local function percentile(list, p)
 	table.sort(sorted)
 	return sorted[math.clamp(math.ceil(p * #sorted), 1, #sorted)]
 end
+
+local TOP = Divisions.List[#Divisions.List].id
 
 local function fmt(value, suffix)
 	if value == nil then
@@ -94,6 +96,10 @@ local function playRun(profil)
 		allBoughtAt = nil,
 		minEnergy = 100,
 		wins = 0,
+		transfers = 0,
+		transferSpent = 0,
+		divisionWins = {}, -- [division] = { wins, matches }
+		baseIncomes = {},
 	}
 	local function stamp()
 		return { minutes = run.playSeconds / 60, matches = run.matches, session = run.sessions }
@@ -121,11 +127,25 @@ local function playRun(profil)
 					best = item
 				end
 			end
+			-- Transfert : un candidat de plus, au prix du marché de la division.
+			local market = Divisions.Get(data.club.division).transfer
+			if market and #data.squad >= Config.MAX_SQUAD_SIZE and market.cost <= data.coins then
+				local weakest = S.SquadService.GetWeakest(data.squad)
+				if weakest.rating < market.ratingMax and (not best or market.cost < best.cost) then
+					best = { transfer = true, cost = market.cost }
+				end
+			end
 			if not best then
 				return
 			end
 			local ok
-			if best.recruit then
+			if best.transfer then
+				ok = S.SquadService.TryTransfer(player)
+				if ok then
+					run.transfers += 1
+					run.transferSpent += best.cost
+				end
+			elseif best.recruit then
 				ok = S.SquadService.TryRecruit(player)
 			else
 				ok = S.BuildingService.TryUpgrade(player, best.building)
@@ -133,11 +153,13 @@ local function playRun(profil)
 			if not ok then
 				return
 			end
-			note(best.key)
+			if not best.transfer then
+				note(best.key)
+			end
 		end
 	end
 
-	while run.sessions < profil.maxSessions and not (run.reach.D5 and run.allBoughtAt) do
+	while run.sessions < profil.maxSessions and not (run.reach[TOP] and run.allBoughtAt) do
 		run.sessions += 1
 		local player = H.join(userId)
 		local data = S.PlayerDataService.GetData(player)
@@ -150,13 +172,22 @@ local function playRun(profil)
 			run.playSeconds += wait
 			shop(player, data)
 			local coins = data.coins
+			local divisionBefore = data.club.division
 			local result, err = S.MatchService.TryStartMatch(player, "ai", "Balanced")
 			if result then
 				run.matches += 1
 				if result.outcome == "Win" then
 					run.wins += 1
 				end
-				table.insert(run.incomes, data.coins - coins)
+				local dw = run.divisionWins[divisionBefore] or { wins = 0, matches = 0 }
+				dw.matches += 1
+				dw.wins += if result.outcome == "Win" then 1 else 0
+				run.divisionWins[divisionBefore] = dw
+				local income = data.coins - coins - (result.promotionReward or 0)
+				table.insert(run.incomes, income)
+				-- Contrôle des sources anormales : hors bonus voulu de la division
+				-- (prime de match ×1 à ×3), le gain doit rester sous 5 000.
+				table.insert(run.baseIncomes, income - (result.rewards.match - Config.Rewards[result.outcome]))
 				if result.promoted then
 					run.reach[result.division] = stamp()
 				end
@@ -258,12 +289,13 @@ for _, profil in PROFILS do
 	line("Premier achat", function(r)
 		return r.firstPurchase
 	end)
-	local missD6 = line("Montée en D6", function(r)
-		return r.reach.D6
-	end)
-	local missD5 = line("Montée en D5", function(r)
-		return r.reach.D5
-	end)
+	local missing = {}
+	for index = 2, #Divisions.List do
+		local id = Divisions.List[index].id
+		missing[id] = line("Montée en " .. id, function(r)
+			return r.reach[id]
+		end)
+	end
 	for _, item in ITEMS do
 		line(("%s (%d)"):format(item.key, item.cost), function(r)
 			return r.bought[item.key]
@@ -273,10 +305,51 @@ for _, profil in PROFILS do
 		return r.allBoughtAt
 	end)
 
-	local incomes, winRates, minEnergy, endCoins = {}, {}, {}, {}
+	-- Objectif long terme : D1 en heures de jeu et en jours.
+	local topHours, topDays = {}, {}
+	for _, run in runs do
+		local r = run.reach[TOP]
+		if r then
+			table.insert(topHours, r.minutes / 60)
+			table.insert(topDays, r.session * (profil.sessionMinutes / 60 + profil.pauseHours) / 24)
+		end
+	end
+	print("")
+	print(("%s : médiane %s de jeu (90 %% avant %s), soit ~%s jours au rythme du profil"):format(
+		TOP,
+		fmt(median(topHours), " h"),
+		fmt(percentile(topHours, 0.9), " h"),
+		fmt(median(topDays))
+	))
+	local winLine = {}
+	for _, division in Divisions.List do
+		local w, m = 0, 0
+		for _, run in runs do
+			local dw = run.divisionWins[division.id]
+			if dw then
+				w += dw.wins
+				m += dw.matches
+			end
+		end
+		if m > 0 then
+			table.insert(winLine, ("%s %s %%"):format(division.id, fmt(w / m * 100)))
+		end
+	end
+	print("Victoires par division : " .. table.concat(winLine, " · "))
+	local transfers, transferSpent = {}, {}
+	for _, run in runs do
+		table.insert(transfers, run.transfers)
+		table.insert(transferSpent, run.transferSpent)
+	end
+	print(("Transferts : médiane %s (dépense %s FC Coins)"):format(fmt(median(transfers)), fmt(median(transferSpent))))
+
+	local incomes, baseIncomes, winRates, minEnergy, endCoins = {}, {}, {}, {}, {}
 	for _, run in runs do
 		for _, v in run.incomes do
 			table.insert(incomes, v)
+		end
+		for _, v in run.baseIncomes do
+			table.insert(baseIncomes, v)
 		end
 		table.insert(winRates, run.wins / math.max(1, run.matches))
 		table.insert(minEnergy, run.minEnergy)
@@ -292,11 +365,17 @@ for _, profil in PROFILS do
 	))
 
 	-- Contrôles : sources infinies et blocages
-	if percentile(incomes, 1) > 5000 then
-		table.insert(problems, profil.label .. " : un match rapporte plus de 5 000 (source anormale)")
+	print(("Gain par match hors bonus de division : max %s (seuil d'alerte 5 000)"):format(fmt(percentile(baseIncomes, 1))))
+	if percentile(baseIncomes, 1) > 5000 then
+		table.insert(problems, profil.label .. " : un match rapporte plus de 5 000 hors bonus de division (source anormale)")
 	end
-	if missD6 > 0 or missD5 > 0 then
-		table.insert(problems, ("%s : D5 non atteinte dans %d partie(s) (blocage sportif)"):format(profil.label, missD5))
+	for id, miss in missing do
+		if miss > 0 then
+			table.insert(problems, ("%s : %s non atteinte dans %d partie(s) (blocage sportif)"):format(profil.label, id, miss))
+		end
+	end
+	if percentile(endCoins, 1) >= Config.MAX_COINS then
+		table.insert(problems, profil.label .. " : solde au plafond (monnaie infinie)")
 	end
 end
 
