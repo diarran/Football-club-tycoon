@@ -12,7 +12,9 @@
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local WorldConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("WorldConfig"))
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Brand = require(Shared:WaitForChild("Brand"))
+local WorldConfig = require(Shared:WaitForChild("WorldConfig"))
 local PartUtil = require(script.Parent:WaitForChild("PartUtil"))
 
 type BuildContext = PartUtil.BuildContext
@@ -81,7 +83,7 @@ function Entrance.build(parent: Instance, origin: CFrame, ctx: BuildContext): Mo
 	-- Écusson générique (emplacement réservé, formes simples).
 	local crest = PartUtil.model(model, "Crest")
 	local cy = HEIGHT + 3 + 1.8 -- la pointe du losange repose sur la poutre
-	PartUtil.block(crest, origin, "ShieldTop", Vector3.new(4.4, 3, 0.6), Vector3.new(0, cy, 0), ctx.primary, Enum.Material.SmoothPlastic)
+	local shieldTop = PartUtil.block(crest, origin, "ShieldTop", Vector3.new(4.4, 3, 0.6), Vector3.new(0, cy, 0), ctx.primary, Enum.Material.SmoothPlastic)
 	PartUtil.box(
 		crest,
 		origin,
@@ -94,6 +96,34 @@ function Entrance.build(parent: Instance, origin: CFrame, ctx: BuildContext): Mo
 	)
 	PartUtil.block(crest, origin, "ShieldBand", Vector3.new(4.4, 0.7, 0.7), Vector3.new(0, cy + 2.3, 0), ctx.secondary, Enum.Material.SmoothPlastic)
 	PartUtil.ball(crest, origin, "Ball", 1.6, Vector3.new(0, cy + 1.6, -0.5), C.Line, Enum.Material.SmoothPlastic)
+
+	-- Sigle du club au dos de l'écusson (visible depuis l'intérieur du club).
+	local tag = PartUtil.label(shieldTop, Enum.NormalId.Back, Brand.Tag(ctx.clubName), ctx.secondary)
+	tag.Name = "ClubTagText"
+
+	-- Écusson importé sur Roblox (voir shared/Brand.lua) : affiché devant le blason.
+	local crestImage = Brand.CrestImage(ctx.slotIndex)
+	if crestImage then
+		local imagePanel = PartUtil.box(
+			crest,
+			origin,
+			"CrestImage",
+			Vector3.new(5.5, 5.5, 0.1),
+			Vector3.new(0, cy + 2, -1.5),
+			ctx.primary,
+			Enum.Material.SmoothPlastic,
+			{ canCollide = false, transparency = 1, castShadow = false }
+		)
+		local surface = Instance.new("SurfaceGui")
+		surface.Face = Enum.NormalId.Front
+		surface.LightInfluence = 0.2
+		surface.Parent = imagePanel
+		local image = Instance.new("ImageLabel")
+		image.BackgroundTransparency = 1
+		image.Size = UDim2.fromScale(1, 1)
+		image.Image = crestImage
+		image.Parent = surface
+	end
 
 	return model
 end

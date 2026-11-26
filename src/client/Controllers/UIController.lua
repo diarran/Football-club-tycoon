@@ -15,11 +15,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Brand = require(Shared.Brand)
 local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
 local Divisions = require(Shared.Divisions)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
+local WorldConfig = require(Shared.WorldConfig)
 
 local player = Players.LocalPlayer
 
@@ -62,7 +64,7 @@ local state = {
 	settings = { managementCamera = true, showTutorial = true },
 }
 
-local gui, hud, panel, content, tabButtons, toast, resultPopup
+local gui, hud, crestBadge, panel, content, tabButtons, toast, resultPopup
 local currentTab = "Home"
 
 -- Outils de construction ------------------------------------------------
@@ -175,6 +177,27 @@ function renderers.Home(profile)
 		then ("%d / %d points pour monter"):format(club.divisionPoints, division.pointsToPromote)
 		else "Division la plus haute du MVP atteinte !"
 	local stats = club.stats
+
+	-- Logo du jeu en tête de l'accueil (image importée si disponible, sinon titre).
+	local logo = Brand.LogoImage()
+	if logo then
+		create("ImageLabel", {
+			Name = "Logo",
+			BackgroundTransparency = 1,
+			Image = logo,
+			ScaleType = Enum.ScaleType.Fit,
+			Size = UDim2.new(1, 0, 0, 72),
+			Parent = content,
+		})
+	else
+		label(Brand.GAME_TITLE, {
+			Name = "Logo",
+			Font = Enum.Font.GothamBlack,
+			TextColor3 = COLORS.gold,
+			TextSize = 26,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}).Parent = content
+	end
 
 	card({
 		label(club.name, { Font = Enum.Font.GothamBold, TextSize = 24 }),
@@ -403,12 +426,60 @@ end
 
 -- Construction de l'interface -------------------------------------------
 
+-- Écusson du club à gauche du HUD : image importée si disponible (Brand),
+-- sinon un écusson dessiné aux couleurs du terrain avec le sigle du club.
+local function buildCrestBadge()
+	crestBadge = create("Frame", {
+		Name = "Crest",
+		BackgroundColor3 = COLORS.card,
+		Position = UDim2.fromOffset(12, 12),
+		Size = UDim2.fromOffset(56, 56),
+		Parent = gui,
+	}, {
+		create("UICorner", { CornerRadius = UDim.new(0.3, 0) }),
+		create("UIStroke", { Name = "Stroke", Thickness = 3, Color = COLORS.gold }),
+		label("FC", {
+			Name = "Tag",
+			Font = Enum.Font.GothamBlack,
+			TextScaled = true,
+			TextXAlignment = Enum.TextXAlignment.Center,
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = UDim2.fromScale(0.8, 0.8),
+			AutomaticSize = Enum.AutomaticSize.None,
+		}),
+		create("ImageLabel", {
+			Name = "Image",
+			BackgroundTransparency = 1,
+			Size = UDim2.fromScale(1, 1),
+			Visible = false,
+		}),
+	})
+end
+
+local function refreshCrestBadge(profile)
+	local slot = player:GetAttribute("ClubSlot")
+	local colors = WorldConfig.CLUB_COLORS[slot]
+	if colors then
+		crestBadge.BackgroundColor3 = colors.primary
+		crestBadge.Stroke.Color = colors.secondary
+		crestBadge.Tag.TextColor3 = colors.secondary
+	end
+	crestBadge.Tag.Text = Brand.Tag(profile.club.name)
+	local image = Brand.CrestImage(slot)
+	crestBadge.Image.Image = image or ""
+	crestBadge.Image.Visible = image ~= nil
+	crestBadge.Tag.Visible = image == nil
+	crestBadge.BackgroundTransparency = if image then 1 else 0
+end
+
 local function buildHud()
+	buildCrestBadge()
 	hud = create("Frame", {
 		Name = "HUD",
 		BackgroundColor3 = COLORS.background,
 		BackgroundTransparency = 0.15,
-		Position = UDim2.fromOffset(12, 12),
+		Position = UDim2.fromOffset(76, 12),
 		Size = UDim2.fromOffset(280, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 		Parent = gui,
@@ -610,6 +681,7 @@ function UIController.Refresh()
 		hud.Division.Text = divisionLabel(profile.club.division)
 			.. (if profile.temporary then " · mode test" else "")
 		hud.Coins.Text = formatCoins(profile.coins)
+		refreshCrestBadge(profile)
 	end
 	if not panel.Visible then
 		return

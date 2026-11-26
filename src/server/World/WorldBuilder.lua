@@ -36,6 +36,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+local Brand = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Brand"))
 local WorldConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("WorldConfig"))
 local World = script.Parent
 local PartUtil = require(World:WaitForChild("PartUtil"))
@@ -257,6 +258,8 @@ function WorldBuilder.setClubName(plot: Model, clubName: string)
 	for _, descendant in plot:GetDescendants() do
 		if descendant:IsA("TextLabel") and descendant.Name == "ClubNameText" then
 			descendant.Text = string.upper(clubName)
+		elseif descendant:IsA("TextLabel") and descendant.Name == "ClubTagText" then
+			descendant.Text = Brand.Tag(clubName)
 		elseif descendant:IsA("ProximityPrompt") and descendant.Name == "ManageClubPrompt" then
 			descendant.ObjectText = clubName
 		end
