@@ -71,4 +71,12 @@ PlayerConfig.MAX_ENERGY = 100
 -- Prix d'un recrutement simple (valeur + premier salaire, simplifié).
 PlayerConfig.RECRUIT_COST = 1500
 
+-- Centre de formation : âge et postes des jeunes repérés ; le reste (note,
+-- potentiel, prix, fréquence) dépend du niveau de l'installation (Buildings.lua).
+PlayerConfig.PROSPECT_AGE_MIN = 16
+PlayerConfig.PROSPECT_AGE_MAX = 18
+PlayerConfig.PROSPECT_POSITIONS = { "GK", "DEF", "DEF", "MID", "MID", "ATT", "ATT" }
+-- Fréquence (secondes) à laquelle le serveur vérifie l'arrivée de nouveaux jeunes.
+PlayerConfig.SCOUT_CHECK_SECONDS = 30
+
 return PlayerConfig

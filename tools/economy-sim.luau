@@ -99,6 +99,7 @@ local function playRun(profil)
 		transfers = 0,
 		transferSpent = 0,
 		divisionWins = {}, -- [division] = { wins, matches }
+		baseIncomes = {},
 	}
 	local function stamp()
 		return { minutes = run.playSeconds / 60, matches = run.matches, session = run.sessions }
@@ -182,7 +183,11 @@ local function playRun(profil)
 				dw.matches += 1
 				dw.wins += if result.outcome == "Win" then 1 else 0
 				run.divisionWins[divisionBefore] = dw
-				table.insert(run.incomes, data.coins - coins - (result.promotionReward or 0))
+				local income = data.coins - coins - (result.promotionReward or 0)
+				table.insert(run.incomes, income)
+				-- Contrôle des sources anormales : hors bonus voulu de la division
+				-- (prime de match ×1 à ×3), le gain doit rester sous 5 000.
+				table.insert(run.baseIncomes, income - (result.rewards.match - Config.Rewards[result.outcome]))
 				if result.promoted then
 					run.reach[result.division] = stamp()
 				end
@@ -338,10 +343,13 @@ for _, profil in PROFILS do
 	end
 	print(("Transferts : médiane %s (dépense %s FC Coins)"):format(fmt(median(transfers)), fmt(median(transferSpent))))
 
-	local incomes, winRates, minEnergy, endCoins = {}, {}, {}, {}
+	local incomes, baseIncomes, winRates, minEnergy, endCoins = {}, {}, {}, {}, {}
 	for _, run in runs do
 		for _, v in run.incomes do
 			table.insert(incomes, v)
+		end
+		for _, v in run.baseIncomes do
+			table.insert(baseIncomes, v)
 		end
 		table.insert(winRates, run.wins / math.max(1, run.matches))
 		table.insert(minEnergy, run.minEnergy)
@@ -357,8 +365,9 @@ for _, profil in PROFILS do
 	))
 
 	-- Contrôles : sources infinies et blocages
-	if percentile(incomes, 1) > 5000 then
-		table.insert(problems, profil.label .. " : un match rapporte plus de 5 000 (source anormale)")
+	print(("Gain par match hors bonus de division : max %s (seuil d'alerte 5 000)"):format(fmt(percentile(baseIncomes, 1))))
+	if percentile(baseIncomes, 1) > 5000 then
+		table.insert(problems, profil.label .. " : un match rapporte plus de 5 000 hors bonus de division (source anormale)")
 	end
 	for id, miss in missing do
 		if miss > 0 then

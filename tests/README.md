@@ -34,6 +34,8 @@ Le test `07_client` démarre aussi le vrai client (HUD, menus) et clique sur les
 | `09_locale` | français et anglais complets (aucune clé manquante), langue du compte Roblox, choix dans les Paramètres, boutons anglais lisibles sur téléphone |
 | `10_progression` | 5 niveaux par installation, Boutique, modèles 3D au bon niveau |
 | `11_divisions` | D7 → D1, clubs fictifs, primes croissantes, transferts validés par le serveur, classement de division |
+| `10_progression` | 5 niveaux par installation, prix exacts, modèles 3D au niveau 5, Boutique |
+| `11_academy_vip` | centre de formation (jeunes repérés hors ligne, signature, libération, progression), espace VIP, anciens profils |
 
 ## Lancer les tests sur son ordinateur
 

@@ -334,12 +334,50 @@ function renderers.Squad(profile)
 	}).Parent =
 		content
 
+	-- Centre de formation : jeunes repérés, à signer à bas prix.
+	local prospects = profile.prospects or {}
+	card({
+		label(T("academy.title"), { Font = Enum.Font.GothamBold }),
+		label(
+			if #prospects == 0 then T("academy.empty") else T("academy.hint"),
+			{ TextColor3 = COLORS.muted, TextSize = 16 }
+		),
+	}).Parent =
+		content
+	for _, prospect in prospects do
+		local position = if PlayerConfig.Positions[prospect.position]
+			then T("position." .. prospect.position)
+			else prospect.position
+		card({
+			label("⭐ " .. prospect.name, { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
+			label(
+				T("academy.prospectLine", {
+					position = position,
+					age = prospect.age,
+					rating = prospect.rating,
+					potential = prospect.potential,
+				}),
+				{ TextColor3 = COLORS.muted, TextSize = 16 }
+			),
+			button(T("academy.sign", { cost = formatCoins(prospect.cost) }), function()
+				Net.Get("RequestSignProspect"):FireServer(prospect.id)
+			end, {
+				Size = UDim2.new(0, 240, 0, 44),
+				BackgroundColor3 = if not full and profile.coins >= prospect.cost
+					then COLORS.accent
+					else COLORS.disabled,
+			}),
+		}).Parent =
+			content
+	end
+
+	local canRelease = #squad > Config.STARTING_PLAYERS
 	for _, footballer in squad do
 		local position = if PlayerConfig.Positions[footballer.position]
 			then T("position." .. footballer.position)
 			else footballer.position
-		card({
-			label(footballer.name, { Font = Enum.Font.GothamBold }),
+		local children = {
+			label((if footballer.youth then "⭐ " else "") .. footballer.name, { Font = Enum.Font.GothamBold }),
 			label(
 				T("squad.playerLine", {
 					position = position,
@@ -350,8 +388,16 @@ function renderers.Squad(profile)
 				}),
 				{ TextColor3 = COLORS.muted, TextSize = 16 }
 			),
-		}).Parent =
-			content
+		}
+		if canRelease then
+			table.insert(
+				children,
+				button(T("squad.release"), function()
+					Net.Get("RequestRelease"):FireServer(footballer.id)
+				end, { Size = UDim2.new(0, 160, 0, 44), BackgroundColor3 = COLORS.disabled })
+			)
+		end
+		card(children).Parent = content
 	end
 end
 
@@ -925,6 +971,7 @@ function UIController.ShowMatchResult(result)
 				tickets = rewards.tickets,
 				sponsor = rewards.sponsor,
 				shop = rewards.shop or 0,
+				vip = rewards.vip or 0,
 			}),
 			{ TextColor3 = COLORS.gold, TextXAlignment = Enum.TextXAlignment.Center }
 		)

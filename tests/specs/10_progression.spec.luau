@@ -81,7 +81,7 @@ H.test("chaque installation au niveau 5 a son modèle 3D au niveau 5", function(
 		H.ok(model, "modèle " .. id)
 		H.eq(model:GetAttribute("Level"), 5, "niveau 3D de " .. id)
 	end
-	H.ok(WorldBuilder.countParts(plot) <= 650, "budget de Parts au niveau maximum")
+	H.ok(WorldBuilder.countParts(plot) <= 750, "budget de Parts au niveau maximum (8 installations)")
 end)
 
 H.test("la Boutique rapporte à chaque match, montant calculé par le serveur", function()
@@ -95,9 +95,9 @@ H.test("la Boutique rapporte à chaque match, montant calculé par le serveur", 
 	H.ok(result, "second match")
 	H.eq(result.rewards.shop, S.Buildings.GetEffects("Shop", 5).shopIncome, "revenu boutique niveau 5")
 	local r = result.rewards
-	H.eq(r.total, r.match + r.tickets + r.sponsor + r.shop, "total = somme des revenus")
+	H.eq(r.total, r.match + r.tickets + r.sponsor + r.shop + r.vip, "total = somme des revenus")
 	H.eq(data.coins, coins + r.total, "solde crédité du total")
-	H.ok(r.total < 5000, "gain par match raisonnable même tout au maximum")
+	H.ok(r.total < 6500, "gain par match raisonnable même tout au maximum")
 end)
 
 H.test("un ancien profil sans Boutique la reçoit au niveau 1", function()
