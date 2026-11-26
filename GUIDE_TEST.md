@@ -1,10 +1,13 @@
-# Tester le jeu (environ 15 minutes)
+# Tester le jeu (environ 20 minutes)
 
 ## 1. Récupérer le fichier du jeu
 
-1. Ouvre le lien de téléchargement que Claude t'a donné (il faut être connecté à GitHub).
-   Sinon : sur GitHub, onglet **Actions** > **Construire la place** > le dernier passage
-   avec une coche verte > en bas, **Artifacts** > `FootballClubTycoon-place`.
+1. Clique sur ce lien : il télécharge toujours la **dernière version** construite
+   (pas besoin d'être connecté) :
+   https://nightly.link/diarran/Football-club-tycoon/workflows/build/main/FootballClubTycoon-place.zip
+   Si le lien ne marche pas : sur GitHub, onglet **Actions** > **Construire la place** >
+   le dernier passage avec une coche verte > en bas, **Artifacts** > `FootballClubTycoon-place`
+   (https://github.com/diarran/Football-club-tycoon/actions/workflows/build.yml?query=branch%3Amain).
 2. Un fichier `.zip` se télécharge. Double-clique dessus pour l'ouvrir : à l'intérieur se
    trouve `FootballClubTycoon.rbxlx`.
 
@@ -28,27 +31,37 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier
+## 5. Ce qu'il faut vérifier (12 points)
 
 Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
 
 1. **Arrivée** : ton personnage apparaît sur ton terrain, près du portique au nom de
    ton club (pas sur la grande place, pas dans le vide).
-2. **Écran** : en haut à gauche, l'écusson avec les initiales du club, le nom du club,
-   la division et le solde **2 500 FC**.
+2. **Écran** : en haut à gauche, l'écusson, le nom du club, la division **D7** et le
+   solde **2 500 FC**.
 3. **Menu** : le bouton **Club** ouvre le menu et la caméra montre ton club d'en haut.
-   Le **X** rouge ferme le menu et la caméra revient derrière ton personnage.
+   Les **7 onglets** sont visibles sur une ligne (Accueil, Stade, Effectif, Matchs,
+   Classement, Prestige, Paramètres). Le **X** rouge ferme le menu.
 4. **Tutoriel** : le bandeau en haut au centre change quand tu fais ce qu'il demande.
-5. **Stade** : « Améliorer » les **Vestiaires** (le moins cher, 1 500 FC) fait baisser
-   le solde et le bâtiment change d'aspect.
-6. **Effectif** : « Recruter » (1 500 FC) ajoute un joueur. S'il manque des FC, joue
-   d'abord un ou deux matchs : un message « pas assez de FC » est normal.
-7. **Matchs** : lance un match. Une fenêtre de résultat s'affiche avec des FC gagnés.
-8. **Nom** : dans **Accueil**, renomme le club. Le nouveau nom apparaît en haut à
-   gauche et sur le portique.
-9. **À 2 joueurs** : chaque joueur a un terrain différent, voit l'autre club dans
-   **Classement** et peut l'affronter dans **Matchs**.
-10. **Téléphone** : onglet **Test** > **Device** (icône de téléphone), choisis un
-    téléphone. Les boutons restent lisibles et faciles à toucher.
+5. **Stade** : « Améliorer » les **Vestiaires** (1 500 FC) fait baisser le solde et le
+   bâtiment change d'aspect. La liste montre aussi la Boutique, le Centre de formation
+   et l'Espace VIP.
+6. **Effectif** : « Recruter » ajoute un joueur. Plus bas, le **Centre de formation**
+   affiche les jeunes repérés que tu peux signer. « Pas assez de FC » est normal au début : joue un match.
+7. **Matchs** : lance un match. Une fenêtre de résultat s'affiche avec les FC gagnés
+   (match, billetterie, sponsors…). Le compte à rebours avant le match suivant défile.
+8. **Prestige** : l'onglet montre la salle des trophées et les objets de personnalisation,
+   avec la division requise pour ceux qui sont encore verrouillés.
+9. **Paramètres** : passe la langue en **English** : tout le menu et les panneaux du
+   terrain changent de langue. Remets **Français**.
+10. **À 2 joueurs** (section 4) : chaque joueur a un terrain différent et voit l'autre
+    club dans **Classement**. Dans **Matchs**, le joueur 1 clique **Défier** ; le
+    joueur 2 reçoit le défi et l'accepte : les deux voient le résultat.
+11. **Tournoi** (à 2) : environ **3 minutes** après le Start, un message annonce
+    l'ouverture des inscriptions. Dans **Matchs**, les deux joueurs cliquent
+    **S'inscrire** (1 minute pour le faire) ; les tours s'enchaînent et un vainqueur est annoncé.
+12. **Téléphone et sortie** : onglet **Test** > **Device**, choisis un téléphone : les
+    7 onglets et les boutons restent lisibles. Pendant tout le test, la fenêtre
+    **Sortie** ne doit montrer aucune ligne **rouge** ni orange commençant par `[Main]`.
 
 Envoie ensuite ta liste (✅ / ❌ + captures + lignes rouges) dans le projet : on corrige.

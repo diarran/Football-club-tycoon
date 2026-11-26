@@ -970,28 +970,28 @@ local function buildPanel()
 		create("UISizeConstraint", { MaxSize = Vector2.new(760, 560) }),
 	})
 
-	local tabBar = create("ScrollingFrame", {
+	-- Tous les onglets tiennent sur une ligne, même sur téléphone : chaque
+	-- bouton prend une part égale de la largeur et son texte rétrécit si besoin
+	-- (avec une barre qui défile, « Prestige » et « Paramètres » restaient cachés).
+	local tabBar = create("Frame", {
 		Name = "Tabs",
 		BackgroundTransparency = 1,
 		Position = UDim2.fromOffset(10, 10),
-		Size = UDim2.new(1, -74, 0, 48),
-		CanvasSize = UDim2.new(),
-		AutomaticCanvasSize = Enum.AutomaticSize.X,
-		ScrollingDirection = Enum.ScrollingDirection.X,
-		ScrollBarThickness = 0,
+		Size = UDim2.new(1, -74, 0, 44),
 		Parent = panel,
 	}, {
 		create("UIListLayout", {
 			FillDirection = Enum.FillDirection.Horizontal,
-			Padding = UDim.new(0, 6),
+			Padding = UDim.new(0, 4),
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		}),
 	})
 	tabButtons = {}
+	local tabWidth = 1 / #TABS
 	for index, tabId in TABS do
 		tabButtons[tabId] = button(T("tab." .. tabId), function()
 			UIController.OpenTab(tabId)
-		end, { LayoutOrder = index, Size = UDim2.fromOffset(120, 44), TextSize = 16, Parent = tabBar })
+		end, { LayoutOrder = index, Size = UDim2.new(tabWidth, -4, 0, 44), TextSize = 16, Parent = tabBar })
 	end
 
 	button("X", function()

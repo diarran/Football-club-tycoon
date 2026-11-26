@@ -329,7 +329,8 @@ local function filterName(player: Player, text: string): string?
 end
 
 local function handleRename(player: Player, newName)
-	if type(newName) ~= "string" or renaming[player] then
+	-- Texte anormalement long (client modifié) : ignoré avant tout traitement.
+	if type(newName) ~= "string" or #newName > 200 or renaming[player] then
 		return
 	end
 	local data = PlayerDataService.GetData(player)
