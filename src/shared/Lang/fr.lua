@@ -294,4 +294,11 @@ return {
 	["admin.invalid"] = "Code invalide.",
 	["admin.locked"] = "Trop d'essais. Réessaie dans quelques minutes.",
 	["admin.infiniteCoins"] = "∞ FC",
+	["community.title"] = "Soutiens le jeu",
+	["community.likeReminder"] = "Tu aimes le jeu ? Clique sur le pouce « J'aime » sur la page Roblox du jeu, ça l'aide beaucoup !",
+	["community.favorite"] = "Ajouter aux favoris",
+	["community.group"] = "Rejoindre le groupe",
+	["community.groupReward"] = "Rejoindre le groupe (+{coins})",
+	["community.groupThanks"] = "Merci d'avoir rejoint le groupe ! +{coins} FC Coins",
+	["community.groupNotMember"] = "Rejoins le groupe Roblox du jeu pour recevoir ton bonus.",
 }

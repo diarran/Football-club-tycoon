@@ -29,6 +29,7 @@ local MonetizationService = require(Services.MonetizationService)
 local ChallengeService = require(Services.ChallengeService)
 local TournamentService = require(Services.TournamentService)
 local AdminService = require(Services.AdminService)
+local CommunityService = require(Services.CommunityService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
 local ORDERED_SERVICES = {
@@ -44,6 +45,7 @@ local ORDERED_SERVICES = {
 	{ name = "ChallengeService", module = ChallengeService },
 	{ name = "TournamentService", module = TournamentService },
 	{ name = "AdminService", module = AdminService },
+	{ name = "CommunityService", module = CommunityService },
 }
 
 for _, entry in ORDERED_SERVICES do

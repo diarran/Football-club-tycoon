@@ -79,6 +79,8 @@ local function defaultData()
 		boost = { expiresAt = 0, multiplier = 1 },
 		-- Code admin (AdminService) : argent illimité, solde d'avant à rendre.
 		admin = { unlimited = false, savedCoins = 0 },
+		-- Groupe Roblox (CommunityService) : bonus unique déjà reçu ?
+		community = { groupRewardClaimed = false },
 		tutorial = { step = 1, completed = false },
 		lastMatchAt = 0,
 		lastEnergyUpdate = os.time(),
@@ -402,6 +404,7 @@ function PlayerDataService.BuildSnapshot(player: Player)
 		-- Le champ du code admin n'est montré qu'à l'administrateur.
 		isAdmin = AdminAccess.IsAdmin(player),
 		adminUnlimited = data.admin.unlimited,
+		community = table.clone(data.community),
 	}
 end
 
