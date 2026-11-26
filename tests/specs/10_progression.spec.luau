@@ -41,6 +41,7 @@ H.test("chaque installation, Boutique comprise, a 5 niveaux de prix croissants",
 end)
 
 H.test("monter une installation jusqu'au niveau 5 coûte la somme exacte des prix", function()
+	data.missions.list = {} -- sans missions du jour (testées dans 16_daily)
 	data.coins = 1000000
 	local total = 0
 	for level = 2, 5 do
@@ -96,7 +97,7 @@ H.test("la Boutique rapporte à chaque match, montant calculé par le serveur", 
 	H.eq(result.rewards.shop, S.Buildings.GetEffects("Shop", 5).shopIncome, "revenu boutique niveau 5")
 	local r = result.rewards
 	H.eq(r.total, r.match + r.tickets + r.sponsor + r.shop + r.vip, "total = somme des revenus")
-	H.eq(data.coins, coins + r.total, "solde crédité du total")
+	H.eq(data.coins, coins + r.total + (result.missionReward or 0), "solde crédité du total")
 	H.ok(r.total < 6500, "gain par match raisonnable même tout au maximum")
 end)
 

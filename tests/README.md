@@ -41,6 +41,7 @@ Le test `07_client` démarre aussi le vrai client (HUD, menus) et clique sur les
 | `15_replay` | replay 3D des matchs : chronologie identique au score du serveur (buts, minutes, buteurs), 0 à 14 buts entre 30 et 60 s, aucun effet sur le tirage ni les récompenses, visiteurs prévenus, client : replay jusqu'au bout, « Passer », avance rapide, public selon les tribunes |
 | `11_academy_vip` | centre de formation (jeunes repérés hors ligne, signature, libération, progression), espace VIP, anciens profils |
 | `12_prestige` | personnalisation du club (achat validé par le serveur, conditions de division et de titres, porter/retirer, terrain 3D), salle des trophées (montées, titres de D1, records, tournois), sauvegarde, anciens profils, écran Prestige |
+| `16_daily` | cadeau du jour (série de 7 jours, jour manqué, minuit en ligne, pas de doublon), missions du jour (vraies actions, prime unique, mêmes missions après reconnexion, faisables), revenus hors ligne (plafond 8 h, horloge incohérente), saisons (points, classement, prime, trophée, saison sans match), anciens profils, écran d'accueil et fenêtre « Pendant ton absence… » |
 
 ## Lancer les tests sur son ordinateur
 

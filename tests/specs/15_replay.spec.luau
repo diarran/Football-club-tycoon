@@ -112,7 +112,7 @@ H.test("le replay n'a aucun effet sur le résultat", function()
 	S.MatchService.BuildReplay = original
 	H.ok(result, "résultat envoyé")
 	H.eq(result.replay, nil, "pas de replay")
-	H.eq(data.coins, coins + result.rewards.total + (result.promotionReward or 0), "récompense versée")
+	H.eq(data.coins, coins + result.rewards.total + (result.promotionReward or 0) + (result.missionReward or 0), "récompense versée")
 	H.ok(H.findText(gui, "Continuer"), "fenêtre de résultat directe sans replay")
 	H.click(gui, "Continuer")
 end)

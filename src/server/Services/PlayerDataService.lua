@@ -20,6 +20,7 @@ local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared.Config)
+local Daily = require(Shared.Daily)
 local Buildings = require(Shared.Buildings)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
@@ -38,6 +39,7 @@ local profiles = {} -- [Player] = { data, temporary, loadedAt }
 local pendingSnapshot = {} -- [Player] = true quand un envoi est prévu
 local releasing = {} -- [UserId] = nombre de sauvegardes de départ en cours
 local RELEASE_WAIT_SECONDS = 60
+local snapshotFields = {} -- { name, fn(player, data) } ajoutés à l'instantané
 local changeListeners = {} -- fonctions appelées avant chaque envoi d'instantané
 local jobId = game.JobId ~= "" and game.JobId or ("studio-" .. HttpService:GenerateGUID(false))
 
@@ -60,6 +62,7 @@ local function defaultData()
 				goalsAgainst = 0,
 				challengesWon = 0, -- défis gagnés (ChallengeService)
 				tournamentsWon = 0, -- tournois du serveur gagnés (TournamentService)
+				seasonsWon = 0, -- saisons terminées à la 1re place (DailyService)
 			},
 		},
 		buildings = Buildings.DefaultLevels(),
@@ -82,6 +85,12 @@ local function defaultData()
 		-- Groupe Roblox (CommunityService) : bonus unique déjà reçu ?
 		community = { groupRewardClaimed = false },
 		tutorial = { step = 1, completed = false },
+		-- Objectifs quotidiens et saisons (DailyService, shared/Daily.lua).
+		-- Le jour de la création, le solde de départ tient lieu de cadeau du jour 1.
+		daily = { lastClaimDay = Daily.Day(os.time()), streak = 1 }, -- jour UTC de la dernière récompense
+		missions = { day = -1, list = {} }, -- missions du jour (renouvelées à minuit UTC)
+		season = { id = Daily.SeasonId(os.time()), points = 0, division = Divisions.STARTING_DIVISION },
+		lastSeenAt = os.time(), -- dernière sauvegarde : base des revenus hors ligne
 		lastMatchAt = 0,
 		lastEnergyUpdate = os.time(),
 		createdAt = os.time(),
@@ -216,6 +225,8 @@ local function writeProfile(player: Player, data, release: boolean): boolean
 				-- pas reposer le verrou, sinon le joueur serait bloqué ailleurs.
 				return nil
 			end
+			-- Heure du serveur : sert à calculer les revenus hors ligne au retour.
+			data.lastSeenAt = os.time()
 			current.data = data
 			current.lock = if release then nil else { jobId = jobId, time = os.time() }
 			written = true
@@ -387,7 +398,7 @@ function PlayerDataService.BuildSnapshot(player: Player)
 		return nil
 	end
 	local now = os.time()
-	return {
+	local snapshot = {
 		coins = data.coins,
 		club = table.clone(data.club),
 		buildings = table.clone(data.buildings),
@@ -406,6 +417,20 @@ function PlayerDataService.BuildSnapshot(player: Player)
 		adminUnlimited = data.admin.unlimited,
 		community = table.clone(data.community),
 	}
+	for _, field in snapshotFields do
+		local ok, value = pcall(field.fn, player, data)
+		if ok then
+			snapshot[field.name] = value
+		else
+			warn(("[PlayerData] Champ d'instantané « %s » : %s"):format(field.name, tostring(value)))
+		end
+	end
+	return snapshot
+end
+
+-- Ajoute un champ calculé à l'instantané client (ex. DailyService : « daily »).
+function PlayerDataService.AddSnapshotField(name: string, fn)
+	table.insert(snapshotFields, { name = name, fn = fn })
 end
 
 -- Signale un changement : un instantané est envoyé au client (regroupé par image).

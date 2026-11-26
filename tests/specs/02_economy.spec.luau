@@ -11,6 +11,7 @@ H.test("un nouveau club démarre avec le solde de départ et tout au niveau 1", 
 end)
 
 H.test("une amélioration débite le prix exact une seule fois", function()
+	data.missions.list = {} -- sans missions du jour (testées dans 16_daily)
 	H.fire(p, "RequestUpgrade", "Pitch")
 	H.eq(data.buildings.Pitch, 2, "niveau du terrain")
 	H.eq(data.coins, S.Config.STARTING_COINS - S.Buildings.GetUpgradeCost("Pitch", 1), "solde après achat")
@@ -87,6 +88,7 @@ end)
 
 H.test("recrutement : prix débité une fois, joueur ajouté, effectif limité", function()
 	H.advance(10)
+	data.missions.list = {} -- sans missions du jour (testées dans 16_daily)
 	data.coins = 1500
 	local size = #data.squad
 	H.fire(p, "RequestRecruit")
