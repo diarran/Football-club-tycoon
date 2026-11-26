@@ -199,10 +199,18 @@ function PlayerDataService.Init()
 			return store:GetAsync("__probe")
 		end)
 		if not probeOk then
-			store = nil
-			warn(
-				"[PlayerData] DataStore indisponible, profils temporaires utilisés : " .. tostring(probeErr)
-			)
+			if RunService:IsStudio() then
+				-- Studio sans accès aux API : mode test, progression non sauvegardée.
+				store = nil
+				warn(
+					"[PlayerData] DataStore indisponible, profils temporaires utilisés : " .. tostring(probeErr)
+				)
+			else
+				-- Jeu publié : une panne passagère au démarrage ne doit pas faire jouer
+				-- tout le serveur sans sauvegarde. On garde le DataStore ; chaque
+				-- chargement réessaie et, en cas d'échec, le joueur est invité à revenir.
+				warn("[PlayerData] Vérification du DataStore échouée, nouvel essai au chargement : " .. tostring(probeErr))
+			end
 		end
 	else
 		warn("[PlayerData] DataStore indisponible, profils temporaires utilisés : " .. tostring(result))
