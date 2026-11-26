@@ -15,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Audio = require(Shared.Audio)
 local Brand = require(Shared.Brand)
 local Community = require(Shared.Community)
 local Buildings = require(Shared.Buildings)
@@ -71,7 +72,7 @@ local state = {
 	challenges = { incoming = {}, outgoing = nil },
 	tournament = nil,
 	tournamentEndsAt = 0,
-	settings = { managementCamera = true, showTutorial = true },
+	settings = { managementCamera = true, showTutorial = true, volume = Audio.DEFAULT_VOLUME, music = true },
 }
 
 local gui, hud, crestBadge, panel, content, tabButtons, toast, resultPopup, welcomePopup
@@ -1146,6 +1147,36 @@ function renderers.Prestige(profile)
 	end
 end
 
+-- Son : volume général par paliers (0 = muet) et musique de fond.
+local function renderSoundSettings(toggle)
+	local row = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, {
+		create("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			Padding = UDim.new(0, 6),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	})
+	local steps = #Audio.VOLUME_STEPS
+	for index, value in Audio.VOLUME_STEPS do
+		local selected = math.abs((state.settings.volume or 0) - value) < 0.01
+		button(if value == 0 then T("settings.mute") else ("%d%%"):format(math.floor(value * 100 + 0.5)), function()
+			state.settings.volume = value
+			if UIController.OnSettingChanged then
+				UIController.OnSettingChanged("volume", value)
+			end
+			UIController.Refresh()
+		end, {
+			Name = "Volume_" .. index,
+			LayoutOrder = index,
+			Size = UDim2.new(1 / steps, -6, 0, 44),
+			BackgroundColor3 = if selected then COLORS.accent else COLORS.disabled,
+			Parent = row,
+		})
+	end
+	card({ label(T("settings.volume"), { Font = Enum.Font.GothamBold }), row }).Parent = content
+	toggle("music", T("settings.music"))
+end
+
 function renderers.Settings(profile)
 	local function toggle(settingId: string, text: string)
 		local value = state.settings[settingId]
@@ -1163,6 +1194,7 @@ function renderers.Settings(profile)
 	end
 	toggle("managementCamera", T("settings.managementCamera"))
 	toggle("showTutorial", T("settings.showTutorial"))
+	renderSoundSettings(toggle)
 
 	-- Langue : un bouton par langue gérée, celle en cours en surbrillance.
 	local current = Locale.ForPlayer(player)

@@ -15,6 +15,7 @@ local CameraController = require(Controllers.CameraController)
 local TutorialController = require(Controllers.TutorialController)
 local WorldTextController = require(Controllers.WorldTextController)
 local MatchReplayController = require(Controllers.MatchReplayController)
+local SoundController = require(Controllers.SoundController)
 
 -- Chaque contrôleur démarre séparément : si l'un échoue (caméra, tutoriel…),
 -- le menu et le HUD restent utilisables et l'erreur s'affiche dans la sortie.
@@ -29,6 +30,14 @@ UIController.Init() -- indispensable : sans lui, rien ne s'affiche
 start("CameraController", CameraController.Init)
 start("TutorialController", TutorialController.Init, UIController.GetScreenGui())
 start("WorldTextController", WorldTextController.Init)
+start("SoundController", function()
+	SoundController.Init()
+	-- Son de clic sur tous les boutons (menus, replay, tutoriel…).
+	local playerGui = UIController.GetScreenGui().Parent
+	if playerGui then
+		SoundController.HookButtons(playerGui)
+	end
+end)
 
 -- Liens entre les contrôleurs ---------------------------------------------
 
@@ -56,12 +65,27 @@ UIController.OnSettingChanged = function(settingId, value)
 		CameraController.SetEnabled(value)
 	elseif settingId == "showTutorial" then
 		TutorialController.SetVisible(value)
+	elseif settingId == "volume" then
+		SoundController.SetVolume(value)
+	elseif settingId == "music" then
+		SoundController.SetMusicEnabled(value)
 	end
 end
 
 UIController.OnLanguageChanged = function()
 	TutorialController.RefreshLanguage()
 	WorldTextController.RefreshAll()
+end
+
+-- Ambiance du replay 3D : public, clameur et son de but.
+MatchReplayController.OnStart = function(crowdLevel, spectator)
+	SoundController.StartMatch(crowdLevel, spectator)
+end
+MatchReplayController.OnGoal = function()
+	SoundController.Goal()
+end
+MatchReplayController.OnEnd = function()
+	SoundController.EndMatch()
 end
 
 -- Messages du serveur ------------------------------------------------------
@@ -93,7 +117,12 @@ end)
 Net.Get("MatchReplay").OnClientEvent:Connect(function(replay)
 	MatchReplayController.Play(replay, { spectator = true })
 end)
-Net.Get("Notify").OnClientEvent:Connect(UIController.Notify)
+Net.Get("Notify").OnClientEvent:Connect(function(message, kind)
+	UIController.Notify(message, kind)
+	if kind == "success" then
+		SoundController.Play("Piece")
+	end
+end)
 Net.Get("ChallengeUpdated").OnClientEvent:Connect(UIController.SetChallenges)
 Net.Get("TournamentUpdated").OnClientEvent:Connect(UIController.SetTournament)
 

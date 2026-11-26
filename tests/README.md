@@ -38,6 +38,7 @@ Le test `07_client` démarre aussi le vrai client (HUD, menus) et clique sur les
 | `11_divisions` | D7 → D1, clubs fictifs, primes croissantes, transferts validés par le serveur, classement de division |
 | `10_progression` | 5 niveaux par installation, prix exacts, modèles 3D au niveau 5, Boutique |
 | `17_staff_sponsors` | staff du club (embauche validée par le serveur, niveaux, effets modérés), sponsors (offres renouvelées, 1 puis 2 contrats, prime par match, bonus d'objectif unique, fin de contrat), ancien profil migré, onglet Gestion |
+| `18_ambiance` | ambiance sonore : sons de Studio d'abord puis sons intégrés à Roblox (muet si rien ne charge), public plus fort et chants dans un grand stade, confettis et son à chaque but du replay, clic des boutons, volume par paliers / muet / musique dans les Paramètres |
 | `12_challenges_tournament` | défis entre clubs (mises plafonnées, refus, expiration, anti-spam, seul le club défié répond, 200 défis sans création de monnaie), tournoi du serveur à 2 joueurs (inscriptions, 8 clubs, forfaits, récompenses bornées, événement « tournoi gagné »), écran Matchs |
 | `15_replay` | replay 3D des matchs : chronologie identique au score du serveur (buts, minutes, buteurs), 0 à 14 buts entre 30 et 60 s, aucun effet sur le tirage ni les récompenses, visiteurs prévenus, client : replay jusqu'au bout, « Passer », avance rapide, public selon les tribunes |
 | `11_academy_vip` | centre de formation (jeunes repérés hors ligne, signature, libération, progression), espace VIP, anciens profils |

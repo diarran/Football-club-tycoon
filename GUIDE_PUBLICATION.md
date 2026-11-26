@@ -120,6 +120,26 @@ reste **cachée** dans le jeu.
   **coupé** et le restera tant qu'on ne décide pas ensemble de l'ouvrir.
   Ne crée pas de produit pour lui pour l'instant.
 
+## Étape 8 (facultatif, 5 minutes). Choisir la musique et le bruit du public
+
+Le jeu a déjà ses clics, son de but et confettis (sons livrés avec Roblox). La musique de
+fond et le public du stade attendent que tu choisisses des sons dans la bibliothèque
+gratuite de Roblox, car on ne peut pas vérifier depuis GitHub quels sons sont publics.
+
+1. Dans Studio, ouvre la **Boîte à outils** (onglet Accueil > Boîte à outils), catégorie
+   **Audio**. Garde de préférence les sons publiés par **Roblox** (gratuits pour tous les jeux).
+2. Cherche par exemple « stadium crowd », écoute avec ▶, puis **glisse** le son choisi
+   sur le dossier **ReplicatedStorage > Sons** (dans l'Explorateur).
+3. **Renomme-le** exactement avec un de ces noms :
+   - **Musique** : musique de fond (en boucle, baisse pendant les matchs) ;
+   - **Foule** : brouhaha du public pendant les matchs (plus fort avec de grandes tribunes) ;
+   - **Chants** : chants de supporters (à partir des tribunes niveau 3) ;
+   - **Clameur** : cri du public au moment d'un but ;
+   - **Sifflet** : coup de sifflet au début et à la fin du match ;
+   - (facultatif) **But**, **Clic**, **Piece** pour remplacer les sons fournis.
+4. Republie le jeu (Fichier > Publier sur Roblox). Un nom absent ou un son qui ne charge
+   pas reste simplement muet : rien ne casse.
+
 ## Textes de la page du jeu
 
 ### Français

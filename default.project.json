@@ -38,6 +38,9 @@
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
+      },
+      "Sons": {
+        "$className": "Folder"
       }
     },
     "ServerScriptService": {

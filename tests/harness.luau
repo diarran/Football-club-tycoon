@@ -314,6 +314,27 @@ local function newInstance(className: string)
 		inst.PivotTo = function(self, cf)
 			self._pivot = cf
 		end
+	elseif className == "Sound" then
+		inst.SoundId = ""
+		inst.IsPlaying = false
+		inst.Volume = 0.5
+		inst.Play = function(self)
+			self.IsPlaying = true
+			H.soundLog[#H.soundLog + 1] = self.Name
+		end
+		inst.Stop = function(self)
+			self.IsPlaying = false
+		end
+		inst.Pause = function(self)
+			self.IsPlaying = false
+		end
+		inst.Resume = function(self)
+			self.IsPlaying = true
+		end
+	elseif className == "ParticleEmitter" then
+		inst.Emit = function(self, count)
+			H.emitted[self] = (H.emitted[self] or 0) + count
+		end
 	end
 	return inst
 end
@@ -489,6 +510,26 @@ camera.CFrame = env.CFrame.new()
 camera.Parent = env.workspace
 env.workspace.CurrentCamera = camera
 env.workspace.DescendantAdded = env.workspace.DescendantAdded or H.newSignal()
+
+-- Sons : une adresse « se charge » sauf si elle figure dans H.missingSounds.
+H.soundLog = {} -- noms des Sound joués, dans l'ordre
+H.emitted = {} -- [ParticleEmitter] = particules émises
+H.missingSounds = {}
+game:GetService("ContentProvider").PreloadAsync = function(_self, list, callback)
+	for _, item in list do
+		local id = item.SoundId or ""
+		local okId = id ~= "" and not H.missingSounds[id]
+		if callback then
+			callback(id, if okId then env.Enum.AssetFetchStatus.Success else env.Enum.AssetFetchStatus.Failure)
+		end
+	end
+end
+
+-- Types de valeurs des effets (particules) : simples tables.
+H.NumberRange = { new = function(a, b) return { Min = a, Max = b or a } end }
+H.NumberSequence = { new = function(v) return { value = v } end }
+H.ColorSequence = { new = function(v) return { value = v } end }
+H.ColorSequenceKeypoint = { new = function(t, c) return { Time = t, Value = c } end }
 
 H.TweenInfo = {
 	new = function(...)
