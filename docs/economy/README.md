@@ -312,6 +312,36 @@ Simulateur : une fois en D1 avec tout acheté, le joueur type continue et achèt
 la personnalisation, la moins chère d'abord. Alerte en CI si tout est acheté
 moins de 15 h de jeu après la D1.
 
+## Retour quotidien : cadeau, missions, hors ligne, saisons (26/11/2026)
+
+Règles et montants : `src/shared/Daily.lua` (service : `DailyService`). Tout est
+calculé par le serveur avec son horloge (`os.time()`, UTC), le client affiche seulement.
+
+| Mécanique | Règle | Montant (×échelle de division) |
+| --- | --- | --- |
+| Cadeau du jour | 1 fois par jour UTC, série sur 7 jours ; un jour manqué remet la série au jour 1 sans rien retirer | 300, 400, 500, 650, 800, 1 000, **2 000** |
+| Missions du jour | 3 tirées par joueur (gagner, jouer, marquer, améliorer, recruter), seulement si faisables ; nouvelles à minuit UTC | 400 à 800 chacune |
+| Revenus hors ligne | revenus des installations (sans prime de match) pour 0,5 match par heure d'absence, à partir de 5 min, **plafond 8 h** | ~4 matchs d'installations au maximum |
+| Saison de 7 jours | du lundi au lundi ; points de saison = points de division ; classement contre les 5 clubs fictifs de la division | 5 000 / 3 000 / 2 000 / 1 200 / 700 / 400 selon la place, trophée si 1re place |
+
+Échelle de division : D7 ×1, D6 ×1,3, D5 ×1,6, D4 ×2,5, D3 ×3,5, D2 ×5, D1 ×6,5
+(suit à peu près le gain moyen d'un match). Le jour de création du club, le solde de
+départ tient lieu de cadeau du jour 1.
+
+Simulateur (10 parties par profil), avant → après :
+
+| | Joueur actif | Joueur occasionnel |
+| --- | --- | --- |
+| Montée en D5 | 43,8 → 40,6 min | 54 → 52 min |
+| D1 | 31,9 → 31,6 h | 46,1 → 44,9 h |
+| Tout le stade acheté | 394 → 355 min | 574 → 314 min (41 → 23 sessions) |
+| Part des gains venant du retour quotidien (arrivée + missions) | 9 % | 42 % |
+
+Le joueur occasionnel est celui que ces mécaniques visent : revenir chaque jour
+fait nettement avancer son stade, sans changer le rythme sportif (D5 ~40 min,
+D1 ~32 h pour un joueur actif). Nouvelle alerte en CI si plus de la moitié des gains
+vient sans jouer. Aucune source de monnaie infinie détectée.
+
 ## Staff du club et sponsors (26/11/2026)
 
 **Staff** (`src/shared/Staff.lua`) : 4 postes à 4 niveaux, chacun payé une fois
@@ -336,8 +366,8 @@ réduites (entraîneur +1 au maximum, primes divisées par ~2) :
 
 | Mesure (médiane, joueur actif) | Avant | Après |
 | --- | --- | --- |
-| D5 | 40 min | 38 min |
-| D1 | 31,5 h | 30,9 h (occasionnel : 44,4 h) |
+| D5 | 40 min | 38 min (34 min avec les objectifs quotidiens) |
+| D1 | 31,5 h | 30,8 h avec les objectifs quotidiens (occasionnel : 43,5 h) |
 | Tout acheté (installations + staff) | ~6 h 15 | ~8 h 15 |
 | Contrats de sponsoring par match | — | ~530 en fin de partie, au plus 720 |
 | Bonus d'objectif | — | ~5 100 FC Coins par heure de jeu |

@@ -660,6 +660,8 @@ function H.boot(modules)
 		StaffService = mock.run(modules.StaffService),
 		Staff = mock.run(modules.Staff),
 		Sponsors = mock.run(modules.Sponsors),
+		DailyService = mock.run(modules.DailyService),
+		Daily = mock.run(modules.Daily),
 		TutorialService = mock.run(modules.TutorialService),
 		CosmeticService = mock.run(modules.CosmeticService),
 		Cosmetics = mock.run(modules.Cosmetics),

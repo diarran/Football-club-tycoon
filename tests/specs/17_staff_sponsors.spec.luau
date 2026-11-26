@@ -30,6 +30,7 @@ end)
 H.test("embauche : prix serveur, débit unique, niveau max, poste inconnu refusé", function()
 	local p = H.join(2)
 	local data = S.PlayerDataService.GetData(p)
+	data.missions.list = {} -- sans missions du jour (testées dans 16_daily)
 	data.coins = 4000
 	H.fire(p, "RequestHireStaff", "Coach")
 	H.eq(data.staff.Coach, 1, "entraîneur embauché")

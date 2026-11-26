@@ -28,6 +28,7 @@ H.test("un joueur quitte puis revient tout de suite : aucune progression perdue"
 	local p = H.join(200)
 	H.advance(2)
 	local data = S.PlayerDataService.GetData(p)
+	data.missions.list = {} -- sans missions du jour (testées dans 16_daily)
 	H.fire(p, "RequestUpgrade", "Pitch")
 	H.eq(data.buildings.Pitch, 2, "amélioration faite")
 	store.failNext = 1 -- la sauvegarde de départ échoue une fois et réessaie

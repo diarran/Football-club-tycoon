@@ -94,6 +94,7 @@ H.test("transfert : remplace le moins bien noté, au même poste, par un meilleu
 	end
 	data.squad[2].rating = 30
 	local weakest = data.squad[2]
+	data.missions.list = {} -- sans missions du jour (testées dans 16_daily)
 	local coins = data.coins
 	H.advance(1)
 	H.fire(p, "RequestTransfer")
@@ -152,6 +153,7 @@ H.test("écrans : classement de division avec clubs fictifs, adversaires et bout
 	H.flush()
 	UI.OpenTab("Squad")
 	H.flush()
+	data.missions.list = {} -- sans missions du jour (testées dans 16_daily)
 	local coins = data.coins
 	H.click(gui, "Transfert")
 	H.eq(data.coins, coins - D.Get("D5").transfer.cost, "transfert payé depuis le bouton")

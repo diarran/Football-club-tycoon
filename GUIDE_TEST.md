@@ -31,7 +31,7 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier (14 points)
+## 5. Ce qu'il faut vérifier (16 points)
 
 Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
 
@@ -74,11 +74,19 @@ Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
     joueur 1, puis le joueur 1 lance un match. Le joueur 2 voit le match se jouer sur ce
     terrain et le tableau d'affichage au-dessus de la tribune du fond, sans que sa
     caméra bouge.
-15. **Gestion : staff** : ouvre l'onglet **Gestion**. Les 4 postes (Entraîneur,
+15. **Objectifs du jour** : dans **Accueil**, trois cartes s'affichent : **Cadeau du jour**
+    (série jour 1 / 7), **Missions du jour** (3 missions avec leur prime) et **Saison de
+    la semaine** (classement de 6 clubs). Lance un match : la mission « Joue … matchs »
+    avance d'un cran ; une mission accomplie affiche un message vert avec sa prime.
+16. **Retour au jeu** (seulement si la sauvegarde est active, voir le guide de
+    publication) : quitte le jeu, attends au moins **5 minutes**, relance-le. Une fenêtre
+    **« Pendant ton absence… »** indique ce que tes installations ont rapporté ; le
+    lendemain, elle montre aussi le **cadeau du jour 2 / 7**.
+17. **Gestion : staff** : ouvre l'onglet **Gestion**. Les 4 postes (Entraîneur,
     Recruteur, Médecin, Directeur commercial) sont vacants. Clique **Embaucher** sur
     le Médecin (2 500 FC) : il passe au niveau 1, ton solde baisse et la ligne
     « Au niveau suivant » montre le prochain effet.
-16. **Gestion : sponsors** : plus bas, 3 offres de sponsors fictifs. Clique **Signer le
+18. **Gestion : sponsors** : plus bas, 3 offres de sponsors fictifs. Clique **Signer le
     contrat** sur l'une d'elles : elle passe dans « Les contrats de sponsoring ».
     Joue un match : la fenêtre de résultat affiche « Contrats de sponsoring : +… »
     et, dans Gestion, le contrat indique un match de moins et la progression de son objectif.
