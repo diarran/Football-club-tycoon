@@ -26,6 +26,7 @@ local MatchReplay = require(Shared.MatchReplay)
 local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
+local Staff = require(Shared.Staff)
 local WorldConfig = require(Shared.WorldConfig)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
@@ -33,6 +34,7 @@ local EconomyService = require(script.Parent.EconomyService)
 local ClubService = require(script.Parent.ClubService)
 local SquadService = require(script.Parent.SquadService)
 local TutorialService = require(script.Parent.TutorialService)
+local StaffService = require(script.Parent.StaffService)
 local DailyService = require(script.Parent.DailyService)
 
 local MatchService = {}
@@ -155,7 +157,8 @@ function MatchService.ClubTeam(player: Player)
 		name = data.club.name,
 		squad = table.clone(data.squad),
 		tactic = data.tactic,
-		bonus = Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0,
+		bonus = (Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0)
+			+ Staff.Effect(data.staff, "teamBonus"),
 	}
 end
 
@@ -288,8 +291,8 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		if not opponentData or #opponentData.squad == 0 then
 			return nil, Locale.TP(player, "error.opponentUnavailable")
 		end
-		local trainingBonus = Buildings.GetEffects("Training", opponentData.buildings.Training or 1).teamBonus
-			or 0
+		local trainingBonus = (Buildings.GetEffects("Training", opponentData.buildings.Training or 1).teamBonus or 0)
+			+ Staff.Effect(opponentData.staff, "teamBonus")
 		away = {
 			id = opponentId,
 			name = opponentData.club.name,
@@ -305,6 +308,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	local homeBonus = Config.HOME_ADVANTAGE
 		+ (Buildings.GetEffects("Pitch", data.buildings.Pitch or 1).homeBonus or 0)
 		+ (Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0)
+		+ Staff.Effect(data.staff, "teamBonus") -- entraîneur du staff
 	local home = {
 		id = "player:" .. player.UserId,
 		name = data.club.name,
@@ -326,7 +330,10 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	local offices = Buildings.GetEffects("Offices", data.buildings.Offices or 1)
 	local attendance = 0.6 + rng:NextNumber() * 0.3
 	local tickets = math.floor((stands.capacity or 0) * attendance * (stands.ticketPrice or 0))
-	local sponsor = offices.sponsorIncome or 0
+	-- Sponsors des bureaux (+ part du directeur commercial du staff).
+	local sponsor = math.floor((offices.sponsorIncome or 0) * StaffService.SponsorMultiplier(data) + 0.5)
+	-- Contrats de sponsoring signés : prime fixe par match.
+	local contracts = StaffService.ContractIncome(data)
 	local shop = Buildings.GetEffects("Shop", data.buildings.Shop or 1).shopIncome or 0
 	-- Espace VIP : bonus sur la billetterie + revenu fixe des loges.
 	local vipEffects = Buildings.GetEffects("VIP", data.buildings.VIP or 1)
@@ -335,7 +342,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	local matchReward = math.floor(
 		Config.Rewards[outcome] * currentDivision.rewardMultiplier * (away.rewardFactor or 1) + 0.5
 	)
-	local totalReward = matchReward + tickets + sponsor + shop + vip
+	local totalReward = matchReward + tickets + sponsor + shop + vip + contracts
 	-- Boost de revenus acheté en Robux : coupé par défaut (Monetization.BOOST_ENABLED).
 	totalReward = math.floor(totalReward * Monetization.BoostMultiplier(data, os.time()))
 	EconomyService.Add(player, totalReward, "match:" .. outcome)
@@ -370,6 +377,9 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		end
 	end
 
+	-- Objectifs des contrats de sponsoring (bonus unique versé ici).
+	local sponsorReport = StaffService.OnMatchPlayed(player, data, outcome, score.homeGoals)
+
 	SquadService.ApplyMatchEffects(data)
 	-- Saison et missions du jour (primes versées par DailyService).
 	DailyService.AddSeasonPoints(player, Config.DivisionPoints[outcome])
@@ -394,7 +404,17 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		awayGoals = score.awayGoals,
 		events = score.events,
 		outcome = outcome,
-		rewards = { match = matchReward, tickets = tickets, sponsor = sponsor, shop = shop, vip = vip, total = totalReward },
+		rewards = {
+			match = matchReward,
+			tickets = tickets,
+			sponsor = sponsor,
+			shop = shop,
+			vip = vip,
+			contracts = contracts,
+			total = totalReward,
+		},
+		sponsorBonuses = sponsorReport.bonuses,
+		sponsorsEnded = sponsorReport.ended,
 		promotionReward = promotionReward,
 		missionReward = missionReward,
 		divisionPoints = data.club.divisionPoints,

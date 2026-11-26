@@ -138,7 +138,7 @@ H.test("rafale de demandes : limitée par joueur", function()
 	H.leave(p)
 end)
 
-H.test("menu : les 7 onglets tiennent sur une ligne (téléphone compris)", function()
+H.test("menu : les 8 onglets tiennent sur une ligne (téléphone compris)", function()
 	local p = H.join(47)
 	local gui = H.startClient(MODULES, p)
 	local UI = mock.run(MODULES.Client_UIController)
@@ -161,7 +161,7 @@ H.test("menu : les 7 onglets tiennent sur une ligne (téléphone compris)", func
 			H.ok(child.TextScaled, "texte qui rétrécit pour " .. child.Text)
 		end
 	end
-	H.eq(count, 7, "onglets")
+	H.eq(count, 8, "onglets")
 	H.ok(totalScale <= 1.0001, "les onglets ne dépassent pas la barre")
 	H.ok(H.findText(gui, "Prestige", "TextButton"), "onglet Prestige visible")
 	H.ok(H.findText(gui, "Paramètres", "TextButton"), "onglet Paramètres visible")

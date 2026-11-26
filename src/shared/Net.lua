@@ -37,6 +37,9 @@ Net.Requests = {
 	"RequestTournamentJoin", -- () s'inscrire au tournoi du serveur
 	"RequestGroupReward", -- () bonus unique après avoir rejoint le groupe Roblox (CommunityService)
 	"RequestAdminCode", -- (code: string) code admin secret, vérifié par le serveur (AdminService)
+	"RequestHireStaff", -- (staffId: string) embaucher ou faire monter un membre du staff
+	"RequestSignSponsor", -- (offerId: number) signer une offre de sponsor
+	"RequestCancelSponsor", -- (contractId: number) arrêter un contrat de sponsor
 }
 
 -- Serveur -> client (notifications)

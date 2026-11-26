@@ -68,7 +68,7 @@ Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
     l'ouverture des inscriptions. Dans **Matchs**, les deux joueurs cliquent
     **S'inscrire** (1 minute pour le faire) ; les tours s'enchaînent et un vainqueur est annoncé.
 13. **Téléphone et sortie** : onglet **Test** > **Device**, choisis un téléphone : les
-    7 onglets et les boutons restent lisibles. Pendant tout le test, la fenêtre
+    8 onglets et les boutons restent lisibles. Pendant tout le test, la fenêtre
     **Sortie** ne doit montrer aucune ligne **rouge** ni orange commençant par `[Main]`.
 14. **Replay vu par un visiteur** (à 2) : le joueur 2 marche jusqu'au terrain du
     joueur 1, puis le joueur 1 lance un match. Le joueur 2 voit le match se jouer sur ce
@@ -82,5 +82,13 @@ Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
     publication) : quitte le jeu, attends au moins **5 minutes**, relance-le. Une fenêtre
     **« Pendant ton absence… »** indique ce que tes installations ont rapporté ; le
     lendemain, elle montre aussi le **cadeau du jour 2 / 7**.
+17. **Gestion : staff** : ouvre l'onglet **Gestion**. Les 4 postes (Entraîneur,
+    Recruteur, Médecin, Directeur commercial) sont vacants. Clique **Embaucher** sur
+    le Médecin (2 500 FC) : il passe au niveau 1, ton solde baisse et la ligne
+    « Au niveau suivant » montre le prochain effet.
+18. **Gestion : sponsors** : plus bas, 3 offres de sponsors fictifs. Clique **Signer le
+    contrat** sur l'une d'elles : elle passe dans « Les contrats de sponsoring ».
+    Joue un match : la fenêtre de résultat affiche « Contrats de sponsoring : +… »
+    et, dans Gestion, le contrat indique un match de moins et la progression de son objectif.
 
 Envoie ensuite ta liste (✅ / ❌ + captures + lignes rouges) dans le projet : on corrige.

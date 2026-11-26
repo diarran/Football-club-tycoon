@@ -30,6 +30,7 @@ local ChallengeService = require(Services.ChallengeService)
 local TournamentService = require(Services.TournamentService)
 local AdminService = require(Services.AdminService)
 local CommunityService = require(Services.CommunityService)
+local StaffService = require(Services.StaffService)
 local DailyService = require(Services.DailyService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
@@ -40,6 +41,7 @@ local ORDERED_SERVICES = {
 	{ name = "TutorialService", module = TutorialService },
 	{ name = "BuildingService", module = BuildingService },
 	{ name = "SquadService", module = SquadService },
+	{ name = "StaffService", module = StaffService },
 	{ name = "MatchService", module = MatchService },
 	{ name = "CosmeticService", module = CosmeticService },
 	{ name = "MonetizationService", module = MonetizationService },
@@ -77,6 +79,7 @@ local function onPlayerAdded(player: Player)
 	-- L'effectif est créé avant l'attribution du terrain pour que la liste
 	-- des clubs affiche tout de suite une note correcte.
 	step("SquadService.OnPlayerReady", SquadService.OnPlayerReady, player, profile)
+	step("StaffService.OnPlayerReady", StaffService.OnPlayerReady, player, profile)
 	local ready, assigned = step("ClubService.OnPlayerReady", ClubService.OnPlayerReady, player, profile)
 	if not ready or not assigned then
 		-- Sans terrain, le joueur ne peut pas jouer : profil libéré (sauvegardé)
