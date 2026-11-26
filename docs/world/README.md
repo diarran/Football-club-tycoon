@@ -48,6 +48,18 @@ niveau 2 petite boutique, niveau 3 magasin vitré avec mannequins en maillot,
 niveau 4 grand magasin de 2 étages au nom du club, niveau 5 boutique officielle
 avec un maillot géant sur le toit.
 
+Le **Centre de formation** (`Academy`), à gauche de la boutique : bâtiment à
+gauche, mini-terrain à droite. Niveau 1 cabane en bois des recruteurs et plots,
+niveau 2 bureau en briques et mini-terrain avec deux petits buts, niveau 3
+façade vitrée et clôture aux couleurs du club, niveau 4 internat de 2 étages et
+mâts d'éclairage, niveau 5 académie de 3 étages avec un ballon géant sur le toit.
+
+L'**Espace VIP** (`VIP`), à droite de l'entrée face au stade : tapis rouge et
+cordons dorés devant la porte. Niveau 1 tente d'accueil, niveau 2 salon enduit
+à bandeau doré, niveau 3 salon vitré avec terrasse sur le toit, niveau 4 club
+house de 2 étages avec parasols, niveau 5 pavillon prestige avec bandeau
+lumineux doré et couronne sur le toit.
+
 ![Club au niveau 5 (aperçu 3D)](club-niveau-5.png)
 
 Capacités des tribunes : 200 / 500 / 1 000 / 1 600 / 2 500 places (voir `docs/economy`).
@@ -63,13 +75,14 @@ Un nouveau club commence avec toutes ses installations au **niveau 1**.
 | | Blocs (Parts) |
 |---|---|
 | Quartier commun | ~210 |
-| Terrain tout niveau 1 | ~175 |
-| Terrain tout niveau 2 | ~330 |
-| Terrain tout niveau 3 | ~510 |
-| Terrain tout niveau 4 | ~590 |
-| Terrain tout niveau 5 | ~600 |
+| Terrain tout niveau 1 | ~220 |
+| Terrain tout niveau 2 | ~390 |
+| Terrain tout niveau 3 | ~570 |
+| Terrain tout niveau 4 | ~660 |
+| Terrain tout niveau 5 | ~680 |
 
-Objectif : environ 600 blocs par terrain au niveau maximum (Boutique comprise).
+Objectif : moins de 750 blocs par terrain au niveau maximum (8 installations,
+vérifié par le test 10_progression).
 
 ## Voir le monde dans Roblox Studio
 
