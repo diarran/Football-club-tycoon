@@ -50,6 +50,29 @@ Config.DivisionPoints = {
 	Loss = 0,
 }
 
+-- Défis entre clubs du serveur (ChallengeService) -------------------------
+-- Enjeu : chaque club met la même somme, le gagnant prend tout, nul = remboursé.
+-- Aucune monnaie n'est créée : l'argent passe seulement d'un club à l'autre.
+Config.Challenge = {
+	STAKES = { 0, 100, 250, 500, 1000 }, -- seules mises acceptées (plafond 1 000)
+	EXPIRE_SECONDS = 30, -- sans réponse, le défi est annulé
+	SEND_COOLDOWN_SECONDS = 20, -- délai entre deux défis envoyés
+	PAIR_COOLDOWN_SECONDS = 60, -- après un refus, même adversaire bloqué
+	MAX_INCOMING = 3, -- défis en attente au maximum pour un même club
+}
+
+-- Tournoi du serveur (TournamentService) ------------------------------------
+-- Mini-tournoi à élimination directe, 8 clubs (humains + clubs fictifs).
+-- Récompenses × multiplicateur de la division du club, versées par le serveur.
+Config.Tournament = {
+	FIRST_DELAY_SECONDS = 180, -- premier tournoi après le démarrage du serveur
+	INTERVAL_SECONDS = 900, -- un tournoi toutes les 15 minutes
+	REGISTRATION_SECONDS = 60,
+	ROUND_SECONDS = 15, -- pause entre deux tours (quarts, demies, finale)
+	SIZE = 8,
+	Rewards = { Winner = 1200, Final = 600, Semi = 300, Quarter = 100 },
+}
+
 -- Nom du club -----------------------------------------------------------
 Config.CLUB_NAME_MIN_LENGTH = 3
 Config.CLUB_NAME_MAX_LENGTH = 24
