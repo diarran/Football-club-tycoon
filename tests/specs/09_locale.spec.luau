@@ -99,6 +99,30 @@ H.test("le décor 3D est traduit pour le joueur", function()
 	H.eq(offices:GetAttribute("TextKey"), "world.offices", "clé notée par le serveur")
 end)
 
+H.test("anglais : aucun mot français dans les 8 onglets", function()
+	-- Mots courants des textes français du jeu (les noms de clubs et de
+	-- joueurs, eux, peuvent garder leurs accents).
+	local FRENCH = { " le ", " la ", " les ", " des ", " du ", " pour ", " avec ", "Améliorer", "Embaucher", "Signer", "Joue", "Gagne", "matchs", "Défier", "Saison", "Cadeau" }
+	local leaks = {}
+	openAll()
+	for _, tab in { "Home", "Stadium", "Squad", "Management", "Matches", "Ranking", "Prestige", "Settings" } do
+		UI.OpenTab(tab)
+		H.flush()
+		for _, d in gui:GetDescendants() do
+			local text = d.Text
+			if type(text) == "string" and text ~= "Français" then
+				for _, word in FRENCH do
+					if string.find(" " .. text .. " ", word, 1, true) then
+						table.insert(leaks, tab .. " : " .. text)
+						break
+					end
+				end
+			end
+		end
+	end
+	H.eq(#leaks, 0, "textes en français : " .. table.concat(leaks, " | "))
+end)
+
 H.test("textes anglais lisibles sur téléphone : aucun bouton trop étroit", function()
 	local camera = workspace.CurrentCamera
 	camera.ViewportSize = Vector2.new(667, 375)

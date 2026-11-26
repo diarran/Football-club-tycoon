@@ -473,7 +473,10 @@ function LeaderboardService.Init()
 	task.spawn(function()
 		while true do
 			task.wait(Leaderboard.ROTATE_SECONDS)
-			LeaderboardService.ShowBoard(boardIndex + 1)
+			-- Serveur vide : personne ne regarde le panneau, inutile de le réécrire.
+			if #Players:GetPlayers() > 0 then
+				LeaderboardService.ShowBoard(boardIndex + 1)
+			end
 		end
 	end)
 	-- Fermeture du serveur : dernières écritures (sans délai).
