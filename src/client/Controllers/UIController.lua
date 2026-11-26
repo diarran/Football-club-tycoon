@@ -25,6 +25,7 @@ local Locale = require(Shared.Locale)
 local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
+local Staff = require(Shared.Staff)
 local WorldConfig = require(Shared.WorldConfig)
 
 local player = Players.LocalPlayer
@@ -58,7 +59,7 @@ local COLORS = {
 }
 
 -- Nom affiché : clé « tab.<id> » de Locale.
-local TABS = { "Home", "Stadium", "Squad", "Matches", "Ranking", "Prestige", "Settings" }
+local TABS = { "Home", "Stadium", "Squad", "Management", "Matches", "Ranking", "Prestige", "Settings" }
 
 local state = {
 	profile = nil,
@@ -486,6 +487,147 @@ function renderers.Squad(profile)
 			)
 		end
 		card(children).Parent = content
+	end
+end
+
+-- Gestion : staff du club et contrats de sponsoring.
+local function durationText(seconds: number): string
+	local minutes = math.max(0, math.ceil(seconds / 60))
+	return T("management.time", { hours = math.floor(minutes / 60), minutes = minutes % 60 })
+end
+
+local function staffEffectText(staffId: string, level: number): string
+	local def = Staff.Get(staffId)
+	local effects = def and def.levels[level] and def.levels[level].effects or {}
+	local function pct(value)
+		return math.floor((value or 0) * 100 + 0.5)
+	end
+	return T("staff." .. staffId .. ".effect", {
+		teamBonus = effects.teamBonus or 0,
+		growth = pct(effects.growthBonus),
+		speed = pct((effects.scoutSpeed or 1) - 1),
+		bonus = if staffId == "Commercial" then pct(effects.sponsorBonus) else (effects.prospectBonus or 0),
+		recovery = pct((effects.energyRecovery or 1) - 1),
+	})
+end
+
+local function sponsorGoalText(entry): string
+	return T("sponsor.goal." .. tostring(entry.goal), { target = entry.target })
+end
+
+function renderers.Management(profile)
+	local staffLevels = profile.staff or {}
+	card({
+		label(T("management.staffTitle"), { Font = Enum.Font.GothamBold }),
+		label(T("management.staffHint"), { TextColor3 = COLORS.muted, TextSize = 16 }),
+	}).Parent =
+		content
+	for _, def in Staff.List() do
+		local level = staffLevels[def.id] or 0
+		local maxLevel = Staff.MaxLevel(def.id)
+		local name = T("staff." .. def.id .. ".label")
+		local children = {
+			label(
+				if level > 0
+					then T("staff.levelLine", { name = name, level = level, max = maxLevel })
+					else T("staff.vacant", { name = name }),
+				{ Font = Enum.Font.GothamBold }
+			),
+		}
+		if level > 0 then
+			table.insert(children, label(T("staff.current", { effect = staffEffectText(def.id, level) }), {
+				TextColor3 = COLORS.muted,
+				TextSize = 16,
+			}))
+		end
+		local cost = Staff.GetHireCost(def.id, level)
+		if cost then
+			table.insert(children, label(T("staff.next", { effect = staffEffectText(def.id, level + 1) }), {
+				TextColor3 = COLORS.muted,
+				TextSize = 16,
+			}))
+			table.insert(
+				children,
+				button(T(if level == 0 then "staff.hire" else "staff.upgrade", { cost = formatCoins(cost) }), function()
+					Net.Get("RequestHireStaff"):FireServer(def.id)
+				end, {
+					Size = UDim2.new(0, 240, 0, 44),
+					BackgroundColor3 = if profile.coins >= cost then COLORS.accent else COLORS.disabled,
+				})
+			)
+		else
+			table.insert(children, label(T("staff.maxLevel"), { TextColor3 = COLORS.gold }))
+		end
+		card(children).Parent = content
+	end
+
+	local sponsors = profile.sponsors or { offers = {}, contracts = {}, refreshIn = 0, maxActive = 1 }
+	local contracts = sponsors.contracts or {}
+	card({
+		label(T("management.sponsorTitle"), { Font = Enum.Font.GothamBold }),
+		label(
+			T("management.sponsorHint", { count = #contracts, max = sponsors.maxActive or 1 }),
+			{ TextColor3 = COLORS.muted, TextSize = 16 }
+		),
+		if #contracts == 0
+			then label(T("management.noContracts"), { TextColor3 = COLORS.muted, TextSize = 16 })
+			else nil,
+	}).Parent =
+		content
+	for _, contract in contracts do
+		card({
+			label("🤝 " .. contract.brand, { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
+			label(
+				T("sponsor.contractLine", { perMatch = contract.perMatch, matches = contract.matchesLeft }),
+				{ TextColor3 = COLORS.muted, TextSize = 16 }
+			),
+			label(
+				if contract.completed
+					then T("sponsor.completed")
+					else T("sponsor.progress", {
+						goal = sponsorGoalText(contract),
+						progress = contract.progress,
+						target = contract.target,
+					}),
+				{ TextColor3 = if contract.completed then COLORS.accent else COLORS.muted, TextSize = 16 }
+			),
+			button(T("sponsor.cancel"), function()
+				Net.Get("RequestCancelSponsor"):FireServer(contract.id)
+			end, { Size = UDim2.new(0, 240, 0, 44), BackgroundColor3 = COLORS.disabled }),
+		}).Parent =
+			content
+	end
+
+	local offers = sponsors.offers or {}
+	local slotsFull = #contracts >= (sponsors.maxActive or 1)
+	card({
+		label(
+			if #offers > 0
+				then T("management.offersTitle", { time = durationText(sponsors.refreshIn or 0) })
+				else T("management.noOffers", { time = durationText(sponsors.refreshIn or 0) }),
+			{ Font = Enum.Font.GothamBold }
+		),
+	}).Parent =
+		content
+	for _, offer in offers do
+		card({
+			label(offer.brand, { Font = Enum.Font.GothamBold }),
+			label(
+				T("sponsor.offerLine", { perMatch = offer.perMatch, matches = offer.matches }),
+				{ TextColor3 = COLORS.muted, TextSize = 16 }
+			),
+			label(
+				T("sponsor.goalLine", { goal = sponsorGoalText(offer), bonus = offer.bonus }),
+				{ TextColor3 = COLORS.muted, TextSize = 16 }
+			),
+			button(T("sponsor.sign"), function()
+				Net.Get("RequestSignSponsor"):FireServer(offer.id)
+			end, {
+				Size = UDim2.new(0, 240, 0, 44),
+				BackgroundColor3 = if slotsFull then COLORS.disabled else COLORS.accent,
+			}),
+		}).Parent =
+			content
 	end
 end
 
@@ -1485,6 +1627,22 @@ function UIController.ShowMatchResult(result)
 			{ TextColor3 = COLORS.gold, TextXAlignment = Enum.TextXAlignment.Center }
 		)
 	)
+	if (rewards.contracts or 0) > 0 then
+		add(label(T("result.sponsorContracts", { coins = formatCoins(rewards.contracts) }), {
+			TextColor3 = COLORS.gold,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}))
+	end
+	for _, bonus in result.sponsorBonuses or {} do
+		add(label(T("result.sponsorBonus", { brand = bonus.brand, coins = formatCoins(bonus.coins) }), {
+			Font = Enum.Font.GothamBold,
+			TextColor3 = COLORS.gold,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}))
+	end
+	for _, brand in result.sponsorsEnded or {} do
+		add(label(T("result.sponsorEnded", { brand = brand }), centered))
+	end
 	if result.promoted then
 		local promotedText = T("result.promoted", { division = divisionLabel(result.division) })
 		if (result.promotionReward or 0) > 0 then

@@ -25,6 +25,8 @@ local Buildings = require(Shared.Buildings)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
+local Sponsors = require(Shared.Sponsors)
+local Staff = require(Shared.Staff)
 local Trophies = require(Shared.Trophies)
 
 local PlayerDataService = {}
@@ -70,6 +72,11 @@ local function defaultData()
 		-- Centre de formation : jeunes repérés en attente de signature (SquadService).
 		academy = { prospects = {}, lastScoutAt = 0 },
 		tactic = Config.DEFAULT_TACTIC,
+		-- Staff du club (StaffService) : niveau de chaque poste, 0 = vacant.
+		staff = Staff.DefaultLevels(),
+		-- Sponsors (StaffService) : offres du moment, contrats signés,
+		-- heure du prochain renouvellement des offres, prochain numéro.
+		sponsors = { offers = {}, contracts = {}, refreshAt = 0, nextId = 1 },
 		-- Personnalisation achetée (CosmeticService) : owned = { [id] = true },
 		-- equipped = { [catégorie] = id } pour les catégories à objet unique.
 		cosmetics = { owned = {}, equipped = {} },
@@ -141,6 +148,15 @@ local function migrate(data)
 		local level = data.buildings[id]
 		if type(level) ~= "number" or badNumber(level) or level < 1 then
 			data.buildings[id] = 1
+		end
+	end
+	-- Postes du staff : niveau entier entre 0 (vacant) et le maximum.
+	for id in Staff.Definitions do
+		local level = data.staff[id]
+		if type(level) ~= "number" or badNumber(level) or level < 0 then
+			data.staff[id] = 0
+		else
+			data.staff[id] = math.min(math.floor(level), Staff.MaxLevel(id))
 		end
 	end
 	return data
@@ -400,6 +416,13 @@ function PlayerDataService.BuildSnapshot(player: Player)
 		squad = data.squad,
 		prospects = data.academy.prospects,
 		tactic = data.tactic,
+		staff = table.clone(data.staff),
+		sponsors = {
+			offers = data.sponsors.offers,
+			contracts = data.sponsors.contracts,
+			refreshIn = math.max(0, (data.sponsors.refreshAt or 0) - now),
+			maxActive = Sponsors.MaxActive((Divisions.Get(data.club.division) or Divisions.List[1]).tier),
+		},
 		tutorial = table.clone(data.tutorial),
 		cosmetics = { owned = table.clone(data.cosmetics.owned), equipped = table.clone(data.cosmetics.equipped) },
 		boostSeconds = math.max(0, (data.boost.expiresAt or 0) - now),

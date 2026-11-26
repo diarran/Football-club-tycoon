@@ -341,3 +341,39 @@ Le joueur occasionnel est celui que ces mécaniques visent : revenir chaque jour
 fait nettement avancer son stade, sans changer le rythme sportif (D5 ~40 min,
 D1 ~32 h pour un joueur actif). Nouvelle alerte en CI si plus de la moitié des gains
 vient sans jouer. Aucune source de monnaie infinie détectée.
+
+## Staff du club et sponsors (26/11/2026)
+
+**Staff** (`src/shared/Staff.lua`) : 4 postes à 4 niveaux, chacun payé une fois
+en FC Coins (pas de salaire). Coût total : 381 500 FC Coins.
+
+| Poste | Niv. 1 | Niv. 2 | Niv. 3 | Niv. 4 | Effet au niveau 4 |
+| --- | --- | --- | --- | --- | --- |
+| Entraîneur | 4 000 | 12 000 | 30 000 | 60 000 | équipe +1 en match, progression +8 % |
+| Recruteur | 3 000 | 9 000 | 22 000 | 45 000 | jeunes repérés 60 % plus souvent, note et potentiel +4 |
+| Médecin | 2 500 | 8 000 | 20 000 | 40 000 | récupération d'énergie +50 % |
+| Directeur commercial | 5 000 | 14 000 | 32 000 | 65 000 | argent des sponsors +20 % (bureaux et contrats) |
+
+**Sponsors** (`src/shared/Sponsors.lua`) : 3 offres renouvelées toutes les 4 h,
+1 contrat actif (2 à partir de la D4). Prime fixe par match de 25 (D7) à 200 (D1),
+±20 % selon l'offre, +5 % par titre de champion (au plus +25 %). Objectif
+(gagner N matchs, marquer N buts, ne pas perdre N matchs) avec un bonus unique
+d'environ 4 à 5 matchs de prime.
+
+Premier essai : l'entraîneur donnait +2 et les contrats montaient à 350 par match.
+La D1 tombait à 29,8 h et un match pouvait rapporter plus de 6 000. Valeurs
+réduites (entraîneur +1 au maximum, primes divisées par ~2) :
+
+| Mesure (médiane, joueur actif) | Avant | Après |
+| --- | --- | --- |
+| D5 | 40 min | 38 min (34 min avec les objectifs quotidiens) |
+| D1 | 31,5 h | 30,8 h avec les objectifs quotidiens (occasionnel : 43,5 h) |
+| Tout acheté (installations + staff) | ~6 h 15 | ~8 h 15 |
+| Contrats de sponsoring par match | — | ~530 en fin de partie, au plus 720 |
+| Bonus d'objectif | — | ~5 100 FC Coins par heure de jeu |
+
+Le simulateur signe toujours l'offre la plus payante et embauche le staff dans
+l'ordre des prix. Contrôles ajoutés : les contrats ne dépassent jamais leur
+plafond (2 contrats de D1 avec prestige et directeur commercial au maximum) ;
+le gain par match hors bonus de division et hors contrats reste sous 5 000 (max 4 931).
+Aucune monnaie infinie.

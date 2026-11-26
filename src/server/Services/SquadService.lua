@@ -20,6 +20,7 @@ local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
+local Staff = require(Shared.Staff)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
@@ -63,8 +64,10 @@ end
 
 -- Jeune repéré par le centre de formation (note modeste, fort potentiel).
 local function generateProspect(data, academy)
-	local rating = rng:NextInteger(academy.ratingMin, academy.ratingMax)
-	local potential = math.max(rating + 10, rng:NextInteger(academy.potentialMin, academy.potentialMax))
+	-- Recruteur du staff : jeunes un peu meilleurs (note et potentiel).
+	local scoutBonus = Staff.Effect(data.staff, "prospectBonus")
+	local rating = rng:NextInteger(academy.ratingMin, academy.ratingMax) + scoutBonus
+	local potential = math.max(rating + 10, rng:NextInteger(academy.potentialMin, academy.potentialMax) + scoutBonus)
 	local prospect = {
 		id = data.nextPlayerId,
 		name = pick(PlayerConfig.FirstNames) .. " " .. pick(PlayerConfig.LastNames),
@@ -104,7 +107,8 @@ function SquadService.RefreshEnergy(data)
 		return
 	end
 	local trainingLevel = data.buildings.Training or 1
-	local multiplier = Buildings.GetEffects("Training", trainingLevel).energyRecovery or 1
+	local multiplier = (Buildings.GetEffects("Training", trainingLevel).energyRecovery or 1)
+		* Staff.Effect(data.staff, "energyRecovery") -- médecin du staff
 	local gain = minutes * Config.ENERGY_RECOVERY_PER_MINUTE * multiplier
 	for _, footballer in data.squad do
 		footballer.energy = math.min(PlayerConfig.MAX_ENERGY, footballer.energy + gain)
@@ -151,7 +155,8 @@ end
 -- et avant chaque signature ; ne dépend que de l'horloge du serveur.
 function SquadService.RefreshProspects(data): number
 	local academy = Buildings.GetEffects("Academy", data.buildings.Academy or 1)
-	local perHour = academy.scoutsPerHour or 0
+	-- Recruteur du staff : repérage plus rapide.
+	local perHour = (academy.scoutsPerHour or 0) * Staff.Effect(data.staff, "scoutSpeed")
 	local state = data.academy
 	local now = os.time()
 	if perHour <= 0 then
@@ -318,7 +323,8 @@ function SquadService.ApplyMatchEffects(data)
 	local trainingLevel = data.buildings.Training or 1
 	local teamBonus = Buildings.GetEffects("Training", trainingLevel).teamBonus or 0
 	local youthGrowth = Buildings.GetEffects("Academy", data.buildings.Academy or 1).youthGrowth or 0
-	local baseChance = 0.2 + 0.1 * teamBonus
+	-- Entraîneur du staff : un peu plus de chance de progresser.
+	local baseChance = 0.2 + 0.1 * teamBonus + Staff.Effect(data.staff, "growthBonus")
 	for _, footballer in data.squad do
 		footballer.energy = math.max(0, footballer.energy - Config.ENERGY_COST_PER_MATCH)
 		local progressChance = if footballer.youth then baseChance + youthGrowth else baseChance

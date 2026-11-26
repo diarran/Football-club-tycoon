@@ -40,7 +40,7 @@ H.test("les données du jeu ont toutes leurs textes", function()
 	for _, step in mock.run(MODULES.TutorialSteps) do
 		table.insert(keys, "tutorial." .. step.id)
 	end
-	for _, tab in { "Home", "Stadium", "Squad", "Matches", "Ranking", "Prestige", "Settings" } do
+	for _, tab in { "Home", "Stadium", "Squad", "Management", "Matches", "Ranking", "Prestige", "Settings" } do
 		table.insert(keys, "tab." .. tab)
 	end
 	for _, outcome in { "Win", "Draw", "Loss" } do
@@ -75,7 +75,7 @@ local UI = mock.run(MODULES.Client_UIController)
 
 local function openAll()
 	UI.SetMenuOpen(true)
-	for _, tab in { "Home", "Stadium", "Squad", "Matches", "Ranking", "Prestige", "Settings" } do
+	for _, tab in { "Home", "Stadium", "Squad", "Management", "Matches", "Ranking", "Prestige", "Settings" } do
 		UI.OpenTab(tab)
 		H.flush()
 	end
@@ -120,7 +120,7 @@ H.test("textes anglais lisibles sur téléphone : aucun bouton trop étroit", fu
 		end
 	end
 	openAll()
-	for _, tab in { "Home", "Stadium", "Squad", "Matches", "Ranking", "Prestige", "Settings" } do
+	for _, tab in { "Home", "Stadium", "Squad", "Management", "Matches", "Ranking", "Prestige", "Settings" } do
 		UI.OpenTab(tab)
 		H.flush()
 		checkButtons()
