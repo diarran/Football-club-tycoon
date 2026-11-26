@@ -1,4 +1,4 @@
-# Tester le jeu (environ 20 minutes)
+# Tester le jeu (environ 25 minutes)
 
 ## 1. Récupérer le fichier du jeu
 
@@ -31,76 +31,52 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier (16 points)
+## 5. Ce qu'il faut vérifier (14 points, environ 20 minutes)
 
-Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
+Note ✅ ou ❌ pour chaque point. Si c'est ❌, fais une capture d'écran.
+Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne rouge**.
 
-1. **Arrivée** : ton personnage apparaît sur ton terrain, près du portique au nom de
-   ton club (pas sur la grande place, pas dans le vide).
-2. **Écran** : en haut à gauche, l'écusson, le nom du club, la division **D7** et le
-   solde **2 500 FC**.
-3. **Menu** : le bouton **Club** ouvre le menu et la caméra montre ton club d'en haut.
-   Les **7 onglets** sont visibles sur une ligne (Accueil, Stade, Effectif, Matchs,
-   Classement, Prestige, Paramètres). Le **X** rouge ferme le menu.
-4. **Tutoriel** : le bandeau en haut au centre change quand tu fais ce qu'il demande.
-5. **Stade** : « Améliorer » les **Vestiaires** (1 500 FC) fait baisser le solde et le
-   bâtiment change d'aspect. La liste montre aussi la Boutique, le Centre de formation
-   et l'Espace VIP.
-6. **Effectif** : « Recruter » ajoute un joueur. Plus bas, le **Centre de formation**
-   affiche les jeunes repérés que tu peux signer. « Pas assez de FC » est normal au début : joue un match.
-7. **Matchs** : lance un match. Le menu se ferme et le **match se joue en 3D** sur ton
-   terrain : 22 joueurs aux couleurs des deux clubs, le ballon, du public dans les
-   tribunes, le score et la minute en haut de l'écran. Les buts marqués sont les mêmes
-   que ceux de la fenêtre de résultat. À la fin (moins d'une minute), la fenêtre de
-   résultat s'affiche avec les FC gagnés (match, billetterie, sponsors…). Le compte à
-   rebours avant le match suivant défile.
-8. **Replay : boutons** : au match suivant, clique **Avance rapide ×3** (le match va
-   3 fois plus vite), puis **Passer** : le replay s'arrête, la caméra revient sur ton
-   personnage et la fenêtre de résultat s'affiche tout de suite.
-9. **Prestige** : l'onglet montre la salle des trophées et les objets de personnalisation,
-   avec la division requise pour ceux qui sont encore verrouillés.
-10. **Paramètres** : passe la langue en **English** : tout le menu et les panneaux du
-   terrain changent de langue. Remets **Français**.
-11. **À 2 joueurs** (section 4) : chaque joueur a un terrain différent et voit l'autre
-    club dans **Classement**. Dans **Matchs**, le joueur 1 clique **Défier** ; le
-    joueur 2 reçoit le défi et l'accepte : les deux voient le résultat.
-12. **Tournoi** (à 2) : environ **3 minutes** après le Start, un message annonce
-    l'ouverture des inscriptions. Dans **Matchs**, les deux joueurs cliquent
-    **S'inscrire** (1 minute pour le faire) ; les tours s'enchaînent et un vainqueur est annoncé.
-13. **Téléphone et sortie** : onglet **Test** > **Device**, choisis un téléphone : les
-    8 onglets et les boutons restent lisibles. Pendant tout le test, la fenêtre
-    **Sortie** ne doit montrer aucune ligne **rouge** ni orange commençant par `[Main]`.
-14. **Replay vu par un visiteur** (à 2) : le joueur 2 marche jusqu'au terrain du
-    joueur 1, puis le joueur 1 lance un match. Le joueur 2 voit le match se jouer sur ce
-    terrain et le tableau d'affichage au-dessus de la tribune du fond, sans que sa
-    caméra bouge.
-15. **Objectifs du jour** : dans **Accueil**, trois cartes s'affichent : **Cadeau du jour**
-    (série jour 1 / 7), **Missions du jour** (3 missions avec leur prime) et **Saison de
-    la semaine** (classement de 6 clubs). Lance un match : la mission « Joue … matchs »
-    avance d'un cran ; une mission accomplie affiche un message vert avec sa prime.
-16. **Retour au jeu** (seulement si la sauvegarde est active, voir le guide de
-    publication) : quitte le jeu, attends au moins **5 minutes**, relance-le. Une fenêtre
-    **« Pendant ton absence… »** indique ce que tes installations ont rapporté ; le
-    lendemain, elle montre aussi le **cadeau du jour 2 / 7**.
-17. **Gestion : staff** : ouvre l'onglet **Gestion**. Les 4 postes (Entraîneur,
-    Recruteur, Médecin, Directeur commercial) sont vacants. Clique **Embaucher** sur
-    le Médecin (2 500 FC) : il passe au niveau 1, ton solde baisse et la ligne
-    « Au niveau suivant » montre le prochain effet.
-18. **Gestion : sponsors** : plus bas, 3 offres de sponsors fictifs. Clique **Signer le
-    contrat** sur l'une d'elles : elle passe dans « Les contrats de sponsoring ».
-    Joue un match : la fenêtre de résultat affiche « Contrats de sponsoring : +… »
-    et, dans Gestion, le contrat indique un match de moins et la progression de son objectif.
-19. **Son** (monte le volume de ton ordinateur) : chaque bouton du menu fait un petit
-    clic. Joue un match : à chaque but, des **confettis** jaillissent derrière le but,
-    la bannière « BUT ! » pulse et un son de victoire retentit. Dans **Paramètres**,
-    « Volume du son » : **Muet** coupe tout, **50%** remet le son ; « Musique de fond »
-    se coupe à part. (Musique et public n'ont du son qu'une fois choisis dans Studio,
-    voir le guide de publication, partie « Sons ».)
-20. **Classement mondial** : sur la place centrale, à gauche du point d'apparition, un
-    grand panneau « CLASSEMENT MONDIAL » affiche un top 10 qui change de tableau toutes
-    les 12 secondes. Dans l'onglet **Classement**, la carte « Classement mondial » a 3
-    boutons (**Cette semaine**, **Meilleurs clubs**, **Trophées**). Dans Studio, elle
-    indique « Mode test : seulement les clubs de ce serveur » ; une fois le jeu publié,
-    elle montre tous les serveurs (mise à jour toutes les 2 minutes).
+**Seul (Play)**
+
+1. **Base** (déjà validée le 26/11) : ton personnage apparaît sur ton terrain, le haut
+   de l'écran montre l'écusson, le club, **D7** et **2 500 FC** ; le bouton **Club**
+   ouvre le menu.
+2. **Onglets** : les **8 onglets** sont visibles (Accueil, Stade, Effectif, Gestion,
+   Matchs, Classement, Prestige, Paramètres) ; chacun s'ouvre sans erreur.
+3. **Accueil** : cartes **Cadeau du jour**, **Missions du jour**, **Saison de la
+   semaine** et **Soutiens le jeu**.
+4. **Match en 3D** : lance un match dans **Matchs** ; il se joue sur ton terrain, les
+   buts font jaillir des **confettis** avec un son. À la fin, la fenêtre de résultat
+   s'affiche et la mission « Joue … matchs » avance.
+5. **Gestion** : **Embaucher** le Médecin (2 500 FC) fait baisser le solde ; **Signer
+   le contrat** d'un sponsor le fait passer dans « Les contrats de sponsoring ».
+6. **Prestige** : la salle des trophées et les objets de personnalisation s'affichent
+   (la boutique Robux reste cachée tant que ses numéros ne sont pas renseignés).
+7. **Classement** : la carte **Classement mondial** et ses 3 boutons (Cette semaine,
+   Meilleurs clubs, Trophées) ; dans Studio elle dit « Mode test : seulement les clubs
+   de ce serveur ». Sur la place, le grand panneau **CLASSEMENT MONDIAL** change de
+   tableau toutes les 12 secondes.
+8. **Paramètres** : **English** traduit tout le menu (aucun mot français), puis remets
+   **Français**. **Volume du son** sur **Muet** coupe les sons. La carte **Code admin**
+   est là (tu es le créateur) : ton code active l'argent illimité (**∞ FC**), le même
+   code le désactive et rend ton solde.
+9. **Téléphone** : onglet **Test** > **Device**, choisis un téléphone : les onglets
+   passent sur **2 rangées de 4**, tous lisibles, et le contenu reste dessous.
+
+**À 2 joueurs (Local Server, 2 Players)**
+
+10. **Deux clubs** : chaque joueur a son terrain et voit l'autre dans **Classement**.
+11. **Défi** : dans **Matchs**, le joueur 1 clique **Défier** ; le joueur 2 accepte :
+    les deux voient le résultat.
+12. **Visiteur** : le joueur 2 va sur le terrain du joueur 1, qui lance un match : le
+    joueur 2 voit le match se jouer, sans que sa caméra bouge.
+13. **Tournoi** : environ **3 minutes** après le Start, inscris les deux joueurs dans
+    **Matchs** ; un vainqueur est annoncé.
+
+**Dans le jeu publié (sauvegarde active)**
+
+14. **Retour au jeu** : joue un peu, quitte, attends **5 minutes** et reviens : ton
+    solde, ton staff et tes contrats sont toujours là, et une fenêtre **« Pendant ton
+    absence… »** indique ce que ton club a rapporté.
 
 Envoie ensuite ta liste (✅ / ❌ + captures + lignes rouges) dans le projet : on corrige.

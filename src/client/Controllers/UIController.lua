@@ -81,6 +81,9 @@ local state = {
 }
 
 local gui, hud, crestBadge, panel, content, tabButtons, toast, resultPopup, welcomePopup
+local tabBar, tabGrid -- barre d'onglets et sa grille (1 ou 2 rangées selon l'écran)
+local TAB_HEIGHT = 44
+local TAB_GAP = 4
 local shownWelcome = nil -- dernier résumé « Pendant ton absence… » affiché
 local currentTab = "Home"
 
@@ -1495,28 +1498,32 @@ local function buildPanel()
 		create("UISizeConstraint", { MaxSize = Vector2.new(760, 560) }),
 	})
 
-	-- Tous les onglets tiennent sur une ligne, même sur téléphone : chaque
-	-- bouton prend une part égale de la largeur et son texte rétrécit si besoin
-	-- (avec une barre qui défile, « Prestige » et « Paramètres » restaient cachés).
-	local tabBar = create("Frame", {
+	-- Tous les onglets restent visibles, sans barre qui défile : chaque bouton
+	-- prend une part égale de la largeur. Sur PC, une seule rangée ; sur
+	-- téléphone, deux rangées de 4 pour que le texte reste lisible
+	-- (voir layoutTabs, appelée quand la taille de l'écran change).
+	tabGrid = create("UIGridLayout", {
+		CellPadding = UDim2.fromOffset(TAB_GAP, TAB_GAP),
+		CellSize = UDim2.new(1 / #TABS, -TAB_GAP, 0, TAB_HEIGHT),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	})
+	tabBar = create("Frame", {
 		Name = "Tabs",
 		BackgroundTransparency = 1,
 		Position = UDim2.fromOffset(10, 10),
-		Size = UDim2.new(1, -74, 0, 44),
+		Size = UDim2.new(1, -74, 0, TAB_HEIGHT),
 		Parent = panel,
-	}, {
-		create("UIListLayout", {
-			FillDirection = Enum.FillDirection.Horizontal,
-			Padding = UDim.new(0, 4),
-			SortOrder = Enum.SortOrder.LayoutOrder,
-		}),
-	})
+	}, { tabGrid })
 	tabButtons = {}
-	local tabWidth = 1 / #TABS
 	for index, tabId in TABS do
 		tabButtons[tabId] = button(T("tab." .. tabId), function()
 			UIController.OpenTab(tabId)
-		end, { LayoutOrder = index, Size = UDim2.new(tabWidth, -4, 0, 44), TextSize = 16, Parent = tabBar })
+		end, {
+			LayoutOrder = index,
+			Size = UDim2.new(1 / #TABS, -TAB_GAP, 0, TAB_HEIGHT),
+			TextSize = 16,
+			Parent = tabBar,
+		})
 	end
 
 	button("X", function()
@@ -1654,6 +1661,29 @@ function UIController.ShowWelcome(welcome)
 	welcomePopup.Visible = true
 end
 
+-- Rangées d'onglets : avec l'interface réduite (téléphone), une seule rangée
+-- de 8 donnerait des textes d'environ 8 px ; on passe alors à 2 rangées de 4.
+function UIController.TabRows(scale: number): number
+	return if scale < 0.95 then 2 else 1
+end
+
+local function layoutTabs(scale: number)
+	if not tabBar then
+		return
+	end
+	local rows = UIController.TabRows(scale)
+	local perRow = math.ceil(#TABS / rows)
+	local barHeight = rows * TAB_HEIGHT + (rows - 1) * TAB_GAP
+	local cell = UDim2.new(1 / perRow, -TAB_GAP, 0, TAB_HEIGHT)
+	tabGrid.CellSize = cell
+	tabBar.Size = UDim2.new(1, -74, 0, barHeight)
+	for _, tabButton in tabButtons do
+		tabButton.Size = cell
+	end
+	content.Position = UDim2.fromOffset(10, 22 + barHeight)
+	content.Size = UDim2.new(1, -20, 1, -(32 + barHeight))
+end
+
 -- Échelle de l'interface selon la taille de l'écran (mobile, tablette, PC).
 local function setupScaling()
 	local uiScale = create("UIScale", { Parent = gui })
@@ -1662,6 +1692,7 @@ local function setupScaling()
 		local viewport = camera.ViewportSize
 		local shortest = math.min(viewport.X, viewport.Y)
 		uiScale.Scale = math.clamp(shortest / 720, 0.7, 1.2)
+		layoutTabs(uiScale.Scale)
 	end
 	camera:GetPropertyChangedSignal("ViewportSize"):Connect(update)
 	update()
