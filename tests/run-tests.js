@@ -59,6 +59,7 @@ function bundle(specFile) {
   src += 'local UDim, UDim2, Enum = mock.env.UDim, mock.env.UDim2, mock.env.Enum\n';
   src += 'local game, workspace, require, typeof = mock.env.game, mock.env.workspace, mock.env.require, mock.env.typeof\n';
   src += 'local Instance, task, os, Random, print, warn, TweenInfo = H.Instance, H.task, H.os, H.Random, H.print, H.warn, H.TweenInfo\n';
+  src += 'local NumberRange, NumberSequence, ColorSequence, ColorSequenceKeypoint = H.NumberRange, H.NumberSequence, H.ColorSequence, H.ColorSequenceKeypoint\n';
   src += 'local MODULES = {}\n';
   for (const { key, rbxPath, cls, file } of collectModules()) {
     // « export type » n'est permis qu'au niveau supérieur d'un fichier.

@@ -90,5 +90,11 @@ Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
     contrat** sur l'une d'elles : elle passe dans « Les contrats de sponsoring ».
     Joue un match : la fenêtre de résultat affiche « Contrats de sponsoring : +… »
     et, dans Gestion, le contrat indique un match de moins et la progression de son objectif.
+19. **Son** (monte le volume de ton ordinateur) : chaque bouton du menu fait un petit
+    clic. Joue un match : à chaque but, des **confettis** jaillissent derrière le but,
+    la bannière « BUT ! » pulse et un son de victoire retentit. Dans **Paramètres**,
+    « Volume du son » : **Muet** coupe tout, **50%** remet le son ; « Musique de fond »
+    se coupe à part. (Musique et public n'ont du son qu'une fois choisis dans Studio,
+    voir le guide de publication, partie « Sons ».)
 
 Envoie ensuite ta liste (✅ / ❌ + captures + lignes rouges) dans le projet : on corrige.
