@@ -3,15 +3,16 @@
 	Constantes communes au client et au serveur.
 
 	Tout ce qui est ici est visible par les joueurs (ReplicatedStorage) :
-	ne jamais y mettre de secret. Les valeurs économiques sont des hypothèses
-	de départ (document de conception, section 7) à équilibrer en test.
+	ne jamais y mettre de secret. Les valeurs économiques (solde de départ,
+	primes, énergie) sont équilibrées avec le simulateur tools/economy-sim.js :
+	le relancer après chaque changement (voir docs/economy/README.md).
 ]]
 
 local Config = {}
 
 -- Économie --------------------------------------------------------------
 Config.CURRENCY_NAME = "FC Coins"
-Config.STARTING_COINS = 5000
+Config.STARTING_COINS = 2500
 Config.MAX_COINS = 1e12 -- garde-fou contre les débordements
 
 -- Monde -----------------------------------------------------------------
@@ -27,8 +28,8 @@ Config.MAX_SQUAD_SIZE = 7 -- à fixer après le prototype de match
 -- Matchs ----------------------------------------------------------------
 Config.MATCH_COOLDOWN_SECONDS = 60
 Config.HOME_ADVANTAGE = 3 -- points de note ajoutés au club hôte
-Config.ENERGY_COST_PER_MATCH = 15
-Config.ENERGY_RECOVERY_PER_MINUTE = 5
+Config.ENERGY_COST_PER_MATCH = 10
+Config.ENERGY_RECOVERY_PER_MINUTE = 8
 
 Config.Tactics = {
 	Balanced = { label = "Équilibrée", attack = 0, defense = 0 },
@@ -38,8 +39,8 @@ Config.Tactics = {
 Config.DEFAULT_TACTIC = "Balanced"
 
 Config.Rewards = {
-	Win = 600,
-	Draw = 250,
+	Win = 400,
+	Draw = 200,
 	Loss = 100,
 }
 Config.DivisionPoints = {

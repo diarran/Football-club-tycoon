@@ -5,6 +5,10 @@
 	Chaque installation a des niveaux. Le niveau 1 est possédé au départ.
 	levels[n].cost = prix pour PASSER au niveau n (le niveau 1 est gratuit).
 	Les effets sont lus par le serveur (billetterie, entraînement, etc.).
+
+	Ajouter un niveau = ajouter une ligne dans levels : le serveur, l'interface
+	et le simulateur d'économie (tools/economy-sim.js) le prennent en compte
+	sans autre changement. Relancer le simulateur pour vérifier le rythme.
 ]]
 
 local Buildings = {}
@@ -27,9 +31,9 @@ Buildings.Definitions = {
 		description = "Capacité d'accueil et revenus de billetterie.",
 		order = 2,
 		levels = {
-			{ cost = 0, effects = { capacity = 200, ticketPrice = 2 } },
-			{ cost = 3000, effects = { capacity = 500, ticketPrice = 2 } },
-			{ cost = 8000, effects = { capacity = 1200, ticketPrice = 3 } },
+			{ cost = 0, effects = { capacity = 200, ticketPrice = 1 } },
+			{ cost = 3000, effects = { capacity = 500, ticketPrice = 1 } },
+			{ cost = 8000, effects = { capacity = 1000, ticketPrice = 1 } },
 		},
 	},
 	Training = {
@@ -50,7 +54,7 @@ Buildings.Definitions = {
 		order = 4,
 		levels = {
 			{ cost = 0, effects = { sponsorIncome = 50 } },
-			{ cost = 2500, effects = { sponsorIncome = 120 } },
+			{ cost = 2500, effects = { sponsorIncome = 150 } },
 		},
 	},
 	LockerRoom = {

@@ -70,35 +70,39 @@ function bundle(specFile) {
   return src;
 }
 
-const filter = process.argv[2] || '';
-const specDir = path.join(ROOT, 'tests', 'specs');
-const specs = fs.readdirSync(specDir).filter((f) => f.endsWith('.spec.luau') && f.includes(filter)).sort();
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fct-tests-'));
+module.exports = { bundle, LUAU };
 
-let passed = 0;
-let failed = 0;
-let crashed = 0;
-for (const spec of specs) {
-  console.log(`\n▶ ${spec}`);
-  const file = path.join(tmp, spec.replace('.spec.luau', '.bundle.luau'));
-  fs.writeFileSync(file, bundle(path.join(specDir, spec)));
-  const run = spawnSync(LUAU, [file], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
-  if (run.error) {
-    console.error(`Impossible de lancer « ${LUAU} » : ${run.error.message}`);
-    process.exit(2);
+if (require.main === module) {
+  const filter = process.argv[2] || '';
+  const specDir = path.join(ROOT, 'tests', 'specs');
+  const specs = fs.readdirSync(specDir).filter((f) => f.endsWith('.spec.luau') && f.includes(filter)).sort();
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fct-tests-'));
+
+  let passed = 0;
+  let failed = 0;
+  let crashed = 0;
+  for (const spec of specs) {
+    console.log(`\n▶ ${spec}`);
+    const file = path.join(tmp, spec.replace('.spec.luau', '.bundle.luau'));
+    fs.writeFileSync(file, bundle(path.join(specDir, spec)));
+    const run = spawnSync(LUAU, [file], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+    if (run.error) {
+      console.error(`Impossible de lancer « ${LUAU} » : ${run.error.message}`);
+      process.exit(2);
+    }
+    const out = (run.stdout || '') + (run.stderr || '');
+    const m = out.match(/@@RESULT (\d+) (\d+)/);
+    process.stdout.write(out.replace(/@@RESULT.*\n?/, ''));
+    if (!m || run.status !== 0) {
+      crashed += 1;
+      console.log(`  ✘ le fichier de test s'est arrêté avant la fin (code ${run.status})`);
+    }
+    if (m) {
+      passed += Number(m[1]);
+      failed += Number(m[2]);
+    }
   }
-  const out = (run.stdout || '') + (run.stderr || '');
-  const m = out.match(/@@RESULT (\d+) (\d+)/);
-  process.stdout.write(out.replace(/@@RESULT.*\n?/, ''));
-  if (!m || run.status !== 0) {
-    crashed += 1;
-    console.log(`  ✘ le fichier de test s'est arrêté avant la fin (code ${run.status})`);
-  }
-  if (m) {
-    passed += Number(m[1]);
-    failed += Number(m[2]);
-  }
+
+  console.log(`\n${passed} test(s) réussi(s), ${failed} échoué(s)${crashed ? `, ${crashed} fichier(s) interrompu(s)` : ''}.`);
+  process.exit(failed > 0 || crashed > 0 || specs.length === 0 ? 1 : 0);
 }
-
-console.log(`\n${passed} test(s) réussi(s), ${failed} échoué(s)${crashed ? `, ${crashed} fichier(s) interrompu(s)` : ''}.`);
-process.exit(failed > 0 || crashed > 0 || specs.length === 0 ? 1 : 0);

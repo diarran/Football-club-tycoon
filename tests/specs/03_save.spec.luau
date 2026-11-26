@@ -15,7 +15,7 @@ H.test("un profil est créé, sauvegardé au départ et le verrou est libéré",
 	H.leave(p)
 	local saved = record(10)
 	H.eq(saved.lock, nil, "verrou libéré")
-	H.eq(saved.data.coins, 2500, "solde sauvegardé")
+	H.eq(saved.data.coins, S.Config.STARTING_COINS - S.Buildings.GetUpgradeCost("Pitch", 1), "solde sauvegardé")
 	H.eq(saved.data.buildings.Pitch, 2, "niveau sauvegardé")
 	H.eq(saved.data.schemaVersion, S.Config.DATA_SCHEMA_VERSION, "version du schéma")
 	H.eq(S.PlayerDataService.Get(p), nil, "profil déchargé")
