@@ -23,6 +23,8 @@ local Config = require(Shared.Config)
 local Cosmetics = require(Shared.Cosmetics)
 local Trophies = require(Shared.Trophies)
 local Divisions = require(Shared.Divisions)
+local Daily = require(Shared.Daily)
+local Leaderboard = require(Shared.Leaderboard)
 local Friends = require(Shared.Friends)
 local Locale = require(Shared.Locale)
 local Monetization = require(Shared.Monetization)
@@ -73,6 +75,8 @@ local state = {
 	challenges = { incoming = {}, outgoing = nil },
 	tournament = nil,
 	tournamentEndsAt = 0,
+	leaderboard = nil, -- classement mondial (LeaderboardService)
+	leaderboardBoard = "week", -- tableau affiché : week, club ou trophies
 	settings = { managementCamera = true, showTutorial = true, volume = Audio.DEFAULT_VOLUME, music = true },
 }
 
@@ -1044,7 +1048,75 @@ local function friendsCard(profile)
 		content
 end
 
+-- Classement mondial : tous les serveurs (ou ce serveur seulement en mode test).
+local function globalLeaderboardCard(profile)
+	local lb = state.leaderboard
+	local board = state.leaderboardBoard
+	local entries = {}
+	for _, id in Leaderboard.BOARDS do
+		table.insert(entries, {
+			text = T("leaderboard.tab." .. id),
+			color = if id == board then COLORS.accent else COLORS.disabled,
+			onClick = function()
+				state.leaderboardBoard = id
+				UIController.Refresh()
+			end,
+		})
+	end
+	local children = {
+		label(T("leaderboard.title"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
+		label(
+			T(if lb and lb.scope == "server" then "leaderboard.serverHelp" else "leaderboard.globalHelp"),
+			{ TextColor3 = COLORS.muted, TextSize = 16 }
+		),
+		buttonRow(entries),
+	}
+	if board == "week" then
+		local now = os.time()
+		table.insert(
+			children,
+			label(T("leaderboard.weekHelp", { time = formatDuration(Daily.SeasonEndsAt(Daily.SeasonId(now)) - now) }), {
+				TextColor3 = COLORS.muted,
+				TextSize = 16,
+			})
+		)
+	end
+	local rows = lb and lb.boards and lb.boards[board] or {}
+	if #rows == 0 then
+		table.insert(children, label(T(if lb then "leaderboard.empty" else "leaderboard.loading"), { TextSize = 16 }))
+	end
+	for _, row in rows do
+		local key, params = Leaderboard.ValueText(board, row.score)
+		local name = if row.club
+			then T("leaderboard.rowClub", { rank = row.rank, club = row.club, name = row.name })
+			else T("leaderboard.row", { rank = row.rank, name = row.name })
+		table.insert(
+			children,
+			label(name .. "  ·  " .. T(key, params), {
+				TextColor3 = if row.userId == player.UserId then COLORS.gold else COLORS.text,
+				TextSize = 16,
+			})
+		)
+	end
+	local mine = profile.leaderboard
+	if mine and mine.scores then
+		local key, params = Leaderboard.ValueText(board, mine.scores[board] or 0)
+		local rank = mine.ranks and mine.ranks[board]
+		table.insert(
+			children,
+			label(
+				if rank
+					then T("leaderboard.myRank", { rank = rank, value = T(key, params) })
+					else T("leaderboard.outOfTop", { top = Leaderboard.TOP, value = T(key, params) }),
+				{ Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold, TextSize = 16 }
+			)
+		)
+	end
+	card(children).Parent = content
+end
+
 function renderers.Ranking(profile)
+	globalLeaderboardCard(profile)
 	friendsCard(profile)
 	divisionTable(profile)
 	label(T("ranking.serverTitle"), { Font = Enum.Font.GothamBold }).Parent = content
@@ -1718,6 +1790,16 @@ function UIController.SetTournament(tournament)
 		UIController.Notify(T("tournament.registrationOpen"), "info")
 	end
 	if currentTab == "Matches" then
+		UIController.Refresh()
+	end
+end
+
+function UIController.SetLeaderboard(leaderboard)
+	if type(leaderboard) ~= "table" then
+		return
+	end
+	state.leaderboard = leaderboard
+	if currentTab == "Ranking" then
 		UIController.Refresh()
 	end
 end

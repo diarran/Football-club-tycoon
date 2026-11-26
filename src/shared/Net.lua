@@ -51,6 +51,7 @@ Net.Events = {
 	"ChallengeUpdated", -- ({ incoming, outgoing }) défis du joueur
 	"TournamentUpdated", -- (state) tournoi du serveur
 	"Notify", -- (message: string, kind: string)
+	"LeaderboardUpdated", -- (state) classement mondial (LeaderboardService)
 }
 
 -- Requêtes avec réponse (RemoteFunction)

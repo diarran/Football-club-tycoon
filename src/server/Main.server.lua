@@ -33,6 +33,7 @@ local CommunityService = require(Services.CommunityService)
 local StaffService = require(Services.StaffService)
 local DailyService = require(Services.DailyService)
 local FriendService = require(Services.FriendService)
+local LeaderboardService = require(Services.LeaderboardService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
 local ORDERED_SERVICES = {
@@ -52,6 +53,7 @@ local ORDERED_SERVICES = {
 	{ name = "CommunityService", module = CommunityService },
 	{ name = "DailyService", module = DailyService },
 	{ name = "FriendService", module = FriendService },
+	{ name = "LeaderboardService", module = LeaderboardService },
 }
 
 for _, entry in ORDERED_SERVICES do
@@ -105,6 +107,8 @@ local function onPlayerAdded(player: Player)
 	step("DailyService.OnPlayerReady", DailyService.OnPlayerReady, player)
 	-- Amis présents, bonus d'invitation (parrainage Roblox).
 	step("FriendService.OnPlayerReady", FriendService.OnPlayerReady, player)
+	-- Classement mondial : état actuel envoyé au joueur.
+	step("LeaderboardService.OnPlayerReady", LeaderboardService.OnPlayerReady, player)
 	if profile.temporary then
 		Net.FireClient(
 			"Notify",
@@ -120,6 +124,7 @@ local function onPlayerRemoving(player: Player)
 	step("ChallengeService.OnPlayerLeaving", ChallengeService.OnPlayerLeaving, player)
 	step("TournamentService.OnPlayerLeaving", TournamentService.OnPlayerLeaving, player)
 	step("FriendService.OnPlayerLeaving", FriendService.OnPlayerLeaving, player)
+	step("LeaderboardService.OnPlayerLeaving", LeaderboardService.OnPlayerLeaving, player)
 	step("ClubService.OnPlayerLeaving", ClubService.OnPlayerLeaving, player)
 	step("AdminService.OnPlayerLeaving", AdminService.OnPlayerLeaving, player)
 	step("PlayerDataService.Release", PlayerDataService.Release, player)

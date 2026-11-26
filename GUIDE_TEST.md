@@ -96,5 +96,11 @@ Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
     « Volume du son » : **Muet** coupe tout, **50%** remet le son ; « Musique de fond »
     se coupe à part. (Musique et public n'ont du son qu'une fois choisis dans Studio,
     voir le guide de publication, partie « Sons ».)
+20. **Classement mondial** : sur la place centrale, à gauche du point d'apparition, un
+    grand panneau « CLASSEMENT MONDIAL » affiche un top 10 qui change de tableau toutes
+    les 12 secondes. Dans l'onglet **Classement**, la carte « Classement mondial » a 3
+    boutons (**Cette semaine**, **Meilleurs clubs**, **Trophées**). Dans Studio, elle
+    indique « Mode test : seulement les clubs de ce serveur » ; une fois le jeu publié,
+    elle montre tous les serveurs (mise à jour toutes les 2 minutes).
 
 Envoie ensuite ta liste (✅ / ❌ + captures + lignes rouges) dans le projet : on corrige.

@@ -441,6 +441,74 @@ game:GetService("DataStoreService").GetDataStore = function(_self, name)
 	}
 end
 
+-- DataStore ordonné en mémoire (classement mondial) : entiers seulement,
+-- tri décroissant ou croissant, une page de pageSize lignes.
+H.orderedStores = {} -- [nom] = { data = {}, failNext = 0, writes = 0, reads = 0 }
+H.requestBudget = {} -- [type de requête] = nombre (absent = illimité)
+local function getOrdered(name: string)
+	local s = H.orderedStores[name]
+	if not s then
+		s = { data = {}, failNext = 0, writes = 0, reads = 0 }
+		H.orderedStores[name] = s
+	end
+	return s
+end
+H.getOrderedStore = getOrdered
+game:GetService("DataStoreService").GetOrderedDataStore = function(_self, name)
+	if not H.datastoreAvailable then
+		error("You must publish this place to the web to access DataStore.", 0)
+	end
+	local s = getOrdered(name)
+	return {
+		SetAsync = function(_, key, value)
+			maybeFail(s)
+			assert(type(value) == "number" and value == math.floor(value), "OrderedDataStore : entier attendu")
+			s.data[key] = value
+			s.writes += 1
+		end,
+		GetAsync = function(_, key)
+			maybeFail(s)
+			return s.data[key]
+		end,
+		GetSortedAsync = function(_, ascending, pageSize)
+			maybeFail(s)
+			s.reads += 1
+			assert(pageSize >= 1 and pageSize <= 100, "pageSize entre 1 et 100")
+			local list = {}
+			for key, value in s.data do
+				table.insert(list, { key = key, value = value })
+			end
+			table.sort(list, function(a, b)
+				if a.value ~= b.value then
+					return if ascending then a.value < b.value else a.value > b.value
+				end
+				return a.key < b.key
+			end)
+			local page = {}
+			for i = 1, math.min(pageSize, #list) do
+				page[i] = list[i]
+			end
+			return { GetCurrentPage = function()
+				return page
+			end, IsFinished = true }
+		end,
+	}
+end
+game:GetService("DataStoreService").GetRequestBudgetForRequestType = function(_self, requestType)
+	local name = if type(requestType) == "table" then requestType.Name else tostring(requestType)
+	return H.requestBudget[name] or 1000
+end
+-- Noms Roblox (UserService) : « Pseudo<id> ». H.userInfoCalls compte les requêtes.
+H.userInfoCalls = 0
+game:GetService("UserService").GetUserInfosByUserIdsAsync = function(_self, ids)
+	H.userInfoCalls += 1
+	local out = {}
+	for _, id in ids do
+		table.insert(out, { Id = id, Username = "user" .. id, DisplayName = "Pseudo" .. id })
+	end
+	return out
+end
+
 -- Joueurs.
 local Players = game:GetService("Players")
 H.Players = Players
