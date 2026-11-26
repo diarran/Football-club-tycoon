@@ -1,0 +1,31 @@
+# Tests automatiques du jeu, sans Roblox Studio (voir tests/README.md).
+# Ils lancent le vrai code du serveur et du client sur une imitation des
+# services Roblox (joueurs, DataStore, RemoteEvents) avec l'interpréteur Luau.
+name: Tests automatiques
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer Luau
+        run: |
+          set -e
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL -o luau.zip https://github.com/luau-lang/luau/releases/latest/download/luau-ubuntu.zip
+          unzip -o luau.zip -d "$HOME/.local/bin"
+          chmod +x "$HOME/.local/bin/luau"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Lancer les tests
+        run: node tests/run-tests.js

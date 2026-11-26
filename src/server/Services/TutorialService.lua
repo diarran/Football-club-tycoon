@@ -22,21 +22,35 @@ local function currentStep(data)
 	return TutorialSteps[data.tutorial.step]
 end
 
--- Valide une étape si c'est bien l'étape en cours. Les étapes ne donnent
--- aucune monnaie : impossible de tricher pour gagner quelque chose ici.
+-- Valide une étape. Les étapes ne donnent aucune monnaie : impossible de
+-- tricher pour gagner quelque chose ici.
+-- - Étape « client » (informative) : acceptée seulement si c'est l'étape en cours.
+-- - Étape « server » (vraie action : amélioration, match) : acceptée aussi si
+--   elle est plus loin dans le tutoriel. Le joueur qui agit avant d'y être invité
+--   avance directement, au lieu de devoir refaire l'action plus tard.
 function TutorialService.Complete(player: Player, stepId: string)
 	local data = PlayerDataService.GetData(player)
-	if not data then
+	if not data or not currentStep(data) then
 		return
 	end
-	local step = currentStep(data)
-	if not step or step.id ~= stepId then
+	local index = nil
+	for i, step in TutorialSteps do
+		if step.id == stepId then
+			index = i
+			break
+		end
+	end
+	local current = data.tutorial.step
+	if not index or index < current then
 		return
 	end
-	if data.tutorial.step >= #TutorialSteps then
+	if index > current and TutorialSteps[index].completedBy ~= "server" then
+		return
+	end
+	if index >= #TutorialSteps then
 		data.tutorial.completed = true
 	else
-		data.tutorial.step += 1
+		data.tutorial.step = index + 1
 	end
 	PlayerDataService.MarkChanged(player)
 end
@@ -48,7 +62,8 @@ function TutorialService.Init()
 		end
 		local data = PlayerDataService.GetData(player)
 		local step = data and currentStep(data)
-		if step and step.completedBy == "client" then
+		-- Le client ne peut valider que l'étape informative en cours, jamais une étape serveur.
+		if step and step.completedBy == "client" and step.id == stepId then
 			TutorialService.Complete(player, stepId)
 		end
 	end)

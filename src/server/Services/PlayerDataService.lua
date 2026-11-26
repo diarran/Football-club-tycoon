@@ -33,6 +33,8 @@ local LOAD_RETRY_DELAY = 4
 local store = nil -- DataStore, ou nil si indisponible (Studio sans accès API)
 local profiles = {} -- [Player] = { data, temporary, loadedAt }
 local pendingSnapshot = {} -- [Player] = true quand un envoi est prévu
+local releasing = {} -- [UserId] = nombre de sauvegardes de départ en cours
+local RELEASE_WAIT_SECONDS = 60
 local jobId = game.JobId ~= "" and game.JobId or ("studio-" .. HttpService:GenerateGUID(false))
 
 -- Profil par défaut -----------------------------------------------------
@@ -159,6 +161,11 @@ local function writeProfile(player: Player, data, release: boolean): boolean
 				-- Un autre serveur a repris le profil : ne pas l'écraser.
 				return nil
 			end
+			if not lock and not release then
+				-- Profil déjà libéré (joueur parti) : une sauvegarde tardive ne doit
+				-- pas reposer le verrou, sinon le joueur serait bloqué ailleurs.
+				return nil
+			end
 			current.data = data
 			current.lock = if release then nil else { jobId = jobId, time = os.time() }
 			return current
@@ -229,6 +236,16 @@ function PlayerDataService.Load(player: Player)
 		return profiles[player]
 	end
 
+	-- Retour rapide sur le même serveur : attendre la fin de la sauvegarde de
+	-- départ, sinon on relirait une ancienne version du profil.
+	local waitUntil = os.clock() + RELEASE_WAIT_SECONDS
+	while releasing[player.UserId] and os.clock() < waitUntil do
+		task.wait(0.2)
+	end
+	if not player.Parent then
+		return nil
+	end
+
 	local data, reason
 	local temporary = false
 	if store then
@@ -276,6 +293,9 @@ function PlayerDataService.Save(player: Player, release: boolean?): boolean
 	if not profile or profile.temporary or not store then
 		return true
 	end
+	if profile.releasing and not release then
+		return true -- la sauvegarde de départ s'en occupe
+	end
 	return writeProfile(player, profile.data, release == true)
 end
 
@@ -285,9 +305,19 @@ function PlayerDataService.Release(player: Player)
 	if not profile then
 		return
 	end
-	PlayerDataService.Save(player, true)
+	profile.releasing = true
+	local userId = player.UserId
+	releasing[userId] = (releasing[userId] or 0) + 1
+	local ok, err = pcall(PlayerDataService.Save, player, true)
+	releasing[userId] -= 1
+	if releasing[userId] <= 0 then
+		releasing[userId] = nil
+	end
 	profiles[player] = nil
 	pendingSnapshot[player] = nil
+	if not ok then
+		warn("[PlayerData] Sauvegarde de départ impossible : " .. tostring(err))
+	end
 end
 
 -- Copie de l'état envoyée au client (lecture seule côté client).

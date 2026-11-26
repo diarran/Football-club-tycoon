@@ -7,6 +7,8 @@ monter dans les divisions. Monnaie : **FC Coins**.
 
 👉 **Pour ouvrir le jeu dans Studio : [OUVRIR_DANS_STUDIO.md](OUVRIR_DANS_STUDIO.md)**
 
+✅ **Tests automatiques (sans Studio) : [tests/README.md](tests/README.md)**
+
 ## Structure du dépôt
 
 ```
