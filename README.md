@@ -33,7 +33,7 @@ src/
     ├── Config.lua              constantes : solde de départ, délais, récompenses
     ├── ClubNames.lua           noms de clubs fictifs
     ├── Buildings.lua           installations, niveaux, prix, effets
-    ├── Divisions.lua           D7 à D5 et règles de montée
+    ├── Divisions.lua           D7 à D1, règles de montée, clubs fictifs
     ├── PlayerConfig.lua        postes, noms fictifs, notes, prix du recrutement
     ├── TutorialSteps.lua       textes des 6 étapes du tutoriel
     └── Net.lua                 RemoteEvents + limitation de fréquence

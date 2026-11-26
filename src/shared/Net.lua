@@ -22,6 +22,7 @@ local Net = {}
 Net.Requests = {
 	"RequestUpgrade", -- (buildingId: string)
 	"RequestRecruit", -- ()
+	"RequestTransfer", -- () remplace le joueur le moins bien noté (effectif complet, D5+)
 	"RequestMatch", -- (opponentId: string, tactic: string)
 	"RequestRename", -- (newName: string)
 	"RequestTutorialStep", -- (stepId: string) étapes purement informatives (menu ouvert…)

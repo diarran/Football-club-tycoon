@@ -9,14 +9,14 @@
 	Adversaires possibles :
 	- "player:<UserId>" : un autre club présent sur le serveur. Son effectif est
 	  seulement lu : le match ne modifie jamais ses données.
-	- "ai" : un club amical généré au niveau de la division du joueur.
+	- "ai:<n>" : un club fictif de la division du joueur (Divisions.GetRival),
+	  plus ou moins fort ; la prime de match suit sa note. "ai" = club de même niveau.
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
-local ClubNames = require(Shared.ClubNames)
 local Config = require(Shared.Config)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
@@ -113,8 +113,8 @@ local function pickScorer(squad)
 	return squad[#squad].name
 end
 
-local function buildAiTeam(divisionId: string)
-	local division = Divisions.Get(divisionId)
+local function buildAiTeam(divisionId: string, rivalIndex: number)
+	local rival = Divisions.GetRival(divisionId, rivalIndex)
 	local squad = {}
 	local positions = { "GK", "DEF", "DEF", "MID", "ATT" }
 	for index = 1, AI_SQUAD_SIZE do
@@ -122,16 +122,17 @@ local function buildAiTeam(divisionId: string)
 			-- Nom fictif fixe (pas de tirage : ne change pas les résultats des matchs).
 			name = PlayerConfig.FirstNames[index] .. " " .. PlayerConfig.LastNames[#PlayerConfig.LastNames + 1 - index],
 			position = positions[index],
-			rating = division.opponentRating + rng:NextInteger(-3, 3),
+			rating = rival.rating + rng:NextInteger(-3, 3),
 			energy = 80,
 		})
 	end
 	return {
-		id = "ai",
-		name = ClubNames.Generate(rng),
+		id = rival.id,
+		name = rival.name,
 		squad = squad,
 		tactic = Config.DEFAULT_TACTIC,
 		bonus = 0,
+		rewardFactor = rival.rewardFactor,
 	}
 end
 
@@ -188,8 +189,9 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 
 	-- Adversaire
 	local away
-	if opponentId == "ai" then
-		away = buildAiTeam(data.club.division)
+	local rivalIndex = Divisions.ParseRivalId(opponentId)
+	if rivalIndex then
+		away = buildAiTeam(data.club.division, rivalIndex)
 	else
 		local opponent = ClubService.FindPlayerByClubId(opponentId)
 		if not opponent or opponent == player then
@@ -239,7 +241,10 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	local tickets = math.floor((stands.capacity or 0) * attendance * (stands.ticketPrice or 0))
 	local sponsor = offices.sponsorIncome or 0
 	local shop = Buildings.GetEffects("Shop", data.buildings.Shop or 1).shopIncome or 0
-	local matchReward = Config.Rewards[outcome]
+	local currentDivision = Divisions.Get(data.club.division)
+	local matchReward = math.floor(
+		Config.Rewards[outcome] * currentDivision.rewardMultiplier * (away.rewardFactor or 1) + 0.5
+	)
 	local totalReward = matchReward + tickets + sponsor + shop
 	EconomyService.Add(player, totalReward, "match:" .. outcome)
 
@@ -258,14 +263,18 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	-- Division : chaque match validé rapporte des points ; la montée est vérifiée ici.
 	local previousDivision = data.club.division
 	data.club.divisionPoints += Config.DivisionPoints[outcome]
-	local division = Divisions.Get(data.club.division)
-	local promoted = false
-	if division.pointsToPromote and data.club.divisionPoints >= division.pointsToPromote then
+	-- Une seule montée par match ; les points restent à 0 dans la nouvelle division.
+	local promoted, promotionReward = false, 0
+	if currentDivision.pointsToPromote and data.club.divisionPoints >= currentDivision.pointsToPromote then
 		local nextDivision = Divisions.GetNext(data.club.division)
 		if nextDivision then
 			data.club.division = nextDivision.id
 			data.club.divisionPoints = 0
 			promoted = true
+			promotionReward = nextDivision.promotionReward or 0
+			if promotionReward > 0 then
+				EconomyService.Add(player, promotionReward, "promotion:" .. nextDivision.id)
+			end
 		end
 	end
 
@@ -282,6 +291,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		events = score.events,
 		outcome = outcome,
 		rewards = { match = matchReward, tickets = tickets, sponsor = sponsor, shop = shop, total = totalReward },
+		promotionReward = promotionReward,
 		divisionPoints = data.club.divisionPoints,
 		division = data.club.division,
 		promoted = promoted,

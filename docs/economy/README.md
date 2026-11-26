@@ -74,9 +74,49 @@ match. Après ~4 h, le vide « rien à acheter » revient : de nouvelles divisio
 ou des dépenses récurrentes (salaires, entretien) seront la suite logique.
 
 
-## Dernier rapport (100 parties par profil)
+## Divisions D4 à D1 (26/11/2026)
 
-# Simulation de l'économie (100 parties par profil)
+La progression continue jusqu'à la **D1**, objectif long terme. Le rythme D7 → D5
+du MVP ne change pas (~40 min pour un joueur actif).
+
+| Division | Seuil de montée | Note des clubs fictifs | Prime de match | Prime en arrivant | Transfert (prix · notes) |
+| --- | --- | --- | --- | --- | --- |
+| D7 | 15 | 45 | ×1 | — | — |
+| D6 | 36 | 56 | ×1 | 500 | — |
+| D5 | 320 | 62 | ×1 | 1 500 | 6 000 · 52-60 |
+| D4 | 650 | 73 | ×1,4 | 10 000 | 15 000 · 58-66 |
+| D3 | 1 000 | 80 | ×1,8 | 25 000 | 30 000 · 65-73 |
+| D2 | 1 500 | 86 | ×2,3 | 50 000 | 50 000 · 72-80 |
+| D1 | — | 92 | ×3 | 100 000 | 80 000 · 78-86 |
+
+- **Clubs fictifs** : 5 par division (note de −4 à +4 autour de la division). Le
+  menu Matchs en propose jusqu'à 3 quand il n'y a pas assez de clubs humains ;
+  un adversaire plus fort rapporte une prime plus grosse (±5 % par point).
+- **Transferts** (à partir de la D5, effectif complet) : un joueur du niveau de la
+  division remplace le moins bien noté. Il est toujours meilleur, et son potentiel
+  est limité (+4) : il faut monter pour trouver mieux. C'est la grande dépense de
+  fin de partie (~2,5 millions de FC Coins jusqu'à la D1).
+- **Classement** : l'onglet affiche le classement de la division (clubs fictifs et
+  humains de la même division, seuil de montée), puis les clubs du serveur.
+
+| Mesure (médiane, 30 parties) | Joueur actif | Joueur occasionnel |
+| --- | --- | --- |
+| D5 | 40 min | 56 min |
+| D4 | 3 h 40 | 5 h 10 |
+| D3 | 9 h 55 | 14 h |
+| D2 | 18 h 45 | 27 h |
+| **D1** | **31 h 40** (~13 jours) | **45 h 40** (~6 mois) |
+| Victoires D4 / D3 / D2 / D1 | 63 / 69 / 72 / 74 % | 64 / 69 / 73 / 74 % |
+| Gain par match (hors prime de montée) | médiane 3 600, max 4 600 | idem |
+
+Contrôles : D1 atteinte dans toutes les parties (aucun blocage), aucun match au-dessus
+de 5 000, solde loin du plafond. Point ouvert : en D1, une fois l'effectif au
+maximum du marché, les FC Coins s'accumulent (~2,5 millions) ; de nouvelles
+dépenses (installations, salaires) pourront le combler.
+
+## Dernier rapport (30 parties par profil)
+
+# Simulation de l'économie (30 parties par profil)
 
 Départ : 2500 FC Coins · prime de match V/N/D : 400/200/100 · recrue : 1500 · délai entre matchs : 60 s
 Coût total de tout le contenu (installations + 4 recrues) : 338000
@@ -86,77 +126,93 @@ Coût total de tout le contenu (installations + 4 recrues) : 338000
 | Étape | Temps de jeu (médiane) | 90 % des joueurs avant | Matchs | Session n° |
 | --- | --- | --- | --- | --- |
 | Premier achat | 0 min | 0 min | 0 | 1 |
-| Montée en D6 | 8.8 min | 11.3 min | 8 | 1 |
-| Montée en D5 | 40 min | 48.8 min | 34 | 2 |
-| Pitch 2 (2500) | 25 min | 26.3 min | 21 | 1 |
-| Pitch 3 (7500) | 77.5 min | 80 min | 64 | 2 |
-| Pitch 4 (16000) | 138.8 min | 143.8 min | 115 | 4 |
-| Pitch 5 (32000) | 221.3 min | 227.5 min | 183 | 6 |
-| Stands 2 (3000) | 37.5 min | 40 min | 31 | 1 |
-| Stands 3 (8000) | 86.3 min | 90 min | 72 | 3 |
-| Stands 4 (18000) | 152.5 min | 157.5 min | 126 | 4 |
-| Stands 5 (36000) | 239.4 min | 245 min | 197.5 | 6 |
-| Training 2 (2000) | 17.5 min | 18.8 min | 15 | 1 |
-| Training 3 (6000) | 57.5 min | 60 min | 48 | 2 |
-| Training 4 (14000) | 115 min | 120 min | 95 | 3 |
-| Training 5 (28000) | 190 min | 195 min | 157 | 5 |
-| Offices 2 (2500) | 31.3 min | 33.8 min | 26 | 1 |
-| Offices 3 (7000) | 67.5 min | 71.3 min | 56 | 2 |
-| Offices 4 (15000) | 126.9 min | 131.3 min | 105.5 | 4 |
-| Offices 5 (30000) | 205 min | 211.3 min | 170 | 6 |
+| Montée en D6 | 7.5 min | 10 min | 7 | 1 |
+| Montée en D5 | 40 min | 46.3 min | 33 | 1 |
+| Montée en D4 | 221.3 min | 237.5 min | 183 | 6 |
+| Montée en D3 | 595 min | 626.3 min | 491 | 15 |
+| Montée en D2 | 1125 min | 1178.8 min | 929 | 29 |
+| Montée en D1 | 1903.1 min | 1950 min | 1570.5 | 48 |
+| Pitch 2 (2500) | 22.5 min | 25 min | 19 | 1 |
+| Pitch 3 (7500) | 122.5 min | 160 min | 102 | 4 |
+| Pitch 4 (16000) | 182.5 min | 221.3 min | 151 | 5 |
+| Pitch 5 (32000) | 333.8 min | 365 min | 276 | 9 |
+| Stands 2 (3000) | 36.3 min | 38.8 min | 30 | 1 |
+| Stands 3 (8000) | 132.5 min | 170 min | 110 | 4 |
+| Stands 4 (18000) | 195.6 min | 288.8 min | 161.5 | 5 |
+| Stands 5 (36000) | 350.6 min | 381.3 min | 289.5 | 9 |
+| Training 2 (2000) | 16.3 min | 17.5 min | 14 | 1 |
+| Training 3 (6000) | 53.8 min | 57.5 min | 45 | 2 |
+| Training 4 (14000) | 160 min | 197.5 min | 132 | 4 |
+| Training 5 (28000) | 303.8 min | 335 min | 251 | 8 |
+| Offices 2 (2500) | 30 min | 32.5 min | 25 | 1 |
+| Offices 3 (7000) | 115 min | 152.5 min | 95 | 3 |
+| Offices 4 (15000) | 170.6 min | 208.8 min | 141.5 | 5 |
+| Offices 5 (30000) | 319.4 min | 350 min | 263.5 | 8 |
 | LockerRoom 2 (1500) | 0 min | 0 min | 0 | 1 |
-| LockerRoom 3 (4000) | 42.5 min | 45 min | 36 | 2 |
-| LockerRoom 4 (9000) | 95 min | 98.8 min | 79 | 3 |
-| LockerRoom 5 (18000) | 161.9 min | 167.5 min | 134.5 | 5 |
-| Shop 2 (4000) | 48.8 min | 51.3 min | 41 | 2 |
-| Shop 3 (10000) | 103.8 min | 107.5 min | 86 | 3 |
-| Shop 4 (20000) | 173.8 min | 178.8 min | 144 | 5 |
-| Shop 5 (38000) | 253.1 min | 260 min | 209.5 | 7 |
-| Recrue 1 (1500) | 0.6 min | 1.3 min | 1.5 | 1 |
+| LockerRoom 3 (4000) | 40 min | 45 min | 33 | 1 |
+| LockerRoom 4 (9000) | 140.6 min | 177.5 min | 116.5 | 4 |
+| LockerRoom 5 (18000) | 211.3 min | 302.5 min | 175 | 6 |
+| Shop 2 (4000) | 45 min | 48.8 min | 38 | 2 |
+| Shop 3 (10000) | 148.8 min | 186.3 min | 123 | 4 |
+| Shop 4 (20000) | 236.9 min | 320 min | 195.5 | 6 |
+| Shop 5 (38000) | 363.8 min | 396.3 min | 301 | 10 |
+| Recrue 1 (1500) | 1.3 min | 1.3 min | 2 | 1 |
 | Recrue 2 (1500) | 3.8 min | 5 min | 4 | 1 |
 | Recrue 3 (1500) | 7.5 min | 8.8 min | 7 | 1 |
-| Recrue 4 (1500) | 12.5 min | 12.5 min | 11 | 1 |
-| Tout acheté | 253.1 min | 260 min | 209.5 | 7 |
+| Recrue 4 (1500) | 10 min | 11.3 min | 9 | 1 |
+| Tout acheté | 363.8 min | 396.3 min | 301 | 10 |
 
-Gain par match : médiane 1688, max 3799 · victoires : 55 % · énergie la plus basse : 90 · solde final médian : 73525
+D1 : médiane 31.7 h de jeu (90 % avant 32.5 h), soit ~13.3 jours au rythme du profil
+Victoires par division : D7 66.1 % · D6 37.8 % · D5 65.2 % · D4 62.8 % · D3 69.1 % · D2 71.6 % · D1 74.3 %
+Transferts : médiane 61.5 (dépense 2.572e+06 FC Coins)
+
+Gain par match : médiane 3601, max 4599 · victoires : 68.4 % · énergie la plus basse : 90 · solde final médian : 2.57765e+06
 
 ## Joueur occasionnel (sessions de 15 min, pause de 24 h, un match toutes les 120 s)
 
 | Étape | Temps de jeu (médiane) | 90 % des joueurs avant | Matchs | Session n° |
 | --- | --- | --- | --- | --- |
 | Premier achat | 0 min | 0 min | 0 | 1 |
-| Montée en D6 | 12 min | 16 min | 7 | 1 |
-| Montée en D5 | 56 min | 66 min | 32 | 4 |
-| Pitch 2 (2500) | 34 min | 38 min | 20 | 3 |
-| Pitch 3 (7500) | 112 min | 114 min | 64 | 8 |
-| Pitch 4 (16000) | 200 min | 206 min | 115 | 15 |
-| Pitch 5 (32000) | 320 min | 326 min | 183 | 23 |
-| Stands 2 (3000) | 54 min | 56 min | 31 | 4 |
-| Stands 3 (8000) | 125 min | 128 min | 71.5 | 9 |
-| Stands 4 (18000) | 220 min | 224 min | 126 | 16 |
-| Stands 5 (36000) | 344 min | 352 min | 197 | 25 |
-| Training 2 (2000) | 26 min | 28 min | 15 | 2 |
-| Training 3 (6000) | 84 min | 86 min | 48 | 6 |
-| Training 4 (14000) | 166 min | 170 min | 95 | 12 |
-| Training 5 (28000) | 272 min | 280 min | 156 | 20 |
-| Offices 2 (2500) | 42 min | 48 min | 25 | 4 |
-| Offices 3 (7000) | 98 min | 100 min | 56 | 7 |
-| Offices 4 (15000) | 182 min | 188 min | 105 | 14 |
-| Offices 5 (30000) | 295 min | 304 min | 169.5 | 22 |
+| Montée en D6 | 14 min | 16 min | 8 | 1 |
+| Montée en D5 | 56 min | 70 min | 32.5 | 4.5 |
+| Montée en D4 | 310 min | 344 min | 178 | 23 |
+| Montée en D3 | 845 min | 882 min | 483.5 | 61 |
+| Montée en D2 | 1623 min | 1666 min | 928 | 116.5 |
+| Montée en D1 | 2736 min | 2788 min | 1564 | 196 |
+| Pitch 2 (2500) | 32 min | 36 min | 19 | 3 |
+| Pitch 3 (7500) | 185 min | 224 min | 106 | 13.5 |
+| Pitch 4 (16000) | 270 min | 322 min | 155 | 20 |
+| Pitch 5 (32000) | 474 min | 538 min | 271 | 34 |
+| Stands 2 (3000) | 52 min | 56 min | 30 | 4 |
+| Stands 3 (8000) | 198 min | 238 min | 113.5 | 14.5 |
+| Stands 4 (18000) | 288 min | 342 min | 165 | 21 |
+| Stands 5 (36000) | 497 min | 560 min | 284.5 | 36 |
+| Training 2 (2000) | 24 min | 26 min | 14 | 2 |
+| Training 3 (6000) | 78 min | 84 min | 45 | 6 |
+| Training 4 (14000) | 236 min | 278 min | 135.5 | 17.5 |
+| Training 5 (28000) | 428 min | 494 min | 245 | 31 |
+| Offices 2 (2500) | 42 min | 46 min | 24.5 | 3.5 |
+| Offices 3 (7000) | 172 min | 212 min | 99 | 13 |
+| Offices 4 (15000) | 254 min | 294 min | 145.5 | 18.5 |
+| Offices 5 (30000) | 451 min | 516 min | 258.5 | 33 |
 | LockerRoom 2 (1500) | 0 min | 0 min | 0 | 1 |
-| LockerRoom 3 (4000) | 62 min | 66 min | 36 | 5 |
-| LockerRoom 4 (9000) | 136 min | 140 min | 78 | 10 |
-| LockerRoom 5 (18000) | 234 min | 240 min | 134 | 17 |
-| Shop 2 (4000) | 70 min | 74 min | 41 | 6 |
-| Shop 3 (10000) | 148 min | 154 min | 85 | 11 |
-| Shop 4 (20000) | 252 min | 258 min | 144 | 18 |
-| Shop 5 (38000) | 365 min | 374 min | 209.5 | 27 |
-| Recrue 1 (1500) | 1 min | 2 min | 1.5 | 1 |
+| LockerRoom 3 (4000) | 56 min | 64 min | 33 | 5 |
+| LockerRoom 4 (9000) | 209 min | 250 min | 120 | 15.5 |
+| LockerRoom 5 (18000) | 308 min | 454 min | 176.5 | 22.5 |
+| Shop 2 (4000) | 66 min | 70 min | 38 | 5 |
+| Shop 3 (10000) | 221 min | 262 min | 127 | 16.5 |
+| Shop 4 (20000) | 396 min | 474 min | 227 | 29 |
+| Shop 5 (38000) | 517 min | 582 min | 295.5 | 37 |
+| Recrue 1 (1500) | 2 min | 2 min | 2 | 1 |
 | Recrue 2 (1500) | 6 min | 8 min | 4 | 1 |
 | Recrue 3 (1500) | 12 min | 14 min | 7 | 1 |
-| Recrue 4 (1500) | 16 min | 18 min | 10 | 2 |
-| Tout acheté | 365 min | 374 min | 209.5 | 27 |
+| Recrue 4 (1500) | 14 min | 16 min | 9 | 2 |
+| Tout acheté | 517 min | 582 min | 295.5 | 37 |
 
-Gain par match : médiane 1607, max 3795 · victoires : 56.5 % · énergie la plus basse : 90 · solde final médian : 13737.5
+D1 : médiane 45.6 h de jeu (90 % avant 46.5 h), soit ~198 jours au rythme du profil
+Victoires par division : D7 59 % · D6 38.8 % · D5 65.7 % · D4 64.2 % · D3 68.8 % · D2 72.9 % · D1 73.5 %
+Transferts : médiane 60.5 (dépense 2.501e+06 FC Coins)
+
+Gain par match : médiane 3602, max 4595 · victoires : 68.7 % · énergie la plus basse : 90 · solde final médian : 2.5037e+06
 
 Aucune source de monnaie infinie ni blocage détecté.

@@ -27,11 +27,13 @@ Le test `07_client` démarre aussi le vrai client (HUD, menus) et clique sur les
 | `02_economy` | débit unique, prix serveur, valeurs client invalides, limite de fréquence, recrutement |
 | `03_save` | sauvegarde, reconnexion, autosave, verrou de session, pannes du DataStore, fermeture |
 | `04_temporary` | mode test sans DataStore (Studio) |
-| `05_match` | match validé par le serveur, délai, récompenses, montée D7 → D5, matchs entre clubs |
+| `05_match` | match validé par le serveur, délai, récompenses, montée D7 → D1, matchs entre clubs |
 | `06_tutorial` | étapes du tutoriel, renommage filtré, instantané client |
 | `07_client` | le vrai client branché sur le serveur : boutons, onglets, écran de téléphone |
 | `08_concurrency` | arrivées simultanées, départ/retour rapide, sauvegardes en échec, matchs croisés |
 | `09_locale` | français et anglais complets (aucune clé manquante), langue du compte Roblox, choix dans les Paramètres, boutons anglais lisibles sur téléphone |
+| `10_progression` | 5 niveaux par installation, Boutique, modèles 3D au bon niveau |
+| `11_divisions` | D7 → D1, clubs fictifs, primes croissantes, transferts validés par le serveur, classement de division |
 
 ## Lancer les tests sur son ordinateur
 

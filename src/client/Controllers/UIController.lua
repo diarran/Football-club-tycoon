@@ -184,6 +184,10 @@ function renderers.Home(profile)
 	local progress = if division and division.pointsToPromote
 		then T("home.pointsToPromote", { points = club.divisionPoints, needed = division.pointsToPromote })
 		else T("home.topDivision")
+	local nextDivision = Divisions.GetNext(club.division)
+	if nextDivision and (nextDivision.promotionReward or 0) > 0 then
+		progress ..= " · " .. T("home.promotionReward", { coins = formatCoins(nextDivision.promotionReward) })
+	end
 	local stats = club.stats
 
 	-- Logo du jeu en tête de l'accueil (image importée si disponible, sinon titre).
@@ -281,6 +285,34 @@ function renderers.Stadium(profile)
 	end
 end
 
+-- Effectif complet : bouton de transfert si la division a un marché.
+local function transferControl(profile)
+	local division = Divisions.Get(profile.club.division)
+	local market = division and division.transfer
+	if not market then
+		return label(T("squad.fullTransferLater"), { TextColor3 = COLORS.muted })
+	end
+	local weakest = nil
+	for _, footballer in profile.squad do
+		if not weakest or footballer.rating < weakest.rating then
+			weakest = footballer
+		end
+	end
+	if weakest and weakest.rating >= market.ratingMax then
+		return label(T("squad.transferNoBetter"), { TextColor3 = COLORS.muted })
+	end
+	return button(
+		T("squad.transfer", { cost = formatCoins(market.cost), name = weakest and weakest.name or "?" }),
+		function()
+			Net.Get("RequestTransfer"):FireServer()
+		end,
+		{
+			Size = UDim2.new(1, 0, 0, 44),
+			BackgroundColor3 = if profile.coins >= market.cost then COLORS.accent else COLORS.disabled,
+		}
+	)
+end
+
 function renderers.Squad(profile)
 	local squad = profile.squad
 	local full = #squad >= Config.MAX_SQUAD_SIZE
@@ -290,7 +322,7 @@ function renderers.Squad(profile)
 			{ Font = Enum.Font.GothamBold }
 		),
 		if full
-			then label(T("squad.full"), { TextColor3 = COLORS.muted })
+			then transferControl(profile)
 			else button(T("squad.recruit", { cost = formatCoins(PlayerConfig.RECRUIT_COST) }), function()
 				Net.Get("RequestRecruit"):FireServer()
 			end, {
@@ -364,12 +396,25 @@ function renderers.Matches(profile)
 	end
 
 	local division = Divisions.Get(profile.club.division)
-	opponentCard(
-		T("matches.friendly"),
-		T("matches.aiSubtitle", { division = divisionLabel(division.id), rating = division.opponentRating }),
-		"ai"
-	)
 	local myId = "player:" .. player.UserId
+	local humans = 0
+	for _, club in state.clubs do
+		if club.id ~= myId then
+			humans += 1
+		end
+	end
+	-- Clubs fictifs de la division quand il n'y a pas assez de clubs humains.
+	for _, rival in Divisions.GetSuggestedRivals(division.id, humans) do
+		opponentCard(
+			rival.name,
+			T("matches.aiSubtitle", {
+				division = divisionLabel(division.id),
+				rating = rival.rating,
+				reward = math.floor(rival.rewardFactor * 100 + 0.5),
+			}),
+			rival.id
+		)
+	end
 	for _, club in state.clubs do
 		if club.id ~= myId then
 			opponentCard(
@@ -386,7 +431,59 @@ function renderers.Matches(profile)
 	end
 end
 
-function renderers.Ranking(_profile)
+-- Classement de la division du joueur : clubs fictifs + clubs humains de la
+-- même division, triés par points. Ligne de montée sous les clubs qui montent.
+local function divisionTable(profile)
+	local division = Divisions.Get(profile.club.division)
+	local myId = "player:" .. player.UserId
+	local rows = {}
+	for _, rival in Divisions.GetRivals(division.id) do
+		table.insert(rows, { name = rival.name, points = rival.points, fictional = true })
+	end
+	local mineListed = false
+	for _, club in state.clubs do
+		if club.division == division.id then
+			table.insert(rows, { name = club.clubName, points = club.divisionPoints, mine = club.id == myId })
+			mineListed = mineListed or club.id == myId
+		end
+	end
+	if not mineListed then
+		table.insert(rows, { name = profile.club.name, points = profile.club.divisionPoints, mine = true })
+	end
+	table.sort(rows, function(a, b)
+		if a.points ~= b.points then
+			return a.points > b.points
+		end
+		return (a.mine and not b.mine) or false
+	end)
+	local children = {
+		label(T("ranking.divisionTitle", { division = divisionLabel(division.id) }), { Font = Enum.Font.GothamBold }),
+		label(
+			if division.pointsToPromote
+				then T("ranking.promotionRule", { points = division.pointsToPromote })
+				else T("ranking.topDivisionRule"),
+			{ TextColor3 = COLORS.muted, TextSize = 16 }
+		),
+	}
+	for rank, row in rows do
+		table.insert(
+			children,
+			label(
+				T(if row.fictional then "ranking.rowFictional" else "ranking.row", {
+					rank = rank,
+					name = row.name,
+					points = row.points,
+				}),
+				{ TextColor3 = if row.mine then COLORS.gold else COLORS.text, TextSize = 16 }
+			)
+		)
+	end
+	card(children).Parent = content
+end
+
+function renderers.Ranking(profile)
+	divisionTable(profile)
+	label(T("ranking.serverTitle"), { Font = Enum.Font.GothamBold }).Parent = content
 	if #state.clubs == 0 then
 		card({ label(T("ranking.empty")) }).Parent = content
 		return
@@ -833,7 +930,11 @@ function UIController.ShowMatchResult(result)
 		)
 	)
 	if result.promoted then
-		add(label(T("result.promoted", { division = divisionLabel(result.division) }), {
+		local promotedText = T("result.promoted", { division = divisionLabel(result.division) })
+		if (result.promotionReward or 0) > 0 then
+			promotedText ..= " " .. T("result.promotionReward", { coins = formatCoins(result.promotionReward) })
+		end
+		add(label(promotedText, {
 			Font = Enum.Font.GothamBold,
 			TextColor3 = COLORS.gold,
 			TextXAlignment = Enum.TextXAlignment.Center,

@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
+local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
@@ -26,7 +27,13 @@ local function pick(list)
 end
 
 -- Crée un footballeur fictif. Les valeurs sont tirées côté serveur uniquement.
-local function generateFootballer(data, position: string, ratingMin: number, ratingMax: number)
+local function generateFootballer(
+	data,
+	position: string,
+	ratingMin: number,
+	ratingMax: number,
+	potentialBonusMax: number?
+)
 	local rating = rng:NextInteger(ratingMin, ratingMax)
 	local footballer = {
 		id = data.nextPlayerId,
@@ -36,7 +43,7 @@ local function generateFootballer(data, position: string, ratingMin: number, rat
 		rating = rating,
 		potential = math.min(
 			PlayerConfig.MAX_RATING,
-			rating + rng:NextInteger(0, PlayerConfig.POTENTIAL_BONUS_MAX)
+			rating + rng:NextInteger(0, potentialBonusMax or PlayerConfig.POTENTIAL_BONUS_MAX)
 		),
 		energy = PlayerConfig.MAX_ENERGY,
 		value = rating * 30,
@@ -113,6 +120,61 @@ function SquadService.TryRecruit(player: Player): (boolean, string)
 		})
 end
 
+-- Joueur le moins bien noté de l'effectif (celui que remplace un transfert).
+function SquadService.GetWeakest(squad)
+	local weakest = nil
+	for _, footballer in squad do
+		if not weakest or footballer.rating < weakest.rating then
+			weakest = footballer
+		end
+	end
+	return weakest
+end
+
+-- Transfert (effectif complet, à partir de la D5) : un joueur du niveau de la
+-- division remplace le moins bien noté, au même poste pour garder l'équilibre.
+-- Le nouveau joueur est toujours meilleur que celui qu'il remplace ; le
+-- transfert est refusé (sans rien débiter) si la division n'a plus mieux.
+function SquadService.TryTransfer(player: Player): (boolean, string)
+	local data = PlayerDataService.GetData(player)
+	if not data then
+		return false, Locale.TP(player, "error.profileNotLoaded")
+	end
+	local division = Divisions.Get(data.club.division)
+	local market = division and division.transfer
+	if not market then
+		return false, Locale.TP(player, "error.transferLocked")
+	end
+	if #data.squad < Config.MAX_SQUAD_SIZE then
+		return false, Locale.TP(player, "error.transferSquadNotFull")
+	end
+	local weakest = SquadService.GetWeakest(data.squad)
+	if weakest.rating >= market.ratingMax then
+		return false, Locale.TP(player, "error.transferNoBetter")
+	end
+	if not EconomyService.TrySpend(player, market.cost, "transfer:" .. division.id) then
+		return false, Locale.TP(player, "error.notEnoughCoinsTransfer", { currency = Config.CURRENCY_NAME })
+	end
+	local newcomer = generateFootballer(
+		data,
+		weakest.position,
+		math.max(market.ratingMin, weakest.rating + 1),
+		market.ratingMax,
+		market.potentialBonusMax
+	)
+	local slot = table.find(data.squad, weakest)
+	data.squad[slot] = newcomer
+	PlayerDataService.MarkChanged(player)
+	local lang = Locale.ForPlayer(player)
+	return true,
+		Locale.T(lang, "squad.transferred", {
+			name = newcomer.name,
+			position = Locale.T(lang, "position." .. newcomer.position),
+			rating = newcomer.rating,
+			old = weakest.name,
+		})
+end
+
 -- Après un match : fatigue et petite chance de progresser vers le potentiel.
 function SquadService.ApplyMatchEffects(data)
 	local trainingLevel = data.buildings.Training or 1
@@ -148,6 +210,13 @@ end
 function SquadService.Init()
 	Net.Handle("RequestRecruit", function(player)
 		local ok, message = SquadService.TryRecruit(player)
+		Net.FireClient("Notify", player, message, if ok then "success" else "error")
+		if ok then
+			ClubService.BroadcastClubs()
+		end
+	end)
+	Net.Handle("RequestTransfer", function(player)
+		local ok, message = SquadService.TryTransfer(player)
 		Net.FireClient("Notify", player, message, if ok then "success" else "error")
 		if ok then
 			ClubService.BroadcastClubs()
