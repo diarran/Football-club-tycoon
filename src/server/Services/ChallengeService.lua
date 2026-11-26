@@ -27,6 +27,7 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
 local ClubService = require(script.Parent.ClubService)
 local MatchService = require(script.Parent.MatchService)
+local FriendService = require(script.Parent.FriendService)
 
 local ChallengeService = {}
 
@@ -45,6 +46,11 @@ local function isAllowedStake(stake): boolean
 	return false
 end
 
+-- Match amical : défi sans mise entre deux amis Roblox.
+local function isFriendly(challenge): boolean
+	return challenge.stake == 0 and FriendService.AreFriends(challenge.from, challenge.to)
+end
+
 local function pairKey(from: Player, to: Player): string
 	return from.UserId .. ":" .. to.UserId
 end
@@ -61,6 +67,7 @@ local function sendState(player: Player)
 			id = challenge.id,
 			stake = challenge.stake,
 			expiresIn = math.max(0, math.ceil(challenge.expiresAt - now)),
+			friendly = isFriendly(challenge),
 		}
 		if challenge.to == player then
 			local data = PlayerDataService.GetData(challenge.from)
@@ -149,13 +156,19 @@ function ChallengeService.TrySend(player: Player, targetId, stake)
 	end)
 	sendState(player)
 	sendState(target)
+	local friendly = isFriendly(challenge)
 	Net.FireClient(
 		"Notify",
 		target,
-		Locale.TP(target, "challenge.received", { club = data.club.name, stake = stake }),
+		Locale.TP(
+			target,
+			if friendly then "friends.friendlyReceived" else "challenge.received",
+			{ club = data.club.name, stake = stake }
+		),
 		"info"
 	)
-	return true, Locale.TP(player, "challenge.sent", { club = targetData.club.name })
+	return true,
+		Locale.TP(player, if friendly then "friends.friendlySent" else "challenge.sent", { club = targetData.club.name })
 end
 
 -- Le club défié accepte (accept = true) ou refuse.
@@ -178,6 +191,7 @@ function ChallengeService.TryRespond(player: Player, challengeId, accept)
 		return false, Locale.TP(player, "error.opponentUnavailable")
 	end
 	local stake = challenge.stake
+	local friendly = isFriendly(challenge)
 	-- Vérification puis double débit sans pause : impossible de payer deux fois.
 	if not EconomyService.CanAfford(challenger, stake) then
 		remove(challenge, "challenge.error.challengerCannotAfford")
@@ -205,6 +219,12 @@ function ChallengeService.TryRespond(player: Player, challengeId, accept)
 		EconomyService.Add(challenger, stake, "challenge:draw")
 		EconomyService.Add(player, stake, "challenge:draw")
 	end
+	-- Match amical : petit bonus pour chacun (limité par jour).
+	local friendlyBonus = {}
+	if friendly then
+		friendlyBonus[challenger] = FriendService.GrantFriendlyBonus(challenger)
+		friendlyBonus[player] = FriendService.GrantFriendlyBonus(player)
+	end
 
 	-- Chaque club reçoit le résultat de son point de vue.
 	local function resultFor(viewer: Player, mine, theirs, myGoals, theirGoals, flip: boolean)
@@ -227,6 +247,8 @@ function ChallengeService.TryRespond(player: Player, challengeId, accept)
 			outcome = outcome,
 			stake = stake,
 			coinsChange = if outcome == "Win" then stake elseif outcome == "Loss" then -stake else 0,
+			friendly = friendly,
+			friendlyBonus = friendlyBonus[viewer] or 0,
 		}
 	end
 	Net.FireClient("MatchResult", challenger, resultFor(challenger, home, away, score.homeGoals, score.awayGoals, false))

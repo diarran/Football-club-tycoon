@@ -22,6 +22,7 @@ local Config = require(Shared.Config)
 local Cosmetics = require(Shared.Cosmetics)
 local Trophies = require(Shared.Trophies)
 local Divisions = require(Shared.Divisions)
+local Friends = require(Shared.Friends)
 local Locale = require(Shared.Locale)
 local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
@@ -777,15 +778,31 @@ local function tournamentCard()
 	card(children).Parent = content
 end
 
+-- Club dirigé par un ami Roblox du joueur (liste calculée par le serveur).
+local function isFriendClub(profile, clubId: string): boolean
+	return profile.friends ~= nil and table.find(profile.friends.clubIds or {}, clubId) ~= nil
+end
+
 -- Défis reçus (accepter / refuser) et défi envoyé en attente.
 local function challengeCards()
 	for _, challenge in state.challenges.incoming do
 		card({
-			label(T("challenge.incomingTitle", { club = challenge.clubName, owner = challenge.ownerName }), {
-				Font = Enum.Font.GothamBold,
-				TextColor3 = COLORS.gold,
-			}),
-			label(T("challenge.incomingLine", { stake = challenge.stake }), { TextSize = 16 }),
+			label(
+				T(
+					if challenge.friendly then "friends.friendlyIncomingTitle" else "challenge.incomingTitle",
+					{ club = challenge.clubName, owner = challenge.ownerName }
+				),
+				{
+					Font = Enum.Font.GothamBold,
+					TextColor3 = COLORS.gold,
+				}
+			),
+			label(
+				if challenge.friendly
+					then T("friends.friendlyIncomingLine", { coins = Friends.FRIENDLY_BONUS })
+					else T("challenge.incomingLine", { stake = challenge.stake }),
+				{ TextSize = 16 }
+			),
 			buttonRow({
 				{
 					text = T("challenge.accept"),
@@ -901,7 +918,9 @@ function renderers.Matches(profile)
 	for _, club in state.clubs do
 		if club.id ~= myId then
 			card({
-				label(club.clubName, { Font = Enum.Font.GothamBold }),
+				label(club.clubName .. (if isFriendClub(profile, club.id) then "  · " .. T("friends.tag") else ""), {
+					Font = Enum.Font.GothamBold,
+				}),
 				label(T("matches.clubSubtitle", {
 					owner = club.ownerName,
 					division = divisionLabel(club.division),
@@ -980,7 +999,52 @@ local function divisionTable(profile)
 	card(children).Parent = content
 end
 
+-- Fenêtre officielle de Roblox pour inviter des amis (elle attend le joueur).
+local function promptInvite()
+	task.spawn(function()
+		local SocialService = game:GetService("SocialService")
+		local ok, canSend = pcall(function()
+			return SocialService:CanSendGameInviteAsync(player)
+		end)
+		if not ok or canSend ~= true then
+			UIController.Notify(T("friends.cannotInvite"), "error")
+			return
+		end
+		local options = nil
+		pcall(function()
+			options = Instance.new("ExperienceInviteOptions")
+			options.PromptMessage = T("friends.invitePrompt")
+		end)
+		pcall(function()
+			SocialService:PromptGameInvite(player, options)
+		end)
+	end)
+end
+
+-- Carte « Amis » : invitation, primes de parrainage, matchs amicaux du jour.
+local function friendsCard(profile)
+	local friends = profile.friends or { clubIds = {}, friendlyLeft = Friends.FRIENDLY_BONUS_PER_DAY, rewardsGiven = 0 }
+	card({
+		label(T("friends.title"), { Font = Enum.Font.GothamBold }),
+		label(
+			T("friends.inviteHelp", { coins = formatCoins(Friends.INVITER_REWARD), welcome = formatCoins(Friends.INVITEE_WELCOME) }),
+			{ TextColor3 = COLORS.muted, TextSize = 16 }
+		),
+		label(T("friends.invitedCount", { count = friends.rewardsGiven, max = Friends.MAX_INVITER_REWARDS }), {
+			TextSize = 16,
+		}),
+		label(T("friends.friendlyLeft", {
+			count = friends.friendlyLeft,
+			max = Friends.FRIENDLY_BONUS_PER_DAY,
+			coins = Friends.FRIENDLY_BONUS,
+		}), { TextSize = 16 }),
+		button(T("friends.invite"), promptInvite, { Name = "InviteButton", Size = UDim2.new(1, 0, 0, 44) }),
+	}).Parent =
+		content
+end
+
 function renderers.Ranking(profile)
+	friendsCard(profile)
 	divisionTable(profile)
 	label(T("ranking.serverTitle"), { Font = Enum.Font.GothamBold }).Parent = content
 	if #state.clubs == 0 then
@@ -989,8 +1053,20 @@ function renderers.Ranking(profile)
 	end
 	local myId = "player:" .. player.UserId
 	for rank, club in state.clubs do
+		local friend = isFriendClub(profile, club.id)
+		local friendRow = nil
+		if friend then
+			friendRow = buttonRow({
+				{
+					text = T("friends.friendlyButton"),
+					onClick = function()
+						Net.Get("RequestChallenge"):FireServer(club.id, 0)
+					end,
+				},
+			})
+		end
 		card({
-			label(("%d. %s"):format(rank, club.clubName), {
+			label(("%d. %s"):format(rank, club.clubName) .. (if friend then "  · " .. T("friends.tag") else ""), {
 				Font = Enum.Font.GothamBold,
 				TextColor3 = if club.id == myId then COLORS.gold else COLORS.text,
 			}),
@@ -1006,6 +1082,7 @@ function renderers.Ranking(profile)
 				{ TextColor3 = COLORS.muted, TextSize = 16 }
 			),
 			label(T("ranking.trophies", { count = club.trophies or 0 }), { TextColor3 = COLORS.gold, TextSize = 16 }),
+			friendRow,
 		}).Parent =
 			content
 	end
@@ -1683,9 +1760,16 @@ function UIController.ShowMatchResult(result)
 			if change > 0
 				then T("challenge.resultWon", { coins = formatCoins(change) })
 				elseif change < 0 then T("challenge.resultLost", { coins = formatCoins(-change) })
+				elseif result.friendly then T("friends.friendlyResult")
 				else T("challenge.resultDraw"),
 			{ TextColor3 = COLORS.gold, TextXAlignment = Enum.TextXAlignment.Center }
 		))
+		if (result.friendlyBonus or 0) > 0 then
+			add(label(T("friends.friendlyBonus", { coins = formatCoins(result.friendlyBonus) }), {
+				TextColor3 = COLORS.accent,
+				TextXAlignment = Enum.TextXAlignment.Center,
+			}))
+		end
 		add(button(T("result.continue"), function()
 			resultPopup.Visible = false
 		end))

@@ -164,6 +164,12 @@ Pour ajouter l'anglais : **create.roblox.com** > ton jeu > **Localization**
   utiliser les vraies images, il faudra les importer sur Roblox puis donner leurs numéros
   à Claude.
 
+- **Inviter des amis** (onglet Classement, bouton « Inviter des amis ») : marche dès que
+  le jeu est publié. Quand un ami arrive grâce à l'invitation, il reçoit 500 FC Coins et
+  toi aussi (10 amis maximum). Facultatif, un jour après la publication : sur le
+  Creator Hub, **Engagement → Referral Rewards**, tu peux créer la bannière officielle
+  « Invite tes amis : 500 FC Coins pour toi et ton ami, 10 fois maximum ».
+
 ## En cas de souci
 
 - **« Publish to Roblox » est grisé** : connecte-toi à Roblox dans Studio (en haut à droite).
