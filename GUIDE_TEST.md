@@ -31,7 +31,7 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier (12 points)
+## 5. Ce qu'il faut vérifier (14 points)
 
 Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
 
@@ -48,20 +48,31 @@ Note pour chaque point ✅ ou ❌. Si c'est ❌, fais une capture d'écran.
    et l'Espace VIP.
 6. **Effectif** : « Recruter » ajoute un joueur. Plus bas, le **Centre de formation**
    affiche les jeunes repérés que tu peux signer. « Pas assez de FC » est normal au début : joue un match.
-7. **Matchs** : lance un match. Une fenêtre de résultat s'affiche avec les FC gagnés
-   (match, billetterie, sponsors…). Le compte à rebours avant le match suivant défile.
-8. **Prestige** : l'onglet montre la salle des trophées et les objets de personnalisation,
+7. **Matchs** : lance un match. Le menu se ferme et le **match se joue en 3D** sur ton
+   terrain : 22 joueurs aux couleurs des deux clubs, le ballon, du public dans les
+   tribunes, le score et la minute en haut de l'écran. Les buts marqués sont les mêmes
+   que ceux de la fenêtre de résultat. À la fin (moins d'une minute), la fenêtre de
+   résultat s'affiche avec les FC gagnés (match, billetterie, sponsors…). Le compte à
+   rebours avant le match suivant défile.
+8. **Replay : boutons** : au match suivant, clique **Avance rapide ×3** (le match va
+   3 fois plus vite), puis **Passer** : le replay s'arrête, la caméra revient sur ton
+   personnage et la fenêtre de résultat s'affiche tout de suite.
+9. **Prestige** : l'onglet montre la salle des trophées et les objets de personnalisation,
    avec la division requise pour ceux qui sont encore verrouillés.
-9. **Paramètres** : passe la langue en **English** : tout le menu et les panneaux du
+10. **Paramètres** : passe la langue en **English** : tout le menu et les panneaux du
    terrain changent de langue. Remets **Français**.
-10. **À 2 joueurs** (section 4) : chaque joueur a un terrain différent et voit l'autre
+11. **À 2 joueurs** (section 4) : chaque joueur a un terrain différent et voit l'autre
     club dans **Classement**. Dans **Matchs**, le joueur 1 clique **Défier** ; le
     joueur 2 reçoit le défi et l'accepte : les deux voient le résultat.
-11. **Tournoi** (à 2) : environ **3 minutes** après le Start, un message annonce
+12. **Tournoi** (à 2) : environ **3 minutes** après le Start, un message annonce
     l'ouverture des inscriptions. Dans **Matchs**, les deux joueurs cliquent
     **S'inscrire** (1 minute pour le faire) ; les tours s'enchaînent et un vainqueur est annoncé.
-12. **Téléphone et sortie** : onglet **Test** > **Device**, choisis un téléphone : les
+13. **Téléphone et sortie** : onglet **Test** > **Device**, choisis un téléphone : les
     7 onglets et les boutons restent lisibles. Pendant tout le test, la fenêtre
     **Sortie** ne doit montrer aucune ligne **rouge** ni orange commençant par `[Main]`.
+14. **Replay vu par un visiteur** (à 2) : le joueur 2 marche jusqu'au terrain du
+    joueur 1, puis le joueur 1 lance un match. Le joueur 2 voit le match se jouer sur ce
+    terrain et le tableau d'affichage au-dessus de la tribune du fond, sans que sa
+    caméra bouge.
 
 Envoie ensuite ta liste (✅ / ❌ + captures + lignes rouges) dans le projet : on corrige.
