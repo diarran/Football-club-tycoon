@@ -28,6 +28,7 @@ local CosmeticService = require(Services.CosmeticService)
 local MonetizationService = require(Services.MonetizationService)
 local ChallengeService = require(Services.ChallengeService)
 local TournamentService = require(Services.TournamentService)
+local DailyService = require(Services.DailyService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
 local ORDERED_SERVICES = {
@@ -42,6 +43,7 @@ local ORDERED_SERVICES = {
 	{ name = "MonetizationService", module = MonetizationService },
 	{ name = "ChallengeService", module = ChallengeService },
 	{ name = "TournamentService", module = TournamentService },
+	{ name = "DailyService", module = DailyService },
 }
 
 for _, entry in ORDERED_SERVICES do
@@ -90,6 +92,8 @@ local function onPlayerAdded(player: Player)
 	step("ClubsUpdated", Net.FireClient, "ClubsUpdated", player, ClubService.GetClubList())
 	step("ChallengeService.OnPlayerReady", ChallengeService.OnPlayerReady, player)
 	step("TournamentService.OnPlayerReady", TournamentService.OnPlayerReady, player)
+	-- Récompense du jour, missions, revenus hors ligne, fin de saison.
+	step("DailyService.OnPlayerReady", DailyService.OnPlayerReady, player)
 	if profile.temporary then
 		Net.FireClient(
 			"Notify",

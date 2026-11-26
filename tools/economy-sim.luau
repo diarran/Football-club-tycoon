@@ -114,6 +114,9 @@ local function playRun(profil)
 		postSessions = 0,
 		titlesAtEnd = 0,
 		tournamentGains = {}, -- gains versés par le tournoi du serveur
+		loginGains = 0, -- cadeau du jour + revenus hors ligne + fin de saison (à l'arrivée)
+		missionGains = 0, -- primes des missions du jour
+		matchGains = 0, -- gains des matchs (hors missions et primes de montée)
 	}
 	local function stamp()
 		return { minutes = run.playSeconds / 60, matches = run.matches, session = run.sessions }
@@ -199,6 +202,9 @@ local function playRun(profil)
 		local player = H.join(userId)
 		local data = S.PlayerDataService.GetData(player)
 		assert(data, "profil non chargé")
+		if run.coinsAtEnd then
+			run.loginGains += math.max(0, data.coins - run.coinsAtEnd)
+		end
 		local sessionEnd = run.playSeconds + profil.sessionMinutes * 60
 		-- Le premier match d'une session part dès l'arrivée.
 		local wait = 0
@@ -207,9 +213,13 @@ local function playRun(profil)
 			-- les récompenses tombent pendant l'attente entre deux matchs.
 			S.TournamentService.TryJoin(player)
 			local beforeWait = data.coins
+			local dayBefore, seasonBefore = data.daily.lastClaimDay, data.season.id
 			H.advance(wait)
 			run.playSeconds += wait
-			if data.coins > beforeWait then
+			if data.daily.lastClaimDay ~= dayBefore or data.season.id ~= seasonBefore then
+				-- Minuit pendant la session : cadeau du jour ou fin de saison (pas le tournoi).
+				run.loginGains += math.max(0, data.coins - beforeWait)
+			elseif data.coins > beforeWait then
 				table.insert(run.tournamentGains, data.coins - beforeWait)
 			end
 			shop(player, data)
@@ -225,7 +235,9 @@ local function playRun(profil)
 				dw.matches += 1
 				dw.wins += if result.outcome == "Win" then 1 else 0
 				run.divisionWins[divisionBefore] = dw
-				local income = data.coins - coins - (result.promotionReward or 0)
+				run.missionGains += result.missionReward or 0
+				local income = data.coins - coins - (result.promotionReward or 0) - (result.missionReward or 0)
+				run.matchGains += income
 				table.insert(run.incomes, income)
 				-- Contrôle des sources anormales : hors bonus voulu de la division
 				-- (prime de match ×1 à ×3), le gain doit rester sous 5 000.
@@ -467,6 +479,23 @@ for _, profil in PROFILS do
 	))
 	if (percentile(gains, 1) or 0) > tournamentCap then
 		table.insert(problems, profil.label .. " : une récompense de tournoi dépasse le plafond (source anormale)")
+	end
+
+	-- Objectifs quotidiens (DailyService) : part des revenus venant du retour quotidien.
+	local loginShare, missionShare, loginPerSession = {}, {}, {}
+	for _, run in runs do
+		local total = math.max(1, run.matchGains + run.loginGains + run.missionGains)
+		table.insert(loginShare, run.loginGains / total)
+		table.insert(missionShare, run.missionGains / total)
+		table.insert(loginPerSession, run.loginGains / math.max(1, run.sessions - 1))
+	end
+	print(("Retour quotidien : arrivée (cadeau + hors ligne + saison) %s %% des gains, %s par session · missions %s %% des gains"):format(
+		fmt(median(loginShare) * 100),
+		fmt(median(loginPerSession)),
+		fmt(median(missionShare) * 100)
+	))
+	if median(loginShare) + median(missionShare) > 0.5 then
+		table.insert(problems, profil.label .. " : plus de la moitié des gains vient sans jouer (cadeaux, hors ligne, missions)")
 	end
 
 	-- Contrôles : sources infinies et blocages
