@@ -32,7 +32,8 @@ const noImages = process.argv.includes('--no-images');
 // Modules du jeu : [clé, chemin Roblox, classe, fichier].
 const MODULES = [
   ['WorldConfig', ['ReplicatedStorage', 'Shared', 'WorldConfig'], 'ModuleScript', 'src/shared/WorldConfig.lua'],
-  ...['PartUtil', 'District', 'Pitch', 'Stands', 'LockerRoom', 'TrainingZone', 'Offices', 'Entrance', 'WorldBuilder'].map(
+  ['Brand', ['ReplicatedStorage', 'Shared', 'Brand'], 'ModuleScript', 'src/shared/Brand.lua'],
+  ...['PartUtil', 'District', 'Pitch', 'Stands', 'LockerRoom', 'TrainingZone', 'Offices', 'Shop', 'Entrance', 'WorldBuilder'].map(
     (n) => [n, ['ServerScriptService', 'Server', 'World', n], 'ModuleScript', `src/server/World/${n}.lua`]
   ),
   ['WorldPreview', ['ServerScriptService', 'Server', 'World', 'WorldPreview'], 'Script', 'src/server/World/WorldPreview.server.lua'],
@@ -102,6 +103,7 @@ const FACILITY_LABELS = {
   LockerRoom: 'Vestiaires',
   Training: 'Entraînement',
   Offices: 'Bureaux',
+  Shop: 'Boutique',
   Entrance: 'Entrée',
 };
 
@@ -136,15 +138,15 @@ function districtSvg(data) {
 
 function plotSvg(data) {
   const [PW, PH] = data.plotSize;
-  const scale = 2.6;
+  const scale = 1.6;
   const pad = 20;
   const header = 40;
   const caption = 30;
   const panelW = PW * scale;
   const panelH = PH * scale;
-  const width = 3 * panelW + 4 * pad;
+  const width = 5 * panelW + 6 * pad;
   const height = panelH + 2 * pad + header + caption;
-  const panels = [1, 2, 3]
+  const panels = [1, 2, 3, 4, 5]
     .map((slot, i) => {
       const s = data.slots.find((x) => x.slot === slot);
       const parts = data.parts.filter((p) => p.g === `Plot${slot}`);
@@ -169,17 +171,17 @@ function plotSvg(data) {
       return `<g transform="translate(${ox}, ${oy})">
         <svg x="0" y="0" width="${panelW}" height="${panelH}" viewBox="${s.x - PW / 2} ${s.z - PH / 2} ${PW} ${PH}">
           <rect x="${s.x - PW / 2}" y="${s.z - PH / 2}" width="${PW}" height="${PH}" fill="#56803f"/>
-          ${partsSvg(parts)}
+          <g transform="${s.z > 0 ? `rotate(180 ${s.x} ${s.z})` : ''}">${partsSvg(parts)}</g>
           ${outlines}
         </svg>
         <rect width="${panelW}" height="${panelH}" fill="none" stroke="#fff" stroke-width="1"/>
-        <text x="${panelW / 2}" y="${panelH + 20}" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">Niveau ${slot} — ${esc(s.club)}  (▼ entrée côté route)</text>
+        <text x="${panelW / 2}" y="${panelH + 20}" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#fff" text-anchor="middle">Niveau ${slot} — ${esc(s.club)}  (▼ entrée côté route)</text>
       </g>`;
     })
     .join('\n');
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <rect width="100%" height="100%" fill="#1d232c"/>
-  <text x="${pad}" y="32" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#fff">Terrain de club ${PW} × ${PH} studs — installations aux niveaux 1, 2 et 3 (pointillés : empreintes réservées)</text>
+  <text x="${pad}" y="32" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#fff">Terrain de club ${PW} × ${PH} studs — installations aux niveaux 1 à 5 (pointillés : empreintes réservées)</text>
   ${panels}
 </svg>`;
 }

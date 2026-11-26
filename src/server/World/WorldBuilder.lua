@@ -28,7 +28,7 @@
 	  Attributes : SlotIndex, ClubName, Level_Pitch, Level_Stands, …
 	  PrimaryPart : « Ground » (sol du terrain).
 	  « Spawn » : Part invisible, sans collision, juste derrière l'entrée (téléportation).
-	  Enfants installations : Pitch, Stands, LockerRoom, Training, Offices
+	  Enfants installations : Pitch, Stands, LockerRoom, Training, Offices, Shop
 	  (+ Entrance, Paths). Chaque installation est un Model avec les Attributes
 	  Facility et Level et une PrimaryPart invisible « Root » (son empreinte au sol).
 ]]
@@ -46,6 +46,7 @@ local Stands = require(World:WaitForChild("Stands"))
 local LockerRoom = require(World:WaitForChild("LockerRoom"))
 local TrainingZone = require(World:WaitForChild("TrainingZone"))
 local Offices = require(World:WaitForChild("Offices"))
+local Shop = require(World:WaitForChild("Shop"))
 local Entrance = require(World:WaitForChild("Entrance"))
 
 type BuildContext = PartUtil.BuildContext
@@ -61,6 +62,7 @@ local BUILDERS: { [string]: FacilityBuilder } = {
 	LockerRoom = LockerRoom.build,
 	Training = TrainingZone.build,
 	Offices = Offices.build,
+	Shop = Shop.build,
 }
 
 local C = WorldConfig.COLORS
@@ -155,6 +157,8 @@ local function buildGround(plot: Model, slotIndex: number)
 	path(50, -85, 50, 43, 6) -- allée latérale (vestiaires, entraînement)
 	path(53, -30, 78, -30, 4) -- porte des vestiaires
 	path(53, 40, 58, 40, 4) -- accès entraînement
+	path(-5, -88, -62, -88, 6) -- allée de la boutique
+	path(-62, -86, -62, -84, 4) -- porte de la boutique
 
 	local spawn = PartUtil.box(
 		plot,
@@ -258,6 +262,8 @@ function WorldBuilder.setClubName(plot: Model, clubName: string)
 	for _, descendant in plot:GetDescendants() do
 		if descendant:IsA("TextLabel") and descendant.Name == "ClubNameText" then
 			descendant.Text = string.upper(clubName)
+		elseif descendant:IsA("TextLabel") and descendant.Name == "ClubShopText" then
+			descendant.Text = string.upper(clubName) .. " · BOUTIQUE"
 		elseif descendant:IsA("TextLabel") and descendant.Name == "ClubTagText" then
 			descendant.Text = Brand.Tag(clubName)
 		elseif descendant:IsA("ProximityPrompt") and descendant.Name == "ManageClubPrompt" then

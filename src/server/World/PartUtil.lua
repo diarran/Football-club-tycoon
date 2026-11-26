@@ -260,7 +260,7 @@ export type ShellStyle = {
 	glassFront: boolean?, -- façade avant entièrement vitrée (style moderne)
 	accent: Color3?, -- bandeau de couleur en haut des murs
 	roofOverhang: number?,
-	floors: number?, -- 2 = plancher intermédiaire
+	floors: number?, -- nombre d'étages (planchers intermédiaires ; un bandeau vitré par étage dès 3)
 }
 
 -- Bâtiment creux simple (sol, 4 murs, ouverture de porte, toit plat).
@@ -317,9 +317,13 @@ function PartUtil.shell(parent: Instance, origin: CFrame, size: Vector3, style: 
 		wallMat
 	)
 
-	if style.windows then
-		local winH = h * 0.32
-		local winY = floorH + h * 0.42
+	-- Bandeaux vitrés : un seul jusqu'à 2 étages, un par étage à partir de 3.
+	local floors = style.floors or 1
+	local bands = if floors >= 3 then floors else 1
+	for band = 1, if style.windows then bands else 0 do
+		local storey = h / bands
+		local winH = storey * 0.32
+		local winY = floorH + (band - 1) * storey + storey * 0.42
 		for _, side in { -1, 1 } do
 			PartUtil.block(
 				parent,
@@ -358,13 +362,13 @@ function PartUtil.shell(parent: Instance, origin: CFrame, size: Vector3, style: 
 		end
 	end
 
-	if style.floors and style.floors >= 2 then
+	for level = 1, floors - 1 do
 		PartUtil.block(
 			parent,
 			origin,
 			"MidFloor",
 			Vector3.new(w - 2 * t, 0.4, d - 2 * t),
-			Vector3.new(0, floorH + h / 2, 0),
+			Vector3.new(0, floorH + h * level / floors, 0),
 			Color3.fromRGB(200, 200, 196),
 			Enum.Material.Concrete
 		)

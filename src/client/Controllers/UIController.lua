@@ -773,11 +773,12 @@ function UIController.ShowMatchResult(result)
 	local rewards = result.rewards
 	add(
 		label(
-			("Récompenses : %s (match %d + billetterie %d + sponsors %d)"):format(
+			("Récompenses : %s (match %d + billetterie %d + sponsors %d + boutique %d)"):format(
 				formatCoins(rewards.total),
 				rewards.match,
 				rewards.tickets,
-				rewards.sponsor
+				rewards.sponsor,
+				rewards.shop or 0
 			),
 			{ TextColor3 = COLORS.gold, TextXAlignment = Enum.TextXAlignment.Center }
 		)

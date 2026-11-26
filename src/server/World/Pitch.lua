@@ -5,6 +5,8 @@
 	Niveau 1 : terrain amateur (pelouse à bandes de tonte, lignes, buts, drapeaux de coin).
 	Niveau 2 : + bancs de touche abrités et panneaux publicitaires fictifs.
 	Niveau 3 : + éclairage : 4 pylônes d'angle équipés de projecteurs (SpotLight).
+	Niveau 4 : + 2 écrans géants dans deux angles opposés du stade.
+	Niveau 5 : + 4 écrans géants et panneaux publicitaires LED (lumineux) aux couleurs du club.
 
 	L'origine reçue est le centre du terrain, posé sur le sol du terrain de club.
 	Le terrain est allongé selon X (longueur) ; -Z = côté entrée (bancs de touche).
@@ -272,7 +274,7 @@ local function buildDugout(model: Model, origin: CFrame, x: number, ctx: BuildCo
 end
 
 -- Niveau 2 : panneaux publicitaires fictifs autour du terrain.
-local function buildAdBoards(model: Model, origin: CFrame)
+local function buildAdBoards(model: Model, origin: CFrame, led: Color3?)
 	local hx, hz = WorldConfig.PITCH_SIZE.X / 2, WorldConfig.PITCH_SIZE.Y / 2
 	local offset = 4.5 -- distance aux lignes
 	local height = 2.2
@@ -288,8 +290,8 @@ local function buildAdBoards(model: Model, origin: CFrame)
 			"AdBoard",
 			Vector3.new(length, height, 0.4),
 			Vector3.new(pos.X, 0.3, pos.Y),
-			C.AdBoard,
-			Enum.Material.SmoothPlastic,
+			led or C.AdBoard,
+			if led then Enum.Material.Neon else Enum.Material.SmoothPlastic,
 			{ rotY = rotY }
 		)
 		PartUtil.label(part, face, texts[(index - 1) % #texts + 1], C.SignText)
@@ -359,6 +361,40 @@ local function buildFloodlights(model: Model, origin: CFrame)
 	end
 end
 
+-- Niveaux 4 et 5 : écran géant sur deux poteaux, dans un angle du stade, tourné
+-- vers le rond central. Placé entre les tribunes et le pylône d'éclairage.
+local function buildScreen(model: Model, origin: CFrame, sx: number, sz: number, ctx: BuildContext)
+	local screen = PartUtil.model(model, "GiantScreen")
+	local pos = Vector3.new(sx * 57, 0, sz * 45)
+	local frame = origin * CFrame.new(pos) * CFrame.Angles(0, math.atan2(pos.X, pos.Z), 0)
+	local width, height, bottom = 12, 7, 15
+	for _, px in { -4, 4 } do
+		PartUtil.block(screen, frame, "Post", Vector3.new(0.8, bottom, 0.8), Vector3.new(px, 0, 0.6), C.MetalDark, Enum.Material.Metal)
+	end
+	PartUtil.block(
+		screen,
+		frame,
+		"ScreenFrame",
+		Vector3.new(width + 1, height + 1, 0.8),
+		Vector3.new(0, bottom - 0.5, 0.6),
+		ctx.primary,
+		Enum.Material.SmoothPlastic
+	)
+	-- Face lumineuse tournée vers le terrain (-Z du repère de l'écran).
+	local display = PartUtil.block(
+		screen,
+		frame,
+		"Display",
+		Vector3.new(width, height, 0.2),
+		Vector3.new(0, bottom, 0.1),
+		C.AdBoard,
+		Enum.Material.Neon,
+		{ canCollide = false }
+	)
+	-- Le texte suit le nom du club (voir WorldBuilder.setClubName).
+	PartUtil.label(display, Enum.NormalId.Front, string.upper(ctx.clubName), C.SignText).Name = "ClubNameText"
+end
+
 -- Construit le terrain au niveau demandé et renvoie son Model.
 function Pitch.build(parent: Instance, origin: CFrame, level: number, ctx: BuildContext): Model
 	local model = PartUtil.model(parent, "Pitch", { Facility = "Pitch", Level = level })
@@ -372,10 +408,18 @@ function Pitch.build(parent: Instance, origin: CFrame, level: number, ctx: Build
 	if level >= 2 then
 		buildDugout(model, origin, -12, ctx)
 		buildDugout(model, origin, 12, ctx)
-		buildAdBoards(model, origin)
+		buildAdBoards(model, origin, if level >= 5 then ctx.primary else nil)
 	end
 	if level >= 3 then
 		buildFloodlights(model, origin)
+	end
+	if level >= 4 then
+		buildScreen(model, origin, 1, 1, ctx)
+		buildScreen(model, origin, -1, -1, ctx)
+	end
+	if level >= 5 then
+		buildScreen(model, origin, -1, 1, ctx)
+		buildScreen(model, origin, 1, -1, ctx)
 	end
 	return model
 end

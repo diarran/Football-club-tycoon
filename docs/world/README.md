@@ -23,9 +23,9 @@ marque réels. Les noms de clubs et les publicités sont inventés.
 
 Chaque club possède son terrain, avec un **portique d'entrée** côté route
 (le nom du club y est écrit des deux côtés, et un écusson simple aux couleurs du
-club est posé dessus), puis 5 installations qui évoluent sur **3 niveaux** :
+club est posé dessus), puis 6 installations qui évoluent sur **5 niveaux** :
 
-![Un terrain aux niveaux 1, 2 et 3](plot-layout.png)
+![Un terrain aux niveaux 1 à 5](plot-layout.png)
 
 | Installation | Niveau 1 | Niveau 2 | Niveau 3 |
 |---|---|---|---|
@@ -35,7 +35,22 @@ club est posé dessus), puis 5 installations qui évoluent sur **3 niveaux** :
 | **Zone d'entraînement** (`Training`) | Carré d'herbe avec des plots | Plus grande, mini-buts et mannequins | Terrain délimité avec clôture et abri |
 | **Bureaux** (`Offices`) | Petit bâtiment en briques | Plus grand, fenêtres, auvent | Immeuble vitré sur 2 étages, enseigne au nom du club |
 
-Les capacités des tribunes sont **provisoires** (à équilibrer pendant les tests).
+| Installation | Niveau 4 | Niveau 5 |
+|---|---|---|
+| **Terrain principal** | + 2 écrans géants dans les angles | + 4 écrans géants, panneaux publicitaires LED aux couleurs du club |
+| **Tribunes** | 4 tribunes couvertes, loges vitrées au nord — **1 600 places** | Grand stade plus haut, loges VIP des deux côtés — **2 500 places** |
+| **Vestiaires** | Plus grand, bain froid, tables de soin, auvent | 2 étages, bandeau lumineux |
+| **Zone d'entraînement** | + 4 mâts d'éclairage, mur de frappe | + centre de performance vitré (musculation) |
+| **Bureaux** | Immeuble de 3 étages, salle de réunion | Siège de 4 étages, écusson géant sur le toit, antenne |
+
+La **Boutique** (`Shop`), à gauche de l'entrée : niveau 1 kiosque à auvent rayé,
+niveau 2 petite boutique, niveau 3 magasin vitré avec mannequins en maillot,
+niveau 4 grand magasin de 2 étages au nom du club, niveau 5 boutique officielle
+avec un maillot géant sur le toit.
+
+![Club au niveau 5 (aperçu 3D)](club-niveau-5.png)
+
+Capacités des tribunes : 200 / 500 / 1 000 / 1 600 / 2 500 places (voir `docs/economy`).
 
 À la porte des bureaux, un bouton d'interaction **« Gérer le club »** apparaît
 quand on s'approche. Pour l'instant il **ne fait rien** : il sera relié plus tard
@@ -48,11 +63,13 @@ Un nouveau club commence avec toutes ses installations au **niveau 1**.
 | | Blocs (Parts) |
 |---|---|
 | Quartier commun | ~210 |
-| Terrain tout niveau 1 | ~155 |
-| Terrain tout niveau 2 | ~300 |
-| Terrain tout niveau 3 | ~465 |
+| Terrain tout niveau 1 | ~175 |
+| Terrain tout niveau 2 | ~330 |
+| Terrain tout niveau 3 | ~510 |
+| Terrain tout niveau 4 | ~590 |
+| Terrain tout niveau 5 | ~600 |
 
-Objectif respecté : moins de 600 blocs par terrain au niveau maximum.
+Objectif : environ 600 blocs par terrain au niveau maximum (Boutique comprise).
 
 ## Voir le monde dans Roblox Studio
 
@@ -70,8 +87,7 @@ Objectif respecté : moins de 600 blocs par terrain au niveau maximum.
 4. Dans Studio, ouvrez un nouveau projet vide (*Baseplate*), puis dans l'onglet
    *Plugins* cliquez sur **Rojo** → **Connect**.
 5. Cliquez sur **Play** (ou F5). Le quartier et les 6 terrains de démonstration
-   apparaissent : terrain 1 au niveau 1, terrain 2 au niveau 2, terrain 3 au
-   niveau 3, terrains 4 à 6 au niveau 1.
+   apparaissent : terrains 1 à 5 aux niveaux 1 à 5, terrain 6 au niveau 1.
 
 Astuce : si une plaque grise « Baseplate » est présente sous le quartier, vous
 pouvez la supprimer, elle n'est pas utile.

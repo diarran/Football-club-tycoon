@@ -41,7 +41,7 @@ H.test("niveau maximum : refusé sans débit", function()
 	data.buildings.Offices = S.Buildings.MaxLevel("Offices")
 	H.fire(p, "RequestUpgrade", "Offices")
 	H.eq(data.coins, 100000, "solde inchangé")
-	H.eq(data.buildings.Offices, 2, "niveau inchangé")
+	H.eq(data.buildings.Offices, S.Buildings.MaxLevel("Offices"), "niveau inchangé")
 end)
 
 H.test("valeurs client invalides pour une amélioration : toutes refusées", function()
