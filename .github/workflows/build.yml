@@ -1,0 +1,39 @@
+# Construit le fichier de place Roblox à partir de src/ à chaque push.
+# Le fichier FootballClubTycoon.rbxlx est téléchargeable dans l'onglet
+# « Actions » de GitHub (section « Artifacts ») et s'ouvre directement dans Studio.
+name: Construire la place
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ROJO_VERSION: 7.7.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer Rojo
+        run: |
+          set -e
+          url="https://github.com/rojo-rbx/rojo/releases/download/v${ROJO_VERSION}/rojo-${ROJO_VERSION}-linux-x86_64.zip"
+          if curl -fsSL -o rojo.zip "$url"; then
+            unzip -o rojo.zip -d "$HOME/.local/bin"
+            chmod +x "$HOME/.local/bin/rojo"
+          else
+            echo "Binaire introuvable, compilation avec cargo"
+            cargo install rojo --version "${ROJO_VERSION}" --locked --root "$HOME/.local"
+          fi
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Construire la place
+        run: rojo build default.project.json -o FootballClubTycoon.rbxlx
+
+      - name: Publier le fichier
+        uses: actions/upload-artifact@v4
+        with:
+          name: FootballClubTycoon-place
+          path: FootballClubTycoon.rbxlx

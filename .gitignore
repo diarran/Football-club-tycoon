@@ -1,0 +1,23 @@
+# Fichiers de place générés par Rojo (on les reconstruit à partir de src/)
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+!assets/**/*.rbxm
+!assets/**/*.rbxmx
+
+# Fichiers temporaires de Studio
+*.rbxl.lock
+*.rbxlx.lock
+
+# Secrets : ne jamais les commiter
+.env
+*.key
+
+# Systèmes et éditeurs
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+sourcemap.json
+roblox.yml
