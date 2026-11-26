@@ -20,6 +20,7 @@ local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
+local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
 
@@ -270,6 +271,8 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		Config.Rewards[outcome] * currentDivision.rewardMultiplier * (away.rewardFactor or 1) + 0.5
 	)
 	local totalReward = matchReward + tickets + sponsor + shop + vip
+	-- Boost de revenus acheté en Robux : coupé par défaut (Monetization.BOOST_ENABLED).
+	totalReward = math.floor(totalReward * Monetization.BoostMultiplier(data, os.time()))
 	EconomyService.Add(player, totalReward, "match:" .. outcome)
 
 	local stats = data.club.stats

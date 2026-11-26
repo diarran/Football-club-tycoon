@@ -31,6 +31,7 @@ Net.Requests = {
 	"RequestLanguage", -- (lang: string) langue choisie dans les Paramètres ("fr" ou "en")
 	"RequestBuyCosmetic", -- (itemId: string) acheter un objet de personnalisation (Cosmetics)
 	"RequestEquipCosmetic", -- (category: string, itemId: string) porter un objet, ou "default"
+	"RequestBuyExclusive", -- (key: string) ouvrir l'achat Robux d'un produit de Monetization
 	"RequestChallenge", -- (clubId: string, stake: number) défier un club du serveur
 	"RequestChallengeResponse", -- (challengeId: number, accept: boolean)
 	"RequestTournamentJoin", -- () s'inscrire au tournoi du serveur

@@ -38,7 +38,8 @@ end
 
 function CosmeticService.TryBuy(player: Player, itemId): (boolean, string)
 	local item = Cosmetics.Get(itemId)
-	if not item then
+	if not item or item.robux then
+		-- Les objets exclusifs ne s'achètent qu'en Robux (MonetizationService).
 		return false, Locale.TP(player, "error.unknownCosmetic")
 	end
 	local data = PlayerDataService.GetData(player)
@@ -67,6 +68,22 @@ function CosmeticService.TryBuy(player: Player, itemId): (boolean, string)
 	end
 	PlayerDataService.MarkChanged(player)
 	return true, Locale.T(lang, "cosmetic.bought", { name = itemName(lang, item) })
+end
+
+-- Objet exclusif payé en Robux : ajouté et porté, sans débit ni condition.
+-- Appelé seulement par MonetizationService après un reçu Roblox. Aucun yield.
+function CosmeticService.GrantExclusive(player: Player, itemId: string): boolean
+	local item = Cosmetics.Get(itemId)
+	local data = PlayerDataService.GetData(player)
+	if not item or not item.robux or not data then
+		return false
+	end
+	data.cosmetics.owned[item.id] = true
+	if Cosmetics.SINGLE[item.category] then
+		data.cosmetics.equipped[item.category] = item.id
+	end
+	PlayerDataService.MarkChanged(player)
+	return true
 end
 
 -- itemId = "default" : retour à l'apparence d'origine de la catégorie.

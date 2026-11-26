@@ -72,6 +72,10 @@ local function defaultData()
 		cosmetics = { owned = {}, equipped = {} },
 		-- Salle des trophées : titres de champion de D1, trophées déjà annoncés.
 		trophies = { titles = 0, seen = 0 },
+		-- Achats Robux (MonetizationService) : receipts = { [PurchaseId] = os.time() }
+		-- pour n'accorder chaque reçu qu'une fois ; boost de revenus temporaire.
+		purchases = { receipts = {}, count = 0 },
+		boost = { expiresAt = 0, multiplier = 1 },
 		tutorial = { step = 1, completed = false },
 		lastMatchAt = 0,
 		lastEnergyUpdate = os.time(),
@@ -192,7 +196,9 @@ end
 
 local function writeProfile(player: Player, data, release: boolean): boolean
 	local key = keyFor(player)
+	local written = false
 	local ok = withRetries("Sauvegarde " .. key, function()
+		written = false
 		return store:UpdateAsync(key, function(current)
 			current = current or {}
 			local lock = current.lock
@@ -207,10 +213,12 @@ local function writeProfile(player: Player, data, release: boolean): boolean
 			end
 			current.data = data
 			current.lock = if release then nil else { jobId = jobId, time = os.time() }
+			written = true
 			return current
 		end)
 	end)
-	return ok
+	-- true seulement si le profil a vraiment été écrit (pas d'annulation pour verrou).
+	return ok and written
 end
 
 -- API -------------------------------------------------------------------
@@ -383,6 +391,7 @@ function PlayerDataService.BuildSnapshot(player: Player)
 		tactic = data.tactic,
 		tutorial = table.clone(data.tutorial),
 		cosmetics = { owned = table.clone(data.cosmetics.owned), equipped = table.clone(data.cosmetics.equipped) },
+		boostSeconds = math.max(0, (data.boost.expiresAt or 0) - now),
 		trophies = Trophies.Earned(data.club.division, data.club.stats, data.trophies.titles),
 		titles = data.trophies.titles,
 		matchCooldown = math.max(0, Config.MATCH_COOLDOWN_SECONDS - (now - data.lastMatchAt)),
