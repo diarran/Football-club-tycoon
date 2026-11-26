@@ -94,9 +94,10 @@ end)
 H.test("montée D7 → D6 → D5 validée par le serveur, D5 est le plafond", function()
 	local function playUntilWin()
 		for _ = 1, 200 do
-			local before = data.club.stats.wins
+			local before, division = data.club.stats.wins, data.club.division
 			play("ai", "Offensive")
-			if data.club.stats.wins > before then
+			-- S'arrête aussi à la montée : 3 nuls d'affilée suffisent pour monter.
+			if data.club.stats.wins > before or data.club.division ~= division then
 				return
 			end
 		end
