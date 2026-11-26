@@ -113,6 +113,7 @@ local function playRun(profil)
 		allCosmeticsAt = nil,
 		postSessions = 0,
 		titlesAtEnd = 0,
+		tournamentGains = {}, -- gains versés par le tournoi du serveur
 	}
 	local function stamp()
 		return { minutes = run.playSeconds / 60, matches = run.matches, session = run.sessions }
@@ -202,8 +203,15 @@ local function playRun(profil)
 		-- Le premier match d'une session part dès l'arrivée.
 		local wait = 0
 		while run.playSeconds + wait <= sessionEnd do
+			-- Le joueur s'inscrit à chaque tournoi du serveur ouvert pendant sa session ;
+			-- les récompenses tombent pendant l'attente entre deux matchs.
+			S.TournamentService.TryJoin(player)
+			local beforeWait = data.coins
 			H.advance(wait)
 			run.playSeconds += wait
+			if data.coins > beforeWait then
+				table.insert(run.tournamentGains, data.coins - beforeWait)
+			end
 			shop(player, data)
 			local coins = data.coins
 			local divisionBefore = data.club.division
@@ -435,6 +443,31 @@ for _, profil in PROFILS do
 		fmt(median(minEnergy)),
 		fmt(median(endCoins))
 	))
+
+	local gains, perHour = {}, {}
+	for _, run in runs do
+		local total = 0
+		for _, v in run.tournamentGains do
+			table.insert(gains, v)
+			total += v
+		end
+		table.insert(perHour, total / math.max(1, run.playSeconds / 3600))
+	end
+	local maxMultiplier = 0
+	for _, division in Divisions.List do
+		maxMultiplier = math.max(maxMultiplier, division.rewardMultiplier)
+	end
+	local tournamentCap = Config.Tournament.Rewards.Winner * maxMultiplier
+	print(("Tournoi du serveur : %d récompenses · médiane %s · max %s (plafond %s) · %s FC Coins par heure de jeu (médiane)"):format(
+		#gains,
+		fmt(median(gains)),
+		fmt(percentile(gains, 1)),
+		fmt(tournamentCap),
+		fmt(median(perHour))
+	))
+	if (percentile(gains, 1) or 0) > tournamentCap then
+		table.insert(problems, profil.label .. " : une récompense de tournoi dépasse le plafond (source anormale)")
+	end
 
 	-- Contrôles : sources infinies et blocages
 	print(("Gain par match hors bonus de division : max %s (seuil d'alerte 5 000)"):format(fmt(percentile(baseIncomes, 1))))

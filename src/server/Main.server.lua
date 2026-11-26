@@ -25,6 +25,8 @@ local BuildingService = require(Services.BuildingService)
 local SquadService = require(Services.SquadService)
 local MatchService = require(Services.MatchService)
 local CosmeticService = require(Services.CosmeticService)
+local ChallengeService = require(Services.ChallengeService)
+local TournamentService = require(Services.TournamentService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
 local ORDERED_SERVICES = {
@@ -36,6 +38,8 @@ local ORDERED_SERVICES = {
 	{ name = "SquadService", module = SquadService },
 	{ name = "MatchService", module = MatchService },
 	{ name = "CosmeticService", module = CosmeticService },
+	{ name = "ChallengeService", module = ChallengeService },
+	{ name = "TournamentService", module = TournamentService },
 }
 
 for _, entry in ORDERED_SERVICES do
@@ -61,6 +65,8 @@ local function onPlayerAdded(player: Player)
 
 	PlayerDataService.MarkChanged(player)
 	Net.FireClient("ClubsUpdated", player, ClubService.GetClubList())
+	ChallengeService.OnPlayerReady(player)
+	TournamentService.OnPlayerReady(player)
 	if profile.temporary then
 		Net.FireClient(
 			"Notify",
@@ -72,6 +78,8 @@ local function onPlayerAdded(player: Player)
 end
 
 local function onPlayerRemoving(player: Player)
+	ChallengeService.OnPlayerLeaving(player)
+	TournamentService.OnPlayerLeaving(player)
 	ClubService.OnPlayerLeaving(player)
 	PlayerDataService.Release(player)
 	Net.ForgetPlayer(player)

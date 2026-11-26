@@ -31,13 +31,18 @@ Net.Requests = {
 	"RequestLanguage", -- (lang: string) langue choisie dans les Paramètres ("fr" ou "en")
 	"RequestBuyCosmetic", -- (itemId: string) acheter un objet de personnalisation (Cosmetics)
 	"RequestEquipCosmetic", -- (category: string, itemId: string) porter un objet, ou "default"
+	"RequestChallenge", -- (clubId: string, stake: number) défier un club du serveur
+	"RequestChallengeResponse", -- (challengeId: number, accept: boolean)
+	"RequestTournamentJoin", -- () s'inscrire au tournoi du serveur
 }
 
 -- Serveur -> client (notifications)
 Net.Events = {
 	"ProfileUpdated", -- (snapshot) état complet du club du joueur
 	"ClubsUpdated", -- (list) clubs présents sur le serveur
-	"MatchResult", -- (result)
+	"MatchResult", -- (result) match, ou défi si result.mode == "challenge"
+	"ChallengeUpdated", -- ({ incoming, outgoing }) défis du joueur
+	"TournamentUpdated", -- (state) tournoi du serveur
 	"Notify", -- (message: string, kind: string)
 }
 

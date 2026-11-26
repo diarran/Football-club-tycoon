@@ -50,7 +50,16 @@ local function defaultData()
 			name = nil, -- généré par ClubService au premier chargement
 			division = Divisions.STARTING_DIVISION,
 			divisionPoints = 0,
-			stats = { played = 0, wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0 },
+			stats = {
+				played = 0,
+				wins = 0,
+				draws = 0,
+				losses = 0,
+				goalsFor = 0,
+				goalsAgainst = 0,
+				challengesWon = 0, -- défis gagnés (ChallengeService)
+				tournamentsWon = 0, -- tournois du serveur gagnés (TournamentService)
+			},
 		},
 		buildings = Buildings.DefaultLevels(),
 		squad = {}, -- rempli par SquadService au premier chargement

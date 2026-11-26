@@ -64,6 +64,10 @@ local state = {
 	clubs = {},
 	cooldownEndsAt = 0,
 	selectedTactic = Config.DEFAULT_TACTIC,
+	selectedStake = Config.Challenge.STAKES[2],
+	challenges = { incoming = {}, outgoing = nil },
+	tournament = nil,
+	tournamentEndsAt = 0,
 	settings = { managementCamera = true, showTutorial = true },
 }
 
@@ -403,7 +407,143 @@ function renderers.Squad(profile)
 	end
 end
 
+-- Ligne de boutons côte à côte (largeur relative : lisible sur téléphone).
+local function buttonRow(entries)
+	local row = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, {
+		create("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			Padding = UDim.new(0, 6),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	})
+	local width = 1 / #entries
+	for index, entry in entries do
+		button(entry.text, entry.onClick, {
+			LayoutOrder = index,
+			Size = UDim2.new(width, -6, 0, 44),
+			BackgroundColor3 = entry.color or COLORS.accent,
+		}).Parent =
+			row
+	end
+	return row
+end
+
+-- Tournoi du serveur : état, inscription, tableau des matchs joués.
+local function tournamentCard()
+	local tournament = state.tournament
+	if not tournament then
+		return
+	end
+	local myId = "player:" .. player.UserId
+	local secondsLeft = math.max(0, math.ceil(state.tournamentEndsAt - os.clock()))
+	local children = { label(T("tournament.title"), { Font = Enum.Font.GothamBold }) }
+	local registered = false
+	for _, entrant in tournament.entrants do
+		registered = registered or entrant.id == myId
+	end
+	if tournament.phase == "registration" then
+		table.insert(children, label(T("tournament.registration", {
+			seconds = secondsLeft,
+			count = #tournament.entrants,
+			size = tournament.size,
+		}), { TextColor3 = COLORS.gold, TextSize = 16 }))
+		if registered then
+			table.insert(children, label(T("tournament.registered"), { TextColor3 = COLORS.accent, TextSize = 16 }))
+		else
+			table.insert(children, button(T("tournament.join"), function()
+				Net.Get("RequestTournamentJoin"):FireServer()
+			end))
+		end
+	elseif tournament.phase == "running" then
+		table.insert(children, label(T("tournament.running", { seconds = secondsLeft }), { TextColor3 = COLORS.gold, TextSize = 16 }))
+	else
+		table.insert(children, label(T("tournament.next", { minutes = math.max(1, math.ceil(secondsLeft / 60)) }), {
+			TextColor3 = COLORS.muted,
+			TextSize = 16,
+		}))
+	end
+	local rewards = Config.Tournament.Rewards
+	table.insert(children, label(T("tournament.rewards", {
+		winner = rewards.Winner,
+		final = rewards.Final,
+		semi = rewards.Semi,
+		quarter = rewards.Quarter,
+	}), { TextColor3 = COLORS.muted, TextSize = 14 }))
+	if tournament.phase ~= "registration" then
+		for _, round in tournament.rounds or {} do
+			table.insert(children, label(T("tournament.stage." .. round.stage), { Font = Enum.Font.GothamBold, TextSize = 16 }))
+			for _, match in round.matches do
+				local key = if match.forfeit
+					then "tournament.matchForfeit"
+					elseif match.penalties then "tournament.matchPenalties"
+					else "tournament.match"
+				table.insert(children, label(T(key, {
+					home = match.homeName,
+					away = match.awayName,
+					homeGoals = match.homeGoals,
+					awayGoals = match.awayGoals,
+					winner = match.winnerName,
+				}), { TextSize = 14, TextColor3 = COLORS.muted }))
+			end
+		end
+	end
+	if tournament.lastWinner and tournament.phase ~= "running" then
+		table.insert(children, label(T("tournament.lastWinner", { club = tournament.lastWinner.clubName }), {
+			TextColor3 = COLORS.gold,
+			TextSize = 16,
+		}))
+	end
+	if state.profile and (state.profile.club.stats.tournamentsWon or 0) > 0 then
+		table.insert(children, label(T("tournament.myTrophies", { count = state.profile.club.stats.tournamentsWon }), {
+			TextColor3 = COLORS.gold,
+			TextSize = 16,
+		}))
+	end
+	card(children).Parent = content
+end
+
+-- Défis reçus (accepter / refuser) et défi envoyé en attente.
+local function challengeCards()
+	for _, challenge in state.challenges.incoming do
+		card({
+			label(T("challenge.incomingTitle", { club = challenge.clubName, owner = challenge.ownerName }), {
+				Font = Enum.Font.GothamBold,
+				TextColor3 = COLORS.gold,
+			}),
+			label(T("challenge.incomingLine", { stake = challenge.stake }), { TextSize = 16 }),
+			buttonRow({
+				{
+					text = T("challenge.accept"),
+					onClick = function()
+						Net.Get("RequestChallengeResponse"):FireServer(challenge.id, true)
+					end,
+				},
+				{
+					text = T("challenge.refuse"),
+					color = COLORS.disabled,
+					onClick = function()
+						Net.Get("RequestChallengeResponse"):FireServer(challenge.id, false)
+					end,
+				},
+			}),
+		}).Parent =
+			content
+	end
+	local outgoing = state.challenges.outgoing
+	if outgoing then
+		card({
+			label(T("challenge.waiting", { club = outgoing.clubName, stake = outgoing.stake }), {
+				TextColor3 = COLORS.muted,
+				TextSize = 16,
+			}),
+		}).Parent =
+			content
+	end
+end
+
 function renderers.Matches(profile)
+	tournamentCard()
+	challengeCards()
 	-- Tactique
 	local tacticRow = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, {
 		create("UIListLayout", {
@@ -463,18 +603,54 @@ function renderers.Matches(profile)
 			rival.id
 		)
 	end
+	if humans > 0 then
+		-- Mise des défis : une valeur parmi celles acceptées par le serveur.
+		local entries = {}
+		for _, stake in Config.Challenge.STAKES do
+			table.insert(entries, {
+				text = tostring(stake),
+				color = if state.selectedStake == stake then COLORS.accent else COLORS.panel,
+				onClick = function()
+					state.selectedStake = stake
+					UIController.Refresh()
+				end,
+			})
+		end
+		card({
+			label(T("challenge.stakeTitle"), { Font = Enum.Font.GothamBold }),
+			label(T("challenge.stakeHelp"), { TextColor3 = COLORS.muted, TextSize = 14 }),
+			buttonRow(entries),
+		}).Parent =
+			content
+	end
 	for _, club in state.clubs do
 		if club.id ~= myId then
-			opponentCard(
-				club.clubName,
-				T("matches.clubSubtitle", {
+			card({
+				label(club.clubName, { Font = Enum.Font.GothamBold }),
+				label(T("matches.clubSubtitle", {
 					owner = club.ownerName,
 					division = divisionLabel(club.division),
 					rating = club.rating,
 					count = club.squadSize,
+				}), { TextColor3 = COLORS.muted, TextSize = 16 }),
+				buttonRow({
+					{
+						text = T("matches.play"),
+						color = if cooldown > 0 then COLORS.disabled else COLORS.accent,
+						onClick = function()
+							Net.Get("RequestMatch"):FireServer(club.id, state.selectedTactic)
+						end,
+					},
+					{
+						text = T("challenge.send", { stake = state.selectedStake }),
+						color = COLORS.accentDark,
+						onClick = function()
+							Net.Get("RequestChallenge"):FireServer(club.id, state.selectedStake)
+						end,
+					},
 				}),
-				club.id
-			)
+			}).Parent =
+				content
 		end
 	end
 end
@@ -995,6 +1171,29 @@ function UIController.SetProfile(profile)
 	UIController.Refresh()
 end
 
+function UIController.SetChallenges(challenges)
+	state.challenges = challenges or { incoming = {}, outgoing = nil }
+	if currentTab == "Matches" then
+		UIController.Refresh()
+	end
+end
+
+function UIController.SetTournament(tournament)
+	if not tournament then
+		return
+	end
+	local previous = state.tournament
+	state.tournament = tournament
+	state.tournamentEndsAt = os.clock() + (tournament.secondsLeft or 0)
+	-- Annonce à l'ouverture des inscriptions (le serveur n'envoie pas de message).
+	if tournament.phase == "registration" and (not previous or previous.id ~= tournament.id or previous.phase ~= "registration") then
+		UIController.Notify(T("tournament.registrationOpen"), "info")
+	end
+	if currentTab == "Matches" then
+		UIController.Refresh()
+	end
+end
+
 function UIController.SetClubs(clubs)
 	state.clubs = clubs or {}
 	if currentTab == "Matches" or currentTab == "Ranking" then
@@ -1059,6 +1258,21 @@ function UIController.ShowMatchResult(result)
 			TextXAlignment = Enum.TextXAlignment.Center,
 		}))
 	end
+	if result.mode == "challenge" then
+		local change = result.coinsChange or 0
+		add(label(
+			if change > 0
+				then T("challenge.resultWon", { coins = formatCoins(change) })
+				elseif change < 0 then T("challenge.resultLost", { coins = formatCoins(-change) })
+				else T("challenge.resultDraw"),
+			{ TextColor3 = COLORS.gold, TextXAlignment = Enum.TextXAlignment.Center }
+		))
+		add(button(T("result.continue"), function()
+			resultPopup.Visible = false
+		end))
+		resultPopup.Visible = true
+		return
+	end
 	local rewards = result.rewards
 	add(
 		label(
@@ -1106,7 +1320,8 @@ end
 task.spawn(function()
 	while true do
 		task.wait(1)
-		if panel and panel.Visible and currentTab == "Matches" and state.cooldownEndsAt > os.clock() - 1 then
+		local ticking = state.cooldownEndsAt > os.clock() - 1 or state.tournamentEndsAt > os.clock() - 1
+		if panel and panel.Visible and currentTab == "Matches" and ticking then
 			UIController.Refresh()
 		end
 	end
