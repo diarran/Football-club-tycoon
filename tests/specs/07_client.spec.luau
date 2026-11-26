@@ -13,6 +13,14 @@ H.test("le client démarre et affiche le HUD avec le solde du serveur", function
 	H.ok(H.findText(gui, "5"), "solde affiché")
 end)
 
+H.test("écusson du club dans le HUD : sigle aux couleurs du terrain", function()
+	local Brand = mock.run(MODULES.Brand)
+	H.eq(Brand.Tag("FC Roquerouge"), "FR", "sigle de deux mots")
+	H.eq(Brand.Tag("Racing Club Élan Nord"), "RCÉ", "trois lettres max, accents gardés")
+	H.eq(Brand.Tag(""), "FC", "sigle par défaut")
+	H.ok(H.findText(gui, Brand.Tag(data.club.name)), "sigle affiché dans le HUD")
+end)
+
 H.test("tous les onglets du menu s'affichent sans erreur", function()
 	UI.SetMenuOpen(true)
 	for _, tab in { "Home", "Stadium", "Squad", "Matches", "Settings", "Ranking" } do

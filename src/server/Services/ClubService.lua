@@ -254,8 +254,17 @@ function ClubService.OnPlayerReady(player: Player, profile)
 
 	player.CharacterAdded:Connect(function(character)
 		character:WaitForChild("HumanoidRootPart", 10)
-		task.wait() -- laisse Roblox placer le personnage avant de le déplacer
-		teleportToPlot(player)
+		-- Roblox place le personnage sur la SpawnLocation après CharacterAdded :
+		-- on attend qu'il soit dans le Workspace, puis un court instant, sinon
+		-- ce placement annule la téléportation (joueur bloqué sur la place).
+		local deadline = os.clock() + 5
+		while character.Parent == nil and os.clock() < deadline do
+			task.wait(0.05)
+		end
+		task.wait(0.1)
+		if player.Character == character then
+			teleportToPlot(player)
+		end
 	end)
 	if player.Character then
 		teleportToPlot(player)

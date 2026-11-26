@@ -19,7 +19,13 @@ local enabled = true
 local inManagementView = false
 local activeTween = nil
 
-function CameraController.Init() end
+function CameraController.Init()
+	-- Après une réapparition, on revient toujours à la caméra normale
+	-- (sinon la caméra resterait figée sur la vue du club).
+	player.CharacterAdded:Connect(function()
+		CameraController.ExitManagementView()
+	end)
+end
 
 function CameraController.SetEnabled(value: boolean)
 	enabled = value

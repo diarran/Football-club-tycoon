@@ -1,5 +1,7 @@
 # Ouvrir le projet dans Roblox Studio
 
+Pour une première séance de test, suis plutôt le guide court : [GUIDE_TEST.md](GUIDE_TEST.md).
+
 Deux méthodes. La première ne demande rien d'installer, la seconde garde
 Studio synchronisé en direct avec le code du dépôt.
 
@@ -50,6 +52,6 @@ synchronisation en un clic.
 
 ## Tester à plusieurs
 
-Onglet **Test** > **Clients and Servers**, choisis 2 joueurs ou plus, puis
-**Start**. Chaque fenêtre est un joueur : vérifie que chacun reçoit un terrain
+Onglet **Test** > **Clients and Servers**, choisis **Local Server** et 2 joueurs
+ou plus, puis **Start**. Chaque fenêtre est un joueur : vérifie que chacun reçoit un terrain
 différent et qu'un club peut affronter l'autre dans l'onglet **Matchs**.
