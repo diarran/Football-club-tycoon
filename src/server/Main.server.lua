@@ -49,24 +49,45 @@ for _, entry in ORDERED_SERVICES do
 	end
 end
 
+-- Étape protégée : une erreur dans un service est signalée dans la sortie
+-- sans bloquer l'arrivée du joueur (sinon il resterait sans terrain ni menu).
+local function step(label: string, fn, ...)
+	local ok, result = pcall(fn, ...)
+	if not ok then
+		warn(("[Main] %s a échoué : %s"):format(label, tostring(result)))
+		return false, nil
+	end
+	return true, result
+end
+
 local function onPlayerAdded(player: Player)
-	local profile = PlayerDataService.Load(player)
-	if not profile or not player.Parent then
+	local loaded, profile = step("PlayerDataService.Load", PlayerDataService.Load, player)
+	if not loaded or not profile or not player.Parent then
 		return
 	end
 
 	-- L'effectif est créé avant l'attribution du terrain pour que la liste
 	-- des clubs affiche tout de suite une note correcte.
-	SquadService.OnPlayerReady(player, profile)
-	if not ClubService.OnPlayerReady(player, profile) then
+	step("SquadService.OnPlayerReady", SquadService.OnPlayerReady, player, profile)
+	local ready, assigned = step("ClubService.OnPlayerReady", ClubService.OnPlayerReady, player, profile)
+	if not ready or not assigned then
+		-- Sans terrain, le joueur ne peut pas jouer : profil libéré (sauvegardé)
+		-- et message clair plutôt qu'un écran vide.
+		ClubService.OnPlayerLeaving(player)
 		PlayerDataService.Release(player)
+		if ready == false and player.Parent then
+			player:Kick(Locale.TP(player, "kick.loadFailed"))
+		end
 		return
+	end
+	if not player.Parent then
+		return -- parti pendant l'installation : onPlayerRemoving s'en occupe
 	end
 
 	PlayerDataService.MarkChanged(player)
-	Net.FireClient("ClubsUpdated", player, ClubService.GetClubList())
-	ChallengeService.OnPlayerReady(player)
-	TournamentService.OnPlayerReady(player)
+	step("ClubsUpdated", Net.FireClient, "ClubsUpdated", player, ClubService.GetClubList())
+	step("ChallengeService.OnPlayerReady", ChallengeService.OnPlayerReady, player)
+	step("TournamentService.OnPlayerReady", TournamentService.OnPlayerReady, player)
 	if profile.temporary then
 		Net.FireClient(
 			"Notify",
@@ -78,10 +99,11 @@ local function onPlayerAdded(player: Player)
 end
 
 local function onPlayerRemoving(player: Player)
-	ChallengeService.OnPlayerLeaving(player)
-	TournamentService.OnPlayerLeaving(player)
-	ClubService.OnPlayerLeaving(player)
-	PlayerDataService.Release(player)
+	-- Chaque étape est protégée : la sauvegarde finale doit toujours avoir lieu.
+	step("ChallengeService.OnPlayerLeaving", ChallengeService.OnPlayerLeaving, player)
+	step("TournamentService.OnPlayerLeaving", TournamentService.OnPlayerLeaving, player)
+	step("ClubService.OnPlayerLeaving", ClubService.OnPlayerLeaving, player)
+	step("PlayerDataService.Release", PlayerDataService.Release, player)
 	Net.ForgetPlayer(player)
 end
 

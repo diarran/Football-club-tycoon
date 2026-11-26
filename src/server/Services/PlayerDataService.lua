@@ -80,9 +80,24 @@ local function defaultData()
 end
 
 -- Complète un profil existant avec les champs manquants (ajoutés plus tard).
+-- Une valeur du mauvais type (profil abîmé, ancien format) ou un nombre
+-- invalide (NaN, infini) est remplacé par la valeur par défaut, pour qu'un
+-- seul champ corrompu ne casse pas tout le jeu au chargement.
+local function badNumber(v): boolean
+	return type(v) == "number" and (v ~= v or v == math.huge or v == -math.huge)
+end
+
 local function reconcile(data, template)
 	for key, value in template do
-		if data[key] == nil then
+		local current = data[key]
+		local wrongType = current ~= nil and type(value) ~= "nil" and type(current) ~= type(value)
+		if current == nil or wrongType or badNumber(current) then
+			if current ~= nil then
+				warn(("[PlayerData] Champ « %s » invalide (%s), valeur par défaut utilisée"):format(
+					tostring(key),
+					tostring(current)
+				))
+			end
 			data[key] = if type(value) == "table" then table.clone(value) else value
 		elseif type(value) == "table" and type(data[key]) == "table" and next(value) ~= nil then
 			reconcile(data[key], value)
@@ -110,7 +125,8 @@ local function migrate(data)
 	reconcile(data, defaultData())
 	-- Nouvelles installations ajoutées après la création du profil.
 	for id in Buildings.Definitions do
-		if type(data.buildings[id]) ~= "number" then
+		local level = data.buildings[id]
+		if type(level) ~= "number" or badNumber(level) or level < 1 then
 			data.buildings[id] = 1
 		end
 	end
@@ -160,7 +176,11 @@ local function openProfile(player: Player)
 			return nil, "datastore"
 		end
 		if not lockedElsewhere and record then
-			return migrate(record.data or defaultData()), nil
+			local stored = record.data
+			if type(stored) ~= "table" then
+				stored = defaultData()
+			end
+			return migrate(stored), nil
 		end
 		task.wait(LOAD_RETRY_DELAY)
 		if not player.Parent then

@@ -15,10 +15,19 @@ local CameraController = require(Controllers.CameraController)
 local TutorialController = require(Controllers.TutorialController)
 local WorldTextController = require(Controllers.WorldTextController)
 
-UIController.Init()
-CameraController.Init()
-TutorialController.Init(UIController.GetScreenGui())
-WorldTextController.Init()
+-- Chaque contrôleur démarre séparément : si l'un échoue (caméra, tutoriel…),
+-- le menu et le HUD restent utilisables et l'erreur s'affiche dans la sortie.
+local function start(label: string, fn, ...)
+	local ok, err = pcall(fn, ...)
+	if not ok then
+		warn(("[Client] %s a échoué : %s"):format(label, tostring(err)))
+	end
+end
+
+UIController.Init() -- indispensable : sans lui, rien ne s'affiche
+start("CameraController", CameraController.Init)
+start("TutorialController", TutorialController.Init, UIController.GetScreenGui())
+start("WorldTextController", WorldTextController.Init)
 
 -- Liens entre les contrôleurs ---------------------------------------------
 
