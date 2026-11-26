@@ -93,6 +93,33 @@ Pour faire tester à quelques amis seulement : laisse le jeu privé et, dans
 
 ---
 
+## Étape 7 (facultatif). Ouvrir la boutique Robux
+
+Le jeu reste gratuit. La boutique ne vend que de l'apparence (4 objets exclusifs
+du Prestige : couleurs néon, projecteurs rubis, statue de cristal, maillot
+carbone), jamais d'avantage dans les matchs. Tant que tu ne fais rien, elle
+reste **cachée** dans le jeu.
+
+1. Va sur [create.roblox.com](https://create.roblox.com), ouvre **Football Club Tycoon**.
+2. Dans le menu de gauche : **Monetization** puis **Developer Products**.
+3. Clique **Create a Developer Product** et crée ces 4 produits (nom au choix, prix conseillé) :
+   - « Couleurs néon » : 99 Robux
+   - « Projecteurs rubis » : 79 Robux
+   - « Statue de cristal » : 149 Robux
+   - « Maillot carbone » : 99 Robux
+4. Pour chaque produit, copie son **ID** (un grand nombre, bouton « Copy Product ID »).
+5. Envoie-moi les 4 IDs dans le chat en disant lequel est lequel : je les colle
+   dans le jeu (fichier `src/shared/Monetization.lua`) et la boutique apparaît
+   dans l'onglet **Prestige**.
+
+À savoir :
+- Le paiement est vérifié par le serveur du jeu : un achat n'est donné qu'une
+  fois, même si le joueur se déconnecte ou si la sauvegarde a un raté.
+- Dans Studio, les achats sont des tests gratuits : rien n'est débité.
+- Il existe aussi un « boost de revenus » (+50 % pendant 30 min). Il est
+  **coupé** et le restera tant qu'on ne décide pas ensemble de l'ouvrir.
+  Ne crée pas de produit pour lui pour l'instant.
+
 ## Textes de la page du jeu
 
 ### Français
