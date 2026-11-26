@@ -19,6 +19,7 @@ jobs:
       - name: Installer Rojo
         run: |
           set -e
+          mkdir -p "$HOME/.local/bin"
           url="https://github.com/rojo-rbx/rojo/releases/download/v${ROJO_VERSION}/rojo-${ROJO_VERSION}-linux-x86_64.zip"
           if curl -fsSL -o rojo.zip "$url"; then
             unzip -o rojo.zip -d "$HOME/.local/bin"
