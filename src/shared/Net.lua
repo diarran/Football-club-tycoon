@@ -40,7 +40,8 @@ Net.Requests = {
 Net.Events = {
 	"ProfileUpdated", -- (snapshot) état complet du club du joueur
 	"ClubsUpdated", -- (list) clubs présents sur le serveur
-	"MatchResult", -- (result) match, ou défi si result.mode == "challenge"
+	"MatchResult", -- (result) match, ou défi si result.mode == "challenge" ; result.replay = replay 3D
+	"MatchReplay", -- (replay) replay 3D d'un match joué par un autre club (visiteurs)
 	"ChallengeUpdated", -- ({ incoming, outgoing }) défis du joueur
 	"TournamentUpdated", -- (state) tournoi du serveur
 	"Notify", -- (message: string, kind: string)
