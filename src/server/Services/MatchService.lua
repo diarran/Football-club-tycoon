@@ -136,6 +136,27 @@ local function buildAiTeam(divisionId: string, rivalIndex: number)
 	}
 end
 
+-- Équipe d'un club du serveur pour un match neutre (défi, tournoi) : bonus
+-- d'entraînement seulement, pas d'avantage du terrain. Lecture seule.
+function MatchService.ClubTeam(player: Player)
+	local data = PlayerDataService.GetData(player)
+	if not data or #data.squad == 0 then
+		return nil
+	end
+	SquadService.RefreshEnergy(data)
+	return {
+		id = "player:" .. player.UserId,
+		name = data.club.name,
+		squad = table.clone(data.squad),
+		tactic = data.tactic,
+		bonus = Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0,
+	}
+end
+
+function MatchService.RivalTeam(divisionId: string, rivalIndex: number)
+	return buildAiTeam(divisionId, rivalIndex)
+end
+
 -- Simulation ------------------------------------------------------------
 
 function MatchService.Simulate(home, away)

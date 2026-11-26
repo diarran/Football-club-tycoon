@@ -65,6 +65,8 @@ Net.Get("ProfileUpdated").OnClientEvent:Connect(onProfile)
 Net.Get("ClubsUpdated").OnClientEvent:Connect(UIController.SetClubs)
 Net.Get("MatchResult").OnClientEvent:Connect(UIController.ShowMatchResult)
 Net.Get("Notify").OnClientEvent:Connect(UIController.Notify)
+Net.Get("ChallengeUpdated").OnClientEvent:Connect(UIController.SetChallenges)
+Net.Get("TournamentUpdated").OnClientEvent:Connect(UIController.SetTournament)
 
 -- État initial (si le profil était déjà chargé avant ce script).
 task.spawn(function()
