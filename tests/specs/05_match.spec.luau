@@ -23,7 +23,7 @@ H.test("match contre l'IA : score, événements et récompenses cohérents", fun
 	local expectedOutcome = if result.homeGoals > result.awayGoals then "Win" elseif result.homeGoals == result.awayGoals then "Draw" else "Loss"
 	H.eq(result.outcome, expectedOutcome, "issue")
 	H.eq(result.rewards.match, S.Config.Rewards[expectedOutcome], "prime de match")
-	H.eq(data.coins, coins + result.rewards.total, "récompense versée une fois")
+	H.eq(data.coins, coins + result.rewards.total + (result.missionReward or 0), "récompense versée une fois")
 	H.eq(data.club.stats.played, 1, "match compté")
 	H.eq(data.club.divisionPoints, S.Config.DivisionPoints[expectedOutcome], "points de division")
 	H.eq(data.tactic, "Offensive", "tactique retenue")
@@ -48,7 +48,7 @@ H.test("le client ne peut pas envoyer de score ni de récompense", function()
 	local result = H.received(p, "MatchResult")
 	result = result[#result][1]
 	H.ok(result.homeGoals < 99, "score calculé par le serveur")
-	H.eq(data.coins, coins + result.rewards.total, "récompense calculée par le serveur")
+	H.eq(data.coins, coins + result.rewards.total + (result.missionReward or 0), "récompense calculée par le serveur")
 	H.ok(result.rewards.total < 5000, "récompense raisonnable")
 end)
 
@@ -131,7 +131,7 @@ H.test("montée D7 → D1 validée par le serveur, une division à la fois, D1 e
 	local result = H.received(p, "MatchResult")
 	result = result[#result][1]
 	H.ok(not result.promoted, "pas de montée en D1")
-	H.eq(data.coins, coins + result.rewards.total, "pas de prime de montée en D1")
+	H.eq(data.coins, coins + result.rewards.total + (result.missionReward or 0), "pas de prime de montée en D1")
 	for i, f in data.squad do
 		f.rating = saved[i]
 	end
