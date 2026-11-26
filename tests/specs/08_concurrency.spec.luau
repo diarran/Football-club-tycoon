@@ -38,7 +38,7 @@ H.test("un joueur quitte puis revient tout de suite : aucune progression perdue"
 	local again = S.PlayerDataService.GetData(back)
 	H.ok(again, "profil rechargé")
 	H.eq(again.buildings.Pitch, 2, "amélioration retrouvée")
-	H.eq(again.coins, 2500, "solde retrouvé")
+	H.eq(again.coins, S.Config.STARTING_COINS - S.Buildings.GetUpgradeCost("Pitch", 1), "solde retrouvé")
 	H.advance(S.Config.AUTOSAVE_INTERVAL_SECONDS + 5)
 	local r = store.data.player_200
 	H.eq(r.data.buildings.Pitch, 2, "sauvegarde correcte")
@@ -55,7 +55,7 @@ H.test("départ juste après un achat : l'achat est sauvegardé", function()
 	H.advance(20)
 	local r = store.data.player_300
 	H.eq(#r.data.squad, 4, "recrue sauvegardée")
-	H.eq(r.data.coins, 5000 - 1500, "débit sauvegardé")
+	H.eq(r.data.coins, S.Config.STARTING_COINS - S.PlayerConfig.RECRUIT_COST, "débit sauvegardé")
 	H.eq(r.lock, nil, "verrou libéré")
 end)
 

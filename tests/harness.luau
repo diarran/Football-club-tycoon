@@ -15,6 +15,7 @@
 local H = {}
 local realOs = os
 local realPrint = print
+H.realPrint = realPrint -- sortie directe (rapports du simulateur)
 
 ------------------------------------------------------------------ journal
 -- Les print/warn du jeu sont gardés en mémoire et affichés seulement en cas d'échec.

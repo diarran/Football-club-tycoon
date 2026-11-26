@@ -29,3 +29,8 @@ jobs:
 
       - name: Lancer les tests
         run: node tests/run-tests.js
+
+      # Rythme de progression (D7 → D5, achats) sur le vrai code du jeu.
+      # Échoue si une source de monnaie anormale ou un blocage est détecté.
+      - name: Simulation de l'économie
+        run: node tools/economy-sim.js 30 --strict | tee -a "$GITHUB_STEP_SUMMARY"
