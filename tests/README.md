@@ -37,6 +37,7 @@ Le test `07_client` démarre aussi le vrai client (HUD, menus) et clique sur les
 | `10_progression` | 5 niveaux par installation, Boutique, modèles 3D au bon niveau |
 | `11_divisions` | D7 → D1, clubs fictifs, primes croissantes, transferts validés par le serveur, classement de division |
 | `10_progression` | 5 niveaux par installation, prix exacts, modèles 3D au niveau 5, Boutique |
+| `18_friends` | clubs entre amis : amis Roblox repérés par le serveur, match amical sans mise (petit bonus limité par jour), primes d'invitation (une fois par ami, plafonnées, versées même si l'inviteur était absent), valeurs invalides refusées, carte Amis et bouton Match amical |
 | `17_staff_sponsors` | staff du club (embauche validée par le serveur, niveaux, effets modérés), sponsors (offres renouvelées, 1 puis 2 contrats, prime par match, bonus d'objectif unique, fin de contrat), ancien profil migré, onglet Gestion |
 | `18_ambiance` | ambiance sonore : sons de Studio d'abord puis sons intégrés à Roblox (muet si rien ne charge), public plus fort et chants dans un grand stade, confettis et son à chaque but du replay, clic des boutons, volume par paliers / muet / musique dans les Paramètres |
 | `12_challenges_tournament` | défis entre clubs (mises plafonnées, refus, expiration, anti-spam, seul le club défié répond, 200 défis sans création de monnaie), tournoi du serveur à 2 joueurs (inscriptions, 8 clubs, forfaits, récompenses bornées, événement « tournoi gagné »), écran Matchs |
