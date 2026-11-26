@@ -280,3 +280,34 @@ Tournoi du serveur : 2 récompenses · médiane 200 · max 300 (plafond 3600) ·
 Gain par match hors bonus de division : max 4811 (seuil d'alerte 5 000)
 
 Aucune source de monnaie infinie ni blocage détecté.
+
+## Fin de partie : personnalisation et salle des trophées (26/11/2026)
+
+Problème relevé par le simulateur : en D1 avec l'équipe au maximum, les FC Coins
+s'accumulaient (solde médian ~3,7 millions) sans rien à acheter.
+
+Nouvel onglet **Prestige** (`src/shared/Cosmetics.lua`, `CosmeticService`) :
+29 objets purement visuels (document de conception, section 9 : aucun avantage
+sportif), achetés en FC Coins et visibles par tous les visiteurs du terrain.
+
+| Catégorie | Objets | Prix | Débloqués |
+| --- | --- | --- | --- |
+| Couleurs du club | 6 palettes | 25 000 → 900 000 | D5 → 2 titres de D1 |
+| Éclairage du stade | 5 couleurs de projecteurs | 40 000 → 1 600 000 | D4 → 6 titres |
+| Statue devant le stade | 6 statues | 60 000 → 2 500 000 | D4 → 10 titres |
+| Tenue fictive | 6 maillots | 30 000 → 2 000 000 | D5 → 8 titres |
+| Décorations | drapeaux, fleurs, palmiers, fontaine, arche, allée des étoiles | 20 000 → 1 500 000 | D6 → 5 titres |
+
+Total du catalogue : ~17,6 millions de FC Coins.
+
+**Salle des trophées** (`src/shared/Trophies.lua`) : pavillon vitré toujours présent
+sur le terrain. Une coupe par montée (D6 → D1), par titre de champion de D1 et par
+record (victoires, matchs, buts, défis et tournois gagnés). La D1 n'ayant pas de
+montée, chaque tranche de 300 points en D1 donne un **titre de champion** et les
+points repartent de zéro. Les titres débloquent les objets les plus prestigieux,
+ce qui étale la fin de partie même pour un joueur qui a déjà beaucoup de pièces.
+Aucun trophée ne rapporte de FC Coins.
+
+Simulateur : une fois en D1 avec tout acheté, le joueur type continue et achète
+la personnalisation, la moins chère d'abord. Alerte en CI si tout est acheté
+moins de 15 h de jeu après la D1.

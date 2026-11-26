@@ -54,10 +54,26 @@ local function uniformLevels(level: number): { [string]: number }
 	return levels
 end
 
+-- Personnalisation et trophées de démonstration : le club de niveau 5 a tout
+-- (couleurs, éclairage, statue, tenue, décorations, salle des trophées pleine).
+local Trophies = require(ReplicatedStorage.Shared:WaitForChild("Trophies"))
+local DEMO_STYLES = {
+	[3] = { colors = "colors_royal", kit = "kit_stripes", decor = { decor_flags = true, decor_flowers = true }, trophies = Trophies.Earned("D5", { wins = 60, played = 120 }, 0) },
+	[5] = {
+		colors = "colors_prestige",
+		lighting = "lighting_gold",
+		statue = "statue_legend",
+		kit = "kit_sash",
+		decor = { decor_flags = true, decor_flowers = true, decor_palms = true, decor_fountain = true, decor_arch = true, decor_walk = true },
+		trophies = Trophies.Earned("D1", { wins = 1200, played = 2100, goalsFor = 5200 }, 12),
+		titles = 12,
+	},
+}
+
 WorldBuilder.buildDistrict()
 for slotIndex = 1, WorldConfig.MAX_PLOTS do
 	local level = if slotIndex <= WorldConfig.MAX_LEVEL then slotIndex else 1
-	local plot = WorldBuilder.buildPlot(slotIndex, uniformLevels(level), DEMO_CLUBS[slotIndex])
+	local plot = WorldBuilder.buildPlot(slotIndex, uniformLevels(level), DEMO_CLUBS[slotIndex], DEMO_STYLES[slotIndex])
 	print(
 		string.format(
 			"[WorldPreview] Terrain %d « %s » (niveau %d) : %d Parts",

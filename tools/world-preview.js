@@ -34,8 +34,9 @@ const MODULES = [
   ['WorldConfig', ['ReplicatedStorage', 'Shared', 'WorldConfig'], 'ModuleScript', 'src/shared/WorldConfig.lua'],
   ['Brand', ['ReplicatedStorage', 'Shared', 'Brand'], 'ModuleScript', 'src/shared/Brand.lua'],
   ['Locale', ['ReplicatedStorage', 'Shared', 'Locale'], 'ModuleScript', 'src/shared/Locale.lua'],
+  ...['Divisions', 'Cosmetics', 'Trophies'].map((n) => [n, ['ReplicatedStorage', 'Shared', n], 'ModuleScript', `src/shared/${n}.lua`]),
   ...['fr', 'en'].map((n) => [`Lang_${n}`, ['ReplicatedStorage', 'Shared', 'Lang', n], 'ModuleScript', `src/shared/Lang/${n}.lua`]),
-  ...['PartUtil', 'District', 'Pitch', 'Stands', 'LockerRoom', 'TrainingZone', 'Offices', 'Shop', 'Academy', 'VipLounge', 'Entrance', 'WorldBuilder'].map(
+  ...['PartUtil', 'District', 'Pitch', 'Stands', 'LockerRoom', 'TrainingZone', 'Offices', 'Shop', 'Academy', 'VipLounge', 'Entrance', 'Prestige', 'WorldBuilder'].map(
     (n) => [n, ['ServerScriptService', 'Server', 'World', n], 'ModuleScript', `src/server/World/${n}.lua`]
   ),
   ['WorldPreview', ['ServerScriptService', 'Server', 'World', 'WorldPreview'], 'Script', 'src/server/World/WorldPreview.server.lua'],

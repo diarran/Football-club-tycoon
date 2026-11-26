@@ -24,6 +24,7 @@ local TutorialService = require(Services.TutorialService)
 local BuildingService = require(Services.BuildingService)
 local SquadService = require(Services.SquadService)
 local MatchService = require(Services.MatchService)
+local CosmeticService = require(Services.CosmeticService)
 local ChallengeService = require(Services.ChallengeService)
 local TournamentService = require(Services.TournamentService)
 
@@ -36,6 +37,7 @@ local ORDERED_SERVICES = {
 	{ name = "BuildingService", module = BuildingService },
 	{ name = "SquadService", module = SquadService },
 	{ name = "MatchService", module = MatchService },
+	{ name = "CosmeticService", module = CosmeticService },
 	{ name = "ChallengeService", module = ChallengeService },
 	{ name = "TournamentService", module = TournamentService },
 }

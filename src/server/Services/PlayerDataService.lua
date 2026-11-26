@@ -24,6 +24,7 @@ local Buildings = require(Shared.Buildings)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
+local Trophies = require(Shared.Trophies)
 
 local PlayerDataService = {}
 
@@ -36,6 +37,7 @@ local profiles = {} -- [Player] = { data, temporary, loadedAt }
 local pendingSnapshot = {} -- [Player] = true quand un envoi est prévu
 local releasing = {} -- [UserId] = nombre de sauvegardes de départ en cours
 local RELEASE_WAIT_SECONDS = 60
+local changeListeners = {} -- fonctions appelées avant chaque envoi d'instantané
 local jobId = game.JobId ~= "" and game.JobId or ("studio-" .. HttpService:GenerateGUID(false))
 
 -- Profil par défaut -----------------------------------------------------
@@ -65,6 +67,11 @@ local function defaultData()
 		-- Centre de formation : jeunes repérés en attente de signature (SquadService).
 		academy = { prospects = {}, lastScoutAt = 0 },
 		tactic = Config.DEFAULT_TACTIC,
+		-- Personnalisation achetée (CosmeticService) : owned = { [id] = true },
+		-- equipped = { [catégorie] = id } pour les catégories à objet unique.
+		cosmetics = { owned = {}, equipped = {} },
+		-- Salle des trophées : titres de champion de D1, trophées déjà annoncés.
+		trophies = { titles = 0, seen = 0 },
 		tutorial = { step = 1, completed = false },
 		lastMatchAt = 0,
 		lastEnergyUpdate = os.time(),
@@ -355,6 +362,9 @@ function PlayerDataService.BuildSnapshot(player: Player)
 		prospects = data.academy.prospects,
 		tactic = data.tactic,
 		tutorial = table.clone(data.tutorial),
+		cosmetics = { owned = table.clone(data.cosmetics.owned), equipped = table.clone(data.cosmetics.equipped) },
+		trophies = Trophies.Earned(data.club.division, data.club.stats, data.trophies.titles),
+		titles = data.trophies.titles,
 		matchCooldown = math.max(0, Config.MATCH_COOLDOWN_SECONDS - (now - data.lastMatchAt)),
 		temporary = profiles[player].temporary,
 	}
@@ -369,9 +379,23 @@ function PlayerDataService.MarkChanged(player: Player)
 	task.defer(function()
 		pendingSnapshot[player] = nil
 		if player.Parent and profiles[player] then
+			for _, listener in changeListeners do
+				local ok, err = pcall(listener, player, profiles[player].data)
+				if not ok then
+					warn("[PlayerData] Erreur dans un suivi de changement : " .. tostring(err))
+				end
+			end
+		end
+		if player.Parent and profiles[player] then
 			Net.FireClient("ProfileUpdated", player, PlayerDataService.BuildSnapshot(player))
 		end
 	end)
+end
+
+-- Branche une fonction(player, data) appelée après chaque changement du profil
+-- (regroupé par image), juste avant l'envoi de l'instantané au client.
+function PlayerDataService.OnChanged(listener)
+	table.insert(changeListeners, listener)
 end
 
 function PlayerDataService.GetLoadedPlayers()

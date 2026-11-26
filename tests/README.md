@@ -38,6 +38,7 @@ Le test `07_client` démarre aussi le vrai client (HUD, menus) et clique sur les
 | `10_progression` | 5 niveaux par installation, prix exacts, modèles 3D au niveau 5, Boutique |
 | `12_challenges_tournament` | défis entre clubs (mises plafonnées, refus, expiration, anti-spam, seul le club défié répond, 200 défis sans création de monnaie), tournoi du serveur à 2 joueurs (inscriptions, 8 clubs, forfaits, récompenses bornées, événement « tournoi gagné »), écran Matchs |
 | `11_academy_vip` | centre de formation (jeunes repérés hors ligne, signature, libération, progression), espace VIP, anciens profils |
+| `12_prestige` | personnalisation du club (achat validé par le serveur, conditions de division et de titres, porter/retirer, terrain 3D), salle des trophées (montées, titres de D1, records, tournois), sauvegarde, anciens profils, écran Prestige |
 
 ## Lancer les tests sur son ordinateur
 

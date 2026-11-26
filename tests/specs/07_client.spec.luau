@@ -93,7 +93,7 @@ H.test("écran de téléphone : l'interface se réduit et reste utilisable", fun
 	H.ok(scale, "UIScale présent")
 	H.ok(scale.Scale < 1 and scale.Scale >= 0.7, "échelle réduite : " .. tostring(scale.Scale))
 	UI.SetMenuOpen(true)
-	for _, tab in { "Home", "Stadium", "Squad", "Matches", "Ranking", "Settings" } do
+	for _, tab in { "Home", "Stadium", "Squad", "Matches", "Ranking", "Prestige", "Settings" } do
 		UI.OpenTab(tab)
 		H.flush()
 	end
