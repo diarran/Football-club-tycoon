@@ -53,6 +53,8 @@ local function defaultData()
 		buildings = Buildings.DefaultLevels(),
 		squad = {}, -- rempli par SquadService au premier chargement
 		nextPlayerId = 1,
+		-- Centre de formation : jeunes repérés en attente de signature (SquadService).
+		academy = { prospects = {}, lastScoutAt = 0 },
 		tactic = Config.DEFAULT_TACTIC,
 		tutorial = { step = 1, completed = false },
 		lastMatchAt = 0,
@@ -333,6 +335,7 @@ function PlayerDataService.BuildSnapshot(player: Player)
 		club = table.clone(data.club),
 		buildings = table.clone(data.buildings),
 		squad = data.squad,
+		prospects = data.academy.prospects,
 		tactic = data.tactic,
 		tutorial = table.clone(data.tutorial),
 		matchCooldown = math.max(0, Config.MATCH_COOLDOWN_SECONDS - (now - data.lastMatchAt)),

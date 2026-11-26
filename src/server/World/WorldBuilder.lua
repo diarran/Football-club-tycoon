@@ -28,7 +28,7 @@
 	  Attributes : SlotIndex, ClubName, Level_Pitch, Level_Stands, …
 	  PrimaryPart : « Ground » (sol du terrain).
 	  « Spawn » : Part invisible, sans collision, juste derrière l'entrée (téléportation).
-	  Enfants installations : Pitch, Stands, LockerRoom, Training, Offices, Shop
+	  Enfants installations : Pitch, Stands, LockerRoom, Training, Offices, Shop, Academy, VIP
 	  (+ Entrance, Paths). Chaque installation est un Model avec les Attributes
 	  Facility et Level et une PrimaryPart invisible « Root » (son empreinte au sol).
 ]]
@@ -47,6 +47,8 @@ local LockerRoom = require(World:WaitForChild("LockerRoom"))
 local TrainingZone = require(World:WaitForChild("TrainingZone"))
 local Offices = require(World:WaitForChild("Offices"))
 local Shop = require(World:WaitForChild("Shop"))
+local Academy = require(World:WaitForChild("Academy"))
+local VipLounge = require(World:WaitForChild("VipLounge"))
 local Entrance = require(World:WaitForChild("Entrance"))
 
 type BuildContext = PartUtil.BuildContext
@@ -63,6 +65,8 @@ local BUILDERS: { [string]: FacilityBuilder } = {
 	Training = TrainingZone.build,
 	Offices = Offices.build,
 	Shop = Shop.build,
+	Academy = Academy.build,
+	VIP = VipLounge.build,
 }
 
 local C = WorldConfig.COLORS
@@ -159,6 +163,9 @@ local function buildGround(plot: Model, slotIndex: number)
 	path(53, 40, 58, 40, 4) -- accès entraînement
 	path(-5, -88, -62, -88, 6) -- allée de la boutique
 	path(-62, -86, -62, -84, 4) -- porte de la boutique
+	path(-62, -88, -107, -88, 6) -- allée du centre de formation
+	path(-107, -88, -107, -85, 4) -- porte du centre de formation
+	path(30, -88, 30, -83, 4) -- porte de l'espace VIP
 
 	local spawn = PartUtil.box(
 		plot,

@@ -74,12 +74,38 @@ match. Après ~4 h, le vide « rien à acheter » revient : de nouvelles divisio
 ou des dépenses récurrentes (salaires, entretien) seront la suite logique.
 
 
+## Centre de formation et espace VIP (26/11/2026)
+
+Deux installations « Après MVP » du document de conception (section 4), chacune
+avec 5 niveaux. Toutes les valeurs sont dans `src/shared/Buildings.lua`.
+
+| Installation | Niv. 2 | Niv. 3 | Niv. 4 | Niv. 5 | Effet (niv. 1 → niv. 5) |
+| --- | --- | --- | --- | --- | --- |
+| Centre de formation | 3 500 | 9 000 | 19 000 | 36 000 | un jeune toutes les 30 → 10 min, 1 → 3 places, potentiel 60-70 → 80-94, signature 400 → 800 |
+| Espace VIP | 5 000 | 12 000 | 24 000 | 45 000 | billetterie +5 % → +25 %, loges 0 → 450 par match |
+
+- **Jeunes du centre de formation** : repérés même hors ligne (calcul serveur à
+  partir de l'heure), note modeste (36 à 52) mais fort potentiel ; ils
+  progressent plus vite après chaque match (+15 % à +40 % de chance). Une
+  signature coûte bien moins qu'un recrutement classique (1 500). Le bouton
+  « Libérer le joueur » fait de la place (3 joueurs minimum). Les signatures ne
+  sont pas jouées par le simulateur : c'est une dépense en plus, au choix.
+- **Espace VIP** : premier essai à +35 % / 700 → gain maximal 5 271 par match,
+  au-dessus du seuil d'alerte (5 000). Réduit à +25 % / 450 → **4 811 au plus**.
+
+| Mesure (médiane, 100 parties) | Avant | Après |
+| --- | --- | --- |
+| D5, joueur actif | ~40 min | ~39 min (inchangé) |
+| Tout acheté, joueur actif | ~4 h 10 (7ᵉ session) | ~5 h (8ᵉ session, ~246 matchs) |
+| Tout acheté, joueur occasionnel | ~27 jours | ~31 jours (~7 h de jeu) |
+| Gain par match | ~1 690, au plus ~3 800 | ~2 000, au plus ~4 800 |
+
 ## Dernier rapport (100 parties par profil)
 
 # Simulation de l'économie (100 parties par profil)
 
 Départ : 2500 FC Coins · prime de match V/N/D : 400/200/100 · recrue : 1500 · délai entre matchs : 60 s
-Coût total de tout le contenu (installations + 4 recrues) : 338000
+Coût total de tout le contenu (installations + 4 recrues) : 491500
 
 ## Joueur actif (sessions de 40 min, pause de 6 h, un match toutes les 75 s)
 
@@ -87,76 +113,92 @@ Coût total de tout le contenu (installations + 4 recrues) : 338000
 | --- | --- | --- | --- | --- |
 | Premier achat | 0 min | 0 min | 0 | 1 |
 | Montée en D6 | 8.8 min | 11.3 min | 8 | 1 |
-| Montée en D5 | 40 min | 48.8 min | 34 | 2 |
-| Pitch 2 (2500) | 25 min | 26.3 min | 21 | 1 |
-| Pitch 3 (7500) | 77.5 min | 80 min | 64 | 2 |
-| Pitch 4 (16000) | 138.8 min | 143.8 min | 115 | 4 |
-| Pitch 5 (32000) | 221.3 min | 227.5 min | 183 | 6 |
-| Stands 2 (3000) | 37.5 min | 40 min | 31 | 1 |
-| Stands 3 (8000) | 86.3 min | 90 min | 72 | 3 |
-| Stands 4 (18000) | 152.5 min | 157.5 min | 126 | 4 |
-| Stands 5 (36000) | 239.4 min | 245 min | 197.5 | 6 |
+| Montée en D5 | 38.8 min | 47.5 min | 32 | 1 |
+| Pitch 2 (2500) | 23.8 min | 26.3 min | 20 | 1 |
+| Pitch 3 (7500) | 85 min | 87.5 min | 71 | 3 |
+| Pitch 4 (16000) | 156.3 min | 161.3 min | 129 | 4 |
+| Pitch 5 (32000) | 245 min | 252.5 min | 203 | 7 |
+| Stands 2 (3000) | 36.3 min | 38.8 min | 30 | 1 |
+| Stands 3 (8000) | 93.8 min | 97.5 min | 78 | 3 |
+| Stands 4 (18000) | 166.3 min | 172.5 min | 138 | 5 |
+| Stands 5 (36000) | 260 min | 267.5 min | 215 | 7 |
 | Training 2 (2000) | 17.5 min | 18.8 min | 15 | 1 |
-| Training 3 (6000) | 57.5 min | 60 min | 48 | 2 |
-| Training 4 (14000) | 115 min | 120 min | 95 | 3 |
-| Training 5 (28000) | 190 min | 195 min | 157 | 5 |
-| Offices 2 (2500) | 31.3 min | 33.8 min | 26 | 1 |
-| Offices 3 (7000) | 67.5 min | 71.3 min | 56 | 2 |
-| Offices 4 (15000) | 126.9 min | 131.3 min | 105.5 | 4 |
-| Offices 5 (30000) | 205 min | 211.3 min | 170 | 6 |
+| Training 3 (6000) | 68.1 min | 71.3 min | 56.5 | 2 |
+| Training 4 (14000) | 135 min | 140 min | 112 | 4 |
+| Training 5 (28000) | 218.8 min | 226.3 min | 181 | 6 |
+| Offices 2 (2500) | 30 min | 32.5 min | 25 | 1 |
+| Offices 3 (7000) | 77.5 min | 80 min | 64 | 2 |
+| Offices 4 (15000) | 145 min | 151.3 min | 120 | 4 |
+| Offices 5 (30000) | 232.5 min | 240 min | 192 | 6 |
 | LockerRoom 2 (1500) | 0 min | 0 min | 0 | 1 |
-| LockerRoom 3 (4000) | 42.5 min | 45 min | 36 | 2 |
-| LockerRoom 4 (9000) | 95 min | 98.8 min | 79 | 3 |
-| LockerRoom 5 (18000) | 161.9 min | 167.5 min | 134.5 | 5 |
-| Shop 2 (4000) | 48.8 min | 51.3 min | 41 | 2 |
-| Shop 3 (10000) | 103.8 min | 107.5 min | 86 | 3 |
-| Shop 4 (20000) | 173.8 min | 178.8 min | 144 | 5 |
-| Shop 5 (38000) | 253.1 min | 260 min | 209.5 | 7 |
-| Recrue 1 (1500) | 0.6 min | 1.3 min | 1.5 | 1 |
+| LockerRoom 3 (4000) | 46.3 min | 50 min | 39 | 2 |
+| LockerRoom 4 (9000) | 101.3 min | 105 min | 84 | 3 |
+| LockerRoom 5 (18000) | 176.3 min | 182.5 min | 146 | 5 |
+| Shop 2 (4000) | 53.8 min | 56.3 min | 45 | 2 |
+| Shop 3 (10000) | 116.3 min | 120 min | 96 | 3 |
+| Shop 4 (20000) | 196.3 min | 201.3 min | 162 | 5 |
+| Shop 5 (38000) | 283.8 min | 291.3 min | 235 | 8 |
+| Academy 2 (3500) | 40.6 min | 43.8 min | 34.5 | 2 |
+| Academy 3 (9000) | 108.8 min | 112.5 min | 90 | 3 |
+| Academy 4 (19000) | 186.3 min | 192.5 min | 154 | 5 |
+| Academy 5 (36000) | 272.5 min | 280 min | 225 | 7 |
+| VIP 2 (5000) | 60 min | 63.8 min | 50 | 2 |
+| VIP 3 (12000) | 125 min | 130 min | 104 | 4 |
+| VIP 4 (24000) | 206.3 min | 212.5 min | 171 | 6 |
+| VIP 5 (45000) | 297.5 min | 306.3 min | 246 | 8 |
+| Recrue 1 (1500) | 1.3 min | 1.3 min | 2 | 1 |
 | Recrue 2 (1500) | 3.8 min | 5 min | 4 | 1 |
 | Recrue 3 (1500) | 7.5 min | 8.8 min | 7 | 1 |
-| Recrue 4 (1500) | 12.5 min | 12.5 min | 11 | 1 |
-| Tout acheté | 253.1 min | 260 min | 209.5 | 7 |
+| Recrue 4 (1500) | 11.3 min | 12.5 min | 10 | 1 |
+| Tout acheté | 297.5 min | 306.3 min | 246 | 8 |
 
-Gain par match : médiane 1688, max 3799 · victoires : 55 % · énergie la plus basse : 90 · solde final médian : 73525
+Gain par match : médiane 1993, max 4811 · victoires : 55.3 % · énergie la plus basse : 90 · solde final médian : 78846
 
 ## Joueur occasionnel (sessions de 15 min, pause de 24 h, un match toutes les 120 s)
 
 | Étape | Temps de jeu (médiane) | 90 % des joueurs avant | Matchs | Session n° |
 | --- | --- | --- | --- | --- |
 | Premier achat | 0 min | 0 min | 0 | 1 |
-| Montée en D6 | 12 min | 16 min | 7 | 1 |
-| Montée en D5 | 56 min | 66 min | 32 | 4 |
+| Montée en D6 | 14 min | 16 min | 8 | 1 |
+| Montée en D5 | 56 min | 70 min | 33 | 5 |
 | Pitch 2 (2500) | 34 min | 38 min | 20 | 3 |
-| Pitch 3 (7500) | 112 min | 114 min | 64 | 8 |
-| Pitch 4 (16000) | 200 min | 206 min | 115 | 15 |
-| Pitch 5 (32000) | 320 min | 326 min | 183 | 23 |
-| Stands 2 (3000) | 54 min | 56 min | 31 | 4 |
-| Stands 3 (8000) | 125 min | 128 min | 71.5 | 9 |
-| Stands 4 (18000) | 220 min | 224 min | 126 | 16 |
-| Stands 5 (36000) | 344 min | 352 min | 197 | 25 |
+| Pitch 3 (7500) | 124 min | 126 min | 71 | 9 |
+| Pitch 4 (16000) | 224 min | 232 min | 129 | 17 |
+| Pitch 5 (32000) | 354 min | 364 min | 203 | 26 |
+| Stands 2 (3000) | 53 min | 56 min | 30.5 | 4 |
+| Stands 3 (8000) | 136 min | 140 min | 78 | 10 |
+| Stands 4 (18000) | 242 min | 248 min | 139 | 18 |
+| Stands 5 (36000) | 376 min | 384 min | 215 | 27 |
 | Training 2 (2000) | 26 min | 28 min | 15 | 2 |
-| Training 3 (6000) | 84 min | 86 min | 48 | 6 |
-| Training 4 (14000) | 166 min | 170 min | 95 | 12 |
-| Training 5 (28000) | 272 min | 280 min | 156 | 20 |
-| Offices 2 (2500) | 42 min | 48 min | 25 | 4 |
-| Offices 3 (7000) | 98 min | 100 min | 56 | 7 |
-| Offices 4 (15000) | 182 min | 188 min | 105 | 14 |
-| Offices 5 (30000) | 295 min | 304 min | 169.5 | 22 |
+| Training 3 (6000) | 98 min | 102 min | 57 | 8 |
+| Training 4 (14000) | 196 min | 200 min | 112 | 14 |
+| Training 5 (28000) | 318 min | 324 min | 182 | 23 |
+| Offices 2 (2500) | 42 min | 46 min | 25 | 4 |
+| Offices 3 (7000) | 112 min | 114 min | 64 | 8 |
+| Offices 4 (15000) | 210 min | 216 min | 121 | 16 |
+| Offices 5 (30000) | 336 min | 344 min | 192.5 | 24.5 |
 | LockerRoom 2 (1500) | 0 min | 0 min | 0 | 1 |
-| LockerRoom 3 (4000) | 62 min | 66 min | 36 | 5 |
-| LockerRoom 4 (9000) | 136 min | 140 min | 78 | 10 |
-| LockerRoom 5 (18000) | 234 min | 240 min | 134 | 17 |
-| Shop 2 (4000) | 70 min | 74 min | 41 | 6 |
-| Shop 3 (10000) | 148 min | 154 min | 85 | 11 |
-| Shop 4 (20000) | 252 min | 258 min | 144 | 18 |
-| Shop 5 (38000) | 365 min | 374 min | 209.5 | 27 |
-| Recrue 1 (1500) | 1 min | 2 min | 1.5 | 1 |
+| LockerRoom 3 (4000) | 70 min | 72 min | 40 | 5 |
+| LockerRoom 4 (9000) | 146 min | 152 min | 84 | 11 |
+| LockerRoom 5 (18000) | 254 min | 262 min | 146 | 19 |
+| Shop 2 (4000) | 78 min | 82 min | 45 | 6 |
+| Shop 3 (10000) | 168 min | 174 min | 96 | 12 |
+| Shop 4 (20000) | 282 min | 290 min | 162 | 21 |
+| Shop 5 (38000) | 410 min | 420 min | 235 | 30 |
+| Academy 2 (3500) | 60 min | 64 min | 35 | 5 |
+| Academy 3 (9000) | 156 min | 162 min | 90 | 12 |
+| Academy 4 (19000) | 268 min | 276 min | 154 | 20 |
+| Academy 5 (36000) | 392 min | 402 min | 225 | 29 |
+| VIP 2 (5000) | 88 min | 92 min | 51 | 7 |
+| VIP 3 (12000) | 182 min | 186 min | 104 | 13 |
+| VIP 4 (24000) | 299 min | 308 min | 171.5 | 22 |
+| VIP 5 (45000) | 430 min | 438 min | 246 | 31 |
+| Recrue 1 (1500) | 2 min | 2 min | 2 | 1 |
 | Recrue 2 (1500) | 6 min | 8 min | 4 | 1 |
 | Recrue 3 (1500) | 12 min | 14 min | 7 | 1 |
 | Recrue 4 (1500) | 16 min | 18 min | 10 | 2 |
-| Tout acheté | 365 min | 374 min | 209.5 | 27 |
+| Tout acheté | 430 min | 438 min | 246 | 31 |
 
-Gain par match : médiane 1607, max 3795 · victoires : 56.5 % · énergie la plus basse : 90 · solde final médian : 13737.5
+Gain par match : médiane 1899, max 4802 · victoires : 54 % · énergie la plus basse : 90 · solde final médian : 17934.5
 
 Aucune source de monnaie infinie ni blocage détecté.

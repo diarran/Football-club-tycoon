@@ -239,8 +239,11 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	local tickets = math.floor((stands.capacity or 0) * attendance * (stands.ticketPrice or 0))
 	local sponsor = offices.sponsorIncome or 0
 	local shop = Buildings.GetEffects("Shop", data.buildings.Shop or 1).shopIncome or 0
+	-- Espace VIP : bonus sur la billetterie + revenu fixe des loges.
+	local vipEffects = Buildings.GetEffects("VIP", data.buildings.VIP or 1)
+	local vip = math.floor(tickets * (vipEffects.ticketBonus or 0)) + (vipEffects.vipIncome or 0)
 	local matchReward = Config.Rewards[outcome]
-	local totalReward = matchReward + tickets + sponsor + shop
+	local totalReward = matchReward + tickets + sponsor + shop + vip
 	EconomyService.Add(player, totalReward, "match:" .. outcome)
 
 	local stats = data.club.stats
@@ -281,7 +284,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		awayGoals = score.awayGoals,
 		events = score.events,
 		outcome = outcome,
-		rewards = { match = matchReward, tickets = tickets, sponsor = sponsor, shop = shop, total = totalReward },
+		rewards = { match = matchReward, tickets = tickets, sponsor = sponsor, shop = shop, vip = vip, total = totalReward },
 		divisionPoints = data.club.divisionPoints,
 		division = data.club.division,
 		promoted = promoted,

@@ -36,7 +36,7 @@ WorldConfig.PREVIEW_ON_START = true
 --------------------------------------------------------------------------------
 
 -- Identifiants des installations (contrat partagé avec BuildingService / ClubService).
-WorldConfig.FACILITY_IDS = { "Pitch", "Stands", "LockerRoom", "Training", "Offices", "Shop" }
+WorldConfig.FACILITY_IDS = { "Pitch", "Stands", "LockerRoom", "Training", "Offices", "Shop", "Academy", "VIP" }
 
 -- Noms affichés des installations : clés « building.<id>.label » de Locale.
 
@@ -51,6 +51,8 @@ WorldConfig.START_LEVELS = {
 	Training = 1,
 	Offices = 1,
 	Shop = 1,
+	Academy = 1,
+	VIP = 1,
 }
 
 -- Capacité des tribunes par niveau (mêmes valeurs que Buildings.lua, utilisées par l'économie).
@@ -147,6 +149,8 @@ WorldConfig.LAYOUT = {
 	Training = { x = 88, z = 40, footprint = Vector2.new(60, 72) },
 	Offices = { x = 82, z = -70, footprint = Vector2.new(44, 26) }, -- toit, auvent, aileron compris
 	Shop = { x = -62, z = -74, footprint = Vector2.new(42, 22) }, -- boutique, à gauche de l'entrée
+	Academy = { x = -107, z = -74, footprint = Vector2.new(40, 22) }, -- centre de formation, à gauche de la boutique
+	VIP = { x = 30, z = -72, footprint = Vector2.new(30, 22) }, -- espace VIP, à droite de l'entrée, face au stade
 	Entrance = { x = 0, z = -96, footprint = Vector2.new(30, 4) },
 }
 
@@ -201,6 +205,8 @@ WorldConfig.COLORS = {
 	Water = Color3.fromRGB(80, 150, 200),
 	SignText = Color3.fromRGB(255, 255, 255),
 	SignBack = Color3.fromRGB(24, 30, 40),
+	Gold = Color3.fromRGB(212, 175, 55),
+	Carpet = Color3.fromRGB(170, 24, 40),
 }
 
 -- Couleurs de club par emplacement (fictives) : principale + secondaire.

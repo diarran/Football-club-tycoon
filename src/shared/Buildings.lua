@@ -85,6 +85,38 @@ Buildings.Definitions = {
 			{ cost = 38000, effects = { shopIncome = 550 } }, -- boutique officielle
 		},
 	},
+	-- Centre de formation (section 4 « Après MVP ») : les recruteurs repèrent
+	-- régulièrement de jeunes joueurs fictifs, bon marché et à fort potentiel.
+	--   scoutsPerHour : jeunes repérés par heure (même hors ligne) : 2 = un toutes les 30 min
+	--   prospectSlots : jeunes en attente au maximum
+	--   ratingMin/Max, potentialMin/Max : note et potentiel tirés par le serveur
+	--   signCost : prix d'une signature ; youthGrowth : chance de progression
+	--   en plus après chaque match pour les jeunes formés au club.
+	Academy = {
+		id = "Academy",
+		order = 7,
+		levels = {
+			{ cost = 0, effects = { scoutsPerHour = 2, prospectSlots = 1, ratingMin = 36, ratingMax = 42, potentialMin = 60, potentialMax = 70, signCost = 400, youthGrowth = 0.15 } }, -- cabane des recruteurs
+			{ cost = 3500, effects = { scoutsPerHour = 2.4, prospectSlots = 2, ratingMin = 38, ratingMax = 45, potentialMin = 65, potentialMax = 76, signCost = 500, youthGrowth = 0.2 } }, -- bureau et mini-terrain
+			{ cost = 9000, effects = { scoutsPerHour = 3, prospectSlots = 2, ratingMin = 40, ratingMax = 47, potentialMin = 70, potentialMax = 82, signCost = 600, youthGrowth = 0.25 } }, -- bâtiment vitré
+			{ cost = 19000, effects = { scoutsPerHour = 4, prospectSlots = 3, ratingMin = 42, ratingMax = 49, potentialMin = 75, potentialMax = 88, signCost = 700, youthGrowth = 0.3 } }, -- internat sur 2 étages
+			{ cost = 36000, effects = { scoutsPerHour = 6, prospectSlots = 3, ratingMin = 44, ratingMax = 52, potentialMin = 80, potentialMax = 94, signCost = 800, youthGrowth = 0.4 } }, -- académie du club
+		},
+	},
+	-- Espace VIP (section 4 « Après MVP ») : loges et salon pour les invités de
+	-- marque. À chaque match à domicile : bonus sur la billetterie (ticketBonus,
+	-- en part des recettes) et revenu fixe des loges (vipIncome).
+	VIP = {
+		id = "VIP",
+		order = 8,
+		levels = {
+			{ cost = 0, effects = { ticketBonus = 0.05, vipIncome = 0 } }, -- tente d'accueil
+			{ cost = 5000, effects = { ticketBonus = 0.08, vipIncome = 80 } }, -- salon VIP
+			{ cost = 12000, effects = { ticketBonus = 0.12, vipIncome = 180 } }, -- salon vitré et terrasse
+			{ cost = 24000, effects = { ticketBonus = 0.18, vipIncome = 300 } }, -- club house sur 2 étages
+			{ cost = 45000, effects = { ticketBonus = 0.25, vipIncome = 450 } }, -- pavillon prestige
+		},
+	},
 }
 
 function Buildings.Get(id: string)
