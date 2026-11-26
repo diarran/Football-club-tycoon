@@ -9,15 +9,39 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local TutorialSteps = require(Shared.TutorialSteps)
 
 local TutorialController = {}
 
+local player = game:GetService("Players").LocalPlayer
+
+-- Noms des boutons et onglets cités dans les étapes (même langue que l'interface).
+local STEP_PARAMS = {
+	OpenMenu = { menu = "hud.menuButton" },
+	CheckSquad = { tab = "tab.Squad" },
+	FirstUpgrade = { tab = "tab.Stadium" },
+	FirstMatch = { tab = "tab.Matches" },
+}
+
+local function stepText(lang: string, stepIndex: number, step): string
+	local params = {}
+	for name, key in STEP_PARAMS[step.id] or {} do
+		params[name] = Locale.T(lang, key)
+	end
+	return Locale.T(lang, "tutorial.progress", {
+		step = stepIndex,
+		total = #TutorialSteps,
+		text = Locale.T(lang, "tutorial." .. step.id, params),
+	})
+end
+
 local banner, textLabel
 local currentStepId = nil
 local visible = true
 local discoverScheduled = false
+local lastProfile = nil
 
 function TutorialController.Init(screenGui: ScreenGui)
 	banner = Instance.new("Frame")
@@ -72,7 +96,8 @@ function TutorialController.Update(profile)
 	end
 	local step = TutorialSteps[tutorial.step]
 	currentStepId = step and step.id
-	textLabel.Text = step and ("Objectif %d/%d · %s"):format(tutorial.step, #TutorialSteps, step.text) or ""
+	lastProfile = profile
+	textLabel.Text = if step then stepText(Locale.ForPlayer(player), tutorial.step, step) else ""
 	refreshVisibility()
 
 	-- Étape 1 : validée après quelques secondes passées sur son terrain.
@@ -81,6 +106,13 @@ function TutorialController.Update(profile)
 		task.delay(8, function()
 			TutorialController.Signal("DiscoverPlot")
 		end)
+	end
+end
+
+-- Langue changée dans les Paramètres : réaffiche l'étape en cours.
+function TutorialController.RefreshLanguage()
+	if lastProfile then
+		TutorialController.Update(lastProfile)
 	end
 end
 

@@ -6,11 +6,12 @@
 
 local PlayerConfig = {}
 
+-- Nom affiché : clé « position.<id> » de Locale.
 PlayerConfig.Positions = {
-	GK = { id = "GK", label = "Gardien" },
-	DEF = { id = "DEF", label = "Défenseur" },
-	MID = { id = "MID", label = "Milieu" },
-	ATT = { id = "ATT", label = "Attaquant" },
+	GK = { id = "GK" },
+	DEF = { id = "DEF" },
+	MID = { id = "MID" },
+	ATT = { id = "ATT" },
 }
 
 -- Postes de l'effectif de départ (3 joueurs).

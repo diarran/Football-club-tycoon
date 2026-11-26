@@ -14,6 +14,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local WorldConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("WorldConfig"))
+local Locale = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Locale"))
 local PartUtil = require(script.Parent:WaitForChild("PartUtil"))
 
 type BuildContext = PartUtil.BuildContext
@@ -89,7 +90,7 @@ function Offices.build(parent: Instance, origin: CFrame, level: number, ctx: Bui
 		)
 	end
 
-	local signText = if level >= 3 then string.upper(ctx.clubName) else "BUREAUX"
+	local signText = if level >= 3 then string.upper(ctx.clubName) else "world.offices"
 	local sign = PartUtil.frontSign(
 		model,
 		origin,
@@ -124,7 +125,7 @@ function Offices.build(parent: Instance, origin: CFrame, level: number, ctx: Bui
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "ManageClubPrompt"
-	prompt.ActionText = "Gérer le club"
+	Locale.Tag(prompt, "world.manageClub", nil, "ActionText")
 	prompt.ObjectText = ctx.clubName
 	prompt.HoldDuration = 0
 	prompt.MaxActivationDistance = 10

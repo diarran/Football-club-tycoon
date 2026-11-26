@@ -12,6 +12,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Locale = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Locale"))
 local Net = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Net"))
 Net.Setup()
 
@@ -62,7 +63,7 @@ local function onPlayerAdded(player: Player)
 		Net.FireClient(
 			"Notify",
 			player,
-			"Mode test : la progression n'est pas sauvegardée (accès aux API Studio désactivé).",
+			Locale.TP(player, "notify.testMode"),
 			"info"
 		)
 	end

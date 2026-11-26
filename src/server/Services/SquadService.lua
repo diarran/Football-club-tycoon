@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
+local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
 
@@ -87,13 +88,13 @@ end
 function SquadService.TryRecruit(player: Player): (boolean, string)
 	local data = PlayerDataService.GetData(player)
 	if not data then
-		return false, "Profil non chargé."
+		return false, Locale.TP(player, "error.profileNotLoaded")
 	end
 	if #data.squad >= Config.MAX_SQUAD_SIZE then
-		return false, ("Effectif complet (%d joueurs maximum)."):format(Config.MAX_SQUAD_SIZE)
+		return false, Locale.TP(player, "error.squadFull", { max = Config.MAX_SQUAD_SIZE })
 	end
 	if not EconomyService.TrySpend(player, PlayerConfig.RECRUIT_COST, "recruit") then
-		return false, ("Il te manque des %s pour recruter."):format(Config.CURRENCY_NAME)
+		return false, Locale.TP(player, "error.notEnoughCoinsRecruit", { currency = Config.CURRENCY_NAME })
 	end
 	local footballer = generateFootballer(
 		data,
@@ -103,9 +104,13 @@ function SquadService.TryRecruit(player: Player): (boolean, string)
 	)
 	table.insert(data.squad, footballer)
 	PlayerDataService.MarkChanged(player)
-	local positionLabel = PlayerConfig.Positions[footballer.position].label
+	local lang = Locale.ForPlayer(player)
 	return true,
-		("%s (%s, note %d) rejoint ton club !"):format(footballer.name, positionLabel, footballer.rating)
+		Locale.T(lang, "squad.recruited", {
+			name = footballer.name,
+			position = Locale.T(lang, "position." .. footballer.position),
+			rating = footballer.rating,
+		})
 end
 
 -- Après un match : fatigue et petite chance de progresser vers le potentiel.

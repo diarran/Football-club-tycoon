@@ -31,6 +31,7 @@ Le test `07_client` démarre aussi le vrai client (HUD, menus) et clique sur les
 | `06_tutorial` | étapes du tutoriel, renommage filtré, instantané client |
 | `07_client` | le vrai client branché sur le serveur : boutons, onglets, écran de téléphone |
 | `08_concurrency` | arrivées simultanées, départ/retour rapide, sauvegardes en échec, matchs croisés |
+| `09_locale` | français et anglais complets (aucune clé manquante), langue du compte Roblox, choix dans les Paramètres, boutons anglais lisibles sur téléphone |
 
 ## Lancer les tests sur son ordinateur
 
