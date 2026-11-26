@@ -53,8 +53,14 @@ H.test("bouton Jouer : match simulé, fenêtre de résultat puis Continuer", fun
 	H.click(gui, "Jouer")
 	H.eq(data.club.stats.played, 1, "match joué côté serveur")
 	H.eq(data.tactic, "Offensive", "tactique choisie envoyée")
+	-- Le replay 3D se joue d'abord ; « Passer » mène à la fenêtre de résultat.
+	H.frames(10)
+	H.ok(workspace:FindFirstChild("MatchReplay"), "replay 3D sur le terrain")
+	H.click(gui, "Passer")
+	H.ok(not workspace:FindFirstChild("MatchReplay"), "replay rangé après « Passer »")
 	H.ok(H.findText(gui, "Continuer"), "fenêtre de résultat")
 	H.click(gui, "Continuer")
+	UI.SetMenuOpen(true)
 end)
 
 H.test("renommer le club depuis l'accueil", function()

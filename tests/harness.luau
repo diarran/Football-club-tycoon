@@ -337,6 +337,14 @@ end
 RunService.IsStudio = function()
 	return H.studio
 end
+-- Signal image par image : les tests l'envoient à la main (H.frames).
+RunService.Heartbeat = H.newSignal()
+function H.frames(count: number, dt: number?)
+	for _ = 1, count do
+		RunService.Heartbeat:Fire(dt or 1 / 30)
+	end
+	H.flush()
+end
 
 local guid = 0
 game:GetService("HttpService").GenerateGUID = function(_self, _braces)

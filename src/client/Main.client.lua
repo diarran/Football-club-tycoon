@@ -14,6 +14,7 @@ local UIController = require(Controllers.UIController)
 local CameraController = require(Controllers.CameraController)
 local TutorialController = require(Controllers.TutorialController)
 local WorldTextController = require(Controllers.WorldTextController)
+local MatchReplayController = require(Controllers.MatchReplayController)
 
 -- Chaque contrôleur démarre séparément : si l'un échoue (caméra, tutoriel…),
 -- le menu et le HUD restent utilisables et l'erreur s'affiche dans la sortie.
@@ -72,7 +73,26 @@ end
 
 Net.Get("ProfileUpdated").OnClientEvent:Connect(onProfile)
 Net.Get("ClubsUpdated").OnClientEvent:Connect(UIController.SetClubs)
-Net.Get("MatchResult").OnClientEvent:Connect(UIController.ShowMatchResult)
+-- Match : d'abord le replay 3D sur le terrain du club, puis la fenêtre de
+-- résultat (tout de suite si le replay ne peut pas se lancer, ou pour un défi).
+Net.Get("MatchResult").OnClientEvent:Connect(function(result)
+	if type(result) == "table" and result.replay then
+		UIController.SetMenuOpen(false)
+		local started = MatchReplayController.Play(result.replay, {
+			onDone = function()
+				UIController.ShowMatchResult(result)
+			end,
+		})
+		if started then
+			return
+		end
+	end
+	UIController.ShowMatchResult(result)
+end)
+-- Match d'un autre club : les visiteurs proches du terrain le regardent.
+Net.Get("MatchReplay").OnClientEvent:Connect(function(replay)
+	MatchReplayController.Play(replay, { spectator = true })
+end)
 Net.Get("Notify").OnClientEvent:Connect(UIController.Notify)
 Net.Get("ChallengeUpdated").OnClientEvent:Connect(UIController.SetChallenges)
 Net.Get("TournamentUpdated").OnClientEvent:Connect(UIController.SetTournament)

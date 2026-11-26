@@ -13,16 +13,20 @@
 	  plus ou moins fort ; la prime de match suit sa note. "ai" = club de même niveau.
 ]]
 
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
+local Cosmetics = require(Shared.Cosmetics)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
+local MatchReplay = require(Shared.MatchReplay)
 local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
+local WorldConfig = require(Shared.WorldConfig)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
@@ -187,6 +191,65 @@ function MatchService.Simulate(home, away)
 	return { homeGoals = homeGoals, awayGoals = awayGoals, events = events }
 end
 
+-- Replay 3D (purement visuel) --------------------------------------------
+
+local replaySeed = 0
+
+-- Couleur principale d'un club, en { r, g, b } (0-255) pour le réseau.
+local function colorArray(color: Color3)
+	return {
+		math.floor(color.R * 255 + 0.5),
+		math.floor(color.G * 255 + 0.5),
+		math.floor(color.B * 255 + 0.5),
+	}
+end
+
+local function clubColor(data, slotIndex: number?)
+	local item = Cosmetics.Get(data and data.cosmetics and data.cosmetics.equipped.colors)
+	local fallback = WorldConfig.CLUB_COLORS[slotIndex or 1] or WorldConfig.CLUB_COLORS[1]
+	return (item and item.primary) or fallback.primary
+end
+
+-- Couleur d'un club fictif : une couleur de la palette, différente de l'hôte.
+local function rivalColor(rivalId: any, homeColor: Color3)
+	local palette = WorldConfig.CLUB_COLORS
+	local hash = 0
+	for i = 1, #tostring(rivalId) do
+		hash = (hash * 31 + string.byte(tostring(rivalId), i)) % 9973
+	end
+	for offset = 0, #palette - 1 do
+		local candidate = palette[(hash + offset) % #palette + 1].primary
+		if candidate ~= homeColor then
+			return candidate
+		end
+	end
+	return Color3.new(1, 1, 1)
+end
+
+-- Construit le replay APRÈS le calcul du résultat : il ne lit que le score déjà
+-- décidé et utilise son propre générateur (MatchReplay), jamais `rng`.
+function MatchService.BuildReplay(player: Player, data, home, away, score, opponentData, opponentSlot)
+	replaySeed += 1
+	local slotIndex = ClubService.GetSlot(player)
+	local homeColor = clubColor(data, slotIndex)
+	local awayColor = if opponentData then clubColor(opponentData, opponentSlot) else rivalColor(away.id, homeColor)
+	if awayColor == homeColor then
+		awayColor = Color3.new(0.95, 0.95, 0.95)
+	end
+	return {
+		slotIndex = slotIndex,
+		hostUserId = player.UserId,
+		homeName = home.name,
+		awayName = away.name,
+		homeGoals = score.homeGoals,
+		awayGoals = score.awayGoals,
+		homeColor = colorArray(homeColor),
+		awayColor = colorArray(awayColor),
+		crowdLevel = data.buildings.Stands or 1,
+		timeline = MatchReplay.Build(score.events, os.time() + player.UserId + replaySeed * 7919),
+	}
+end
+
 -- Demande de match ------------------------------------------------------
 
 function MatchService.TryStartMatch(player: Player, opponentId, tactic)
@@ -211,7 +274,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	end
 
 	-- Adversaire
-	local away
+	local away, opponentData, opponentSlot
 	local rivalIndex = Divisions.ParseRivalId(opponentId)
 	if rivalIndex then
 		away = buildAiTeam(data.club.division, rivalIndex)
@@ -220,7 +283,8 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		if not opponent or opponent == player then
 			return nil, Locale.TP(player, "error.opponentUnavailable")
 		end
-		local opponentData = PlayerDataService.GetData(opponent)
+		opponentData = PlayerDataService.GetData(opponent)
+		opponentSlot = ClubService.GetSlot(opponent)
 		if not opponentData or #opponentData.squad == 0 then
 			return nil, Locale.TP(player, "error.opponentUnavailable")
 		end
@@ -316,6 +380,13 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	TutorialService.Complete(player, "FirstMatch")
 	ClubService.BroadcastClubs()
 
+	-- Replay 3D : construit en dernier, il ne peut rien changer à ce qui précède.
+	local okReplay, replay = pcall(MatchService.BuildReplay, player, data, home, away, score, opponentData, opponentSlot)
+	if not okReplay then
+		warn("[Match] replay non construit : " .. tostring(replay))
+		replay = nil
+	end
+
 	return {
 		homeName = home.name,
 		awayName = away.name,
@@ -330,6 +401,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		division = data.club.division,
 		promoted = promoted,
 		previousDivision = previousDivision,
+		replay = replay,
 	}
 end
 
@@ -338,6 +410,15 @@ function MatchService.Init()
 		local result, err = MatchService.TryStartMatch(player, opponentId, tactic)
 		if result then
 			Net.FireClient("MatchResult", player, result)
+			-- Les visiteurs présents peuvent regarder le replay (leur client
+			-- vérifie qu'ils sont près du terrain avant de l'afficher).
+			if result.replay and result.replay.slotIndex then
+				for _, other in Players:GetPlayers() do
+					if other ~= player then
+						Net.FireClient("MatchReplay", other, result.replay)
+					end
+				end
+			end
 		else
 			Net.FireClient("Notify", player, err, "error")
 		end
