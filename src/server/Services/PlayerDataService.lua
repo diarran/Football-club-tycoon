@@ -28,6 +28,7 @@ local Net = require(Shared.Net)
 local Sponsors = require(Shared.Sponsors)
 local Staff = require(Shared.Staff)
 local Trophies = require(Shared.Trophies)
+local AdminAccess = require(script.Parent.Parent.Admin.AdminAccess)
 
 local PlayerDataService = {}
 
@@ -86,6 +87,10 @@ local function defaultData()
 		-- pour n'accorder chaque reçu qu'une fois ; boost de revenus temporaire.
 		purchases = { receipts = {}, count = 0 },
 		boost = { expiresAt = 0, multiplier = 1 },
+		-- Code admin (AdminService) : argent illimité, solde d'avant à rendre.
+		admin = { unlimited = false, savedCoins = 0 },
+		-- Groupe Roblox (CommunityService) : bonus unique déjà reçu ?
+		community = { groupRewardClaimed = false },
 		tutorial = { step = 1, completed = false },
 		-- Objectifs quotidiens et saisons (DailyService, shared/Daily.lua).
 		-- Le jour de la création, le solde de départ tient lieu de cadeau du jour 1.
@@ -430,6 +435,10 @@ function PlayerDataService.BuildSnapshot(player: Player)
 		titles = data.trophies.titles,
 		matchCooldown = math.max(0, Config.MATCH_COOLDOWN_SECONDS - (now - data.lastMatchAt)),
 		temporary = profiles[player].temporary,
+		-- Le champ du code admin n'est montré qu'à l'administrateur.
+		isAdmin = AdminAccess.IsAdmin(player),
+		adminUnlimited = data.admin.unlimited,
+		community = table.clone(data.community),
 	}
 	for _, field in snapshotFields do
 		local ok, value = pcall(field.fn, player, data)

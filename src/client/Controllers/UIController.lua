@@ -17,6 +17,7 @@ local TweenService = game:GetService("TweenService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Audio = require(Shared.Audio)
 local Brand = require(Shared.Brand)
+local Community = require(Shared.Community)
 local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
 local Cosmetics = require(Shared.Cosmetics)
@@ -166,7 +167,8 @@ local function card(children, height: number?)
 end
 
 local function formatCoins(amount: number): string
-	local text = tostring(math.floor(amount))
+	-- %.0f : pas d'écriture « 1e+12 » pour les très grands soldes.
+	local text = string.format("%.0f", math.floor(amount))
 	local formatted = text:reverse():gsub("(%d%d%d)", "%1 "):reverse():gsub("^ ", "")
 	return formatted .. " FC"
 end
@@ -266,6 +268,53 @@ end
 
 local renderers = {}
 
+-- Carte « Soutiens le jeu » : favori, groupe Roblox (bonus unique), J'aime.
+-- Les fenêtres de Roblox attendent la réponse du joueur : lancées à part.
+local function communityCard(profile)
+	local children = {
+		label(T("community.title"), { Font = Enum.Font.GothamBold }),
+		label(T("community.likeReminder"), { TextColor3 = COLORS.muted }),
+	}
+	local row = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, {
+		create("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			Padding = UDim.new(0, 8),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	})
+	local placeId = game.PlaceId
+	if type(placeId) == "number" and placeId > 0 then
+		button(T("community.favorite"), function()
+			task.spawn(pcall, function()
+				game:GetService("AvatarEditorService"):PromptSetFavorite(placeId, Enum.AvatarItemType.Asset, true)
+			end)
+		end, { Name = "FavoriteButton", LayoutOrder = 1, Parent = row })
+	end
+	if Community.GroupEnabled() then
+		local claimed = profile.community and profile.community.groupRewardClaimed
+		button(
+			if claimed then T("community.group") else T("community.groupReward", { coins = formatCoins(Community.GROUP_REWARD) }),
+			function()
+				task.spawn(function()
+					local ok, status = pcall(function()
+						return game:GetService("GroupService"):PromptJoinAsync(Community.GROUP_ID)
+					end)
+					local joined = ok
+						and (status == Enum.GroupMembershipStatus.Joined or status == Enum.GroupMembershipStatus.AlreadyMember)
+					if joined and not claimed then
+						Net.Get("RequestGroupReward"):FireServer()
+					end
+				end)
+			end,
+			{ Name = "GroupButton", LayoutOrder = 2, Size = UDim2.new(0, 220, 0, 44), Parent = row }
+		)
+	end
+	if #row:GetChildren() > 1 then
+		table.insert(children, row)
+	end
+	card(children).Parent = content
+end
+
 function renderers.Home(profile)
 	local club = profile.club
 	local division = Divisions.Get(club.division)
@@ -344,6 +393,8 @@ function renderers.Home(profile)
 		),
 	}).Parent =
 		content
+
+	communityCard(profile)
 end
 
 function renderers.Stadium(profile)
@@ -1126,7 +1177,7 @@ local function renderSoundSettings(toggle)
 	toggle("music", T("settings.music"))
 end
 
-function renderers.Settings(_profile)
+function renderers.Settings(profile)
 	local function toggle(settingId: string, text: string)
 		local value = state.settings[settingId]
 		card({
@@ -1165,6 +1216,34 @@ function renderers.Settings(_profile)
 		})
 	end
 	card({ label(T("settings.language"), { Font = Enum.Font.GothamBold }), row }).Parent = content
+
+	-- Code admin : montré seulement à l'administrateur (le serveur revérifie tout).
+	if profile and profile.isAdmin then
+		local codeBox = create("TextBox", {
+			Name = "AdminCodeBox",
+			BackgroundColor3 = COLORS.panel,
+			ClearTextOnFocus = true,
+			Font = Enum.Font.Gotham,
+			PlaceholderText = T("admin.placeholder"),
+			Text = "",
+			TextColor3 = COLORS.text,
+			TextSize = 18,
+			Size = UDim2.new(1, -170, 0, 44),
+		}, { corner(8) })
+		local validate = button(T("admin.validate"), function()
+			Net.Get("RequestAdminCode"):FireServer(codeBox.Text)
+			codeBox.Text = ""
+		end, { Name = "AdminCodeButton", Position = UDim2.new(1, -160, 0, 0) })
+		card({
+			label(T("admin.title"), { Font = Enum.Font.GothamBold }),
+			label(
+				if profile.adminUnlimited then T("admin.statusOn") else T("admin.statusOff"),
+				{ TextColor3 = COLORS.muted }
+			),
+			create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, { codeBox, validate }),
+		}).Parent =
+			content
+	end
 end
 
 -- Construction de l'interface -------------------------------------------
@@ -1512,7 +1591,7 @@ function UIController.Refresh()
 		hud.ClubName.Text = profile.club.name or T("hud.myClub")
 		hud.Division.Text = divisionLabel(profile.club.division)
 			.. (if profile.temporary then " · " .. T("hud.testMode") else "")
-		hud.Coins.Text = formatCoins(profile.coins)
+		hud.Coins.Text = if profile.adminUnlimited then T("admin.infiniteCoins") else formatCoins(profile.coins)
 		refreshCrestBadge(profile)
 	end
 	if not panel.Visible then

@@ -26,7 +26,14 @@ function EconomyService.GetBalance(player: Player): number
 end
 
 function EconomyService.CanAfford(player: Player, amount: number): boolean
-	return isValidAmount(amount) and EconomyService.GetBalance(player) >= amount
+	if not isValidAmount(amount) then
+		return false
+	end
+	local data = PlayerDataService.GetData(player)
+	if data and data.admin and data.admin.unlimited then
+		return true
+	end
+	return EconomyService.GetBalance(player) >= amount
 end
 
 -- Ajoute des FC Coins. reason sert au suivi (équilibrage, détection d'abus).
@@ -49,6 +56,12 @@ function EconomyService.TrySpend(player: Player, amount: number, reason: string)
 		return false
 	end
 	amount = math.floor(amount)
+	if data.admin and data.admin.unlimited then
+		-- Code admin : rien n'est débité, le solde reste au maximum.
+		data.coins = Config.MAX_COINS
+		PlayerDataService.MarkChanged(player)
+		return true
+	end
 	if data.coins < amount then
 		return false
 	end
