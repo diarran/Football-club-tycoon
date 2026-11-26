@@ -35,6 +35,7 @@ Net.Requests = {
 	"RequestChallenge", -- (clubId: string, stake: number) défier un club du serveur
 	"RequestChallengeResponse", -- (challengeId: number, accept: boolean)
 	"RequestTournamentJoin", -- () s'inscrire au tournoi du serveur
+	"RequestAdminCode", -- (code: string) code admin secret, vérifié par le serveur (AdminService)
 }
 
 -- Serveur -> client (notifications)

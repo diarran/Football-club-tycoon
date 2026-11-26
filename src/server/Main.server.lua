@@ -28,6 +28,7 @@ local CosmeticService = require(Services.CosmeticService)
 local MonetizationService = require(Services.MonetizationService)
 local ChallengeService = require(Services.ChallengeService)
 local TournamentService = require(Services.TournamentService)
+local AdminService = require(Services.AdminService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
 local ORDERED_SERVICES = {
@@ -42,6 +43,7 @@ local ORDERED_SERVICES = {
 	{ name = "MonetizationService", module = MonetizationService },
 	{ name = "ChallengeService", module = ChallengeService },
 	{ name = "TournamentService", module = TournamentService },
+	{ name = "AdminService", module = AdminService },
 }
 
 for _, entry in ORDERED_SERVICES do
@@ -105,6 +107,7 @@ local function onPlayerRemoving(player: Player)
 	step("ChallengeService.OnPlayerLeaving", ChallengeService.OnPlayerLeaving, player)
 	step("TournamentService.OnPlayerLeaving", TournamentService.OnPlayerLeaving, player)
 	step("ClubService.OnPlayerLeaving", ClubService.OnPlayerLeaving, player)
+	step("AdminService.OnPlayerLeaving", AdminService.OnPlayerLeaving, player)
 	step("PlayerDataService.Release", PlayerDataService.Release, player)
 	Net.ForgetPlayer(player)
 end

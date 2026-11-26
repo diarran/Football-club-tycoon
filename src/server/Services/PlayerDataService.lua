@@ -25,6 +25,7 @@ local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local Trophies = require(Shared.Trophies)
+local AdminAccess = require(script.Parent.Parent.Admin.AdminAccess)
 
 local PlayerDataService = {}
 
@@ -76,6 +77,8 @@ local function defaultData()
 		-- pour n'accorder chaque reçu qu'une fois ; boost de revenus temporaire.
 		purchases = { receipts = {}, count = 0 },
 		boost = { expiresAt = 0, multiplier = 1 },
+		-- Code admin (AdminService) : argent illimité, solde d'avant à rendre.
+		admin = { unlimited = false, savedCoins = 0 },
 		tutorial = { step = 1, completed = false },
 		lastMatchAt = 0,
 		lastEnergyUpdate = os.time(),
@@ -396,6 +399,9 @@ function PlayerDataService.BuildSnapshot(player: Player)
 		titles = data.trophies.titles,
 		matchCooldown = math.max(0, Config.MATCH_COOLDOWN_SECONDS - (now - data.lastMatchAt)),
 		temporary = profiles[player].temporary,
+		-- Le champ du code admin n'est montré qu'à l'administrateur.
+		isAdmin = AdminAccess.IsAdmin(player),
+		adminUnlimited = data.admin.unlimited,
 	}
 end
 
