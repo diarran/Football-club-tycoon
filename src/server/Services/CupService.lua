@@ -32,6 +32,7 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
 local MatchService = require(script.Parent.MatchService)
 local SquadService = require(script.Parent.SquadService)
+local ReputationService = require(script.Parent.ReputationService)
 
 local CupService = {}
 
@@ -173,6 +174,8 @@ function CupService.TryPlay(player: Player, tactic)
 		cup.round = round + 1
 		cup.opponent = drawOpponent(data, cup.round)
 	end
+	-- Réputation : tour gagné, exploit, coupe gagnée (conférence de presse possible).
+	local reputation = ReputationService.OnCupRound(player, data, won, giantKill, champion)
 	PlayerDataService.MarkChanged(player)
 
 	local stage = NationalCup.STAGES[round]
@@ -203,6 +206,7 @@ function CupService.TryPlay(player: Player, tactic)
 		coins = coins,
 		tactics = score.tactics,
 		weather = weather,
+		reputation = reputation,
 		replay = replay,
 	}
 end
