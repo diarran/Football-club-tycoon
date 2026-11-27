@@ -35,6 +35,7 @@ local Onboarding = require(Shared.Onboarding)
 local PlayerConfig = require(Shared.PlayerConfig)
 local Staff = require(Shared.Staff)
 local Tactics = require(Shared.Tactics)
+local Weather = require(Shared.Weather)
 local Training = require(Shared.Training)
 local TutorialSteps = require(Shared.TutorialSteps)
 local WorldConfig = require(Shared.WorldConfig)
@@ -85,7 +86,13 @@ local state = {
 	nextInjuryReturn = math.huge, -- os.time du prochain retour de blessure (onglet Effectif)
 	leaderboard = nil, -- classement mondial (LeaderboardService)
 	leaderboardBoard = "week", -- tableau affiché : week, club ou trophies
-	settings = { managementCamera = true, showTutorial = true, volume = Audio.DEFAULT_VOLUME, music = true },
+	settings = {
+		managementCamera = true,
+		showTutorial = true,
+		volume = Audio.DEFAULT_VOLUME,
+		music = true,
+		weatherEffects = true,
+	},
 }
 
 local gui, hud, crestBadge, panel, content, tabButtons, toast, resultPopup, welcomePopup
@@ -1031,6 +1038,47 @@ local function challengeCards()
 	end
 end
 
+-- Heure du serveur (même météo que celle du match). Tests : UIController.weatherTime.
+local function serverNow(): number
+	if UIController.weatherTime then
+		return UIController.weatherTime
+	end
+	local ok, t = pcall(function()
+		return workspace:GetServerTimeNow()
+	end)
+	return if ok and type(t) == "number" then t else os.time()
+end
+
+local function weatherName(kind: string): string
+	return (Weather.EMOJI[kind] or "") .. " " .. T("weather." .. kind)
+end
+
+-- Onglet Matchs : météo du stade, son effet sur les styles et la suivante.
+local function weatherCard()
+	local t = serverNow()
+	local kind = Weather.At(t)
+	local title = weatherName(kind)
+	if Weather.IsNight(t) then
+		title ..= " · 🌙 " .. T("weather.night")
+	end
+	local favored = Weather.Favors(kind)
+	local nextAt, nextKind = Weather.Next(t)
+	card({
+		label(T("matches.weather", { weather = title }), { Font = Enum.Font.GothamBold, Name = "WeatherTitle" }),
+		label(
+			if favored
+				then T("matches.weatherFavors", { weather = T("weather." .. kind), tactic = T("tactic." .. favored), bonus = Weather.BONUS })
+				else T("matches.weatherNone"),
+			{ TextSize = 16, TextColor3 = if favored then COLORS.gold else COLORS.muted, Name = "WeatherEffect" }
+		),
+		label(T("matches.weatherNext", {
+			minutes = math.max(1, math.ceil((nextAt - t) / 60)),
+			weather = weatherName(nextKind),
+		}), { TextSize = 14, TextColor3 = COLORS.muted }),
+	}).Parent =
+		content
+end
+
 function renderers.Matches(profile)
 	tournamentCard()
 	challengeCards()
@@ -1073,6 +1121,8 @@ function renderers.Matches(profile)
 		label(T("matches.tacticCycle"), { TextColor3 = COLORS.muted, TextSize = 14 }),
 	}).Parent =
 		content
+
+	weatherCard()
 
 	local cooldown = math.max(0, math.ceil(state.cooldownEndsAt - os.clock()))
 	if cooldown > 0 then
@@ -1833,6 +1883,8 @@ function renderers.Settings(profile)
 	toggle("managementCamera", T("settings.managementCamera"))
 	toggle("showTutorial", T("settings.showTutorial"))
 	renderSoundSettings(toggle)
+	toggle("weatherEffects", T("settings.weatherEffects"))
+	label(T("settings.weatherEffectsHint"), { TextColor3 = COLORS.muted, TextSize = 14 }).Parent = content
 
 	-- Langue : un bouton par langue gérée, celle en cours en surbrillance.
 	local current = Locale.ForPlayer(player)
@@ -2503,6 +2555,24 @@ function UIController.ShowMatchResult(result)
 			Name = "TacticResult",
 			TextSize = 16,
 			TextColor3 = if duel.edge > 0 then COLORS.accent else COLORS.error,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}))
+	end
+	-- Météo du match (absente pour un défi ou un ancien serveur).
+	local weather = result.weather
+	if type(weather) == "table" and Weather.IsValid(weather.kind) and (weather.kind ~= "Clear" or weather.night) then
+		local text = if weather.kind ~= "Clear" then weatherName(weather.kind) else ""
+		if weather.night then
+			text = (if text ~= "" then text .. " · " else "") .. "🌙 " .. T("weather.nightMatch")
+		end
+		local favored = Weather.Favors(weather.kind)
+		if favored then
+			text ..= " · " .. T("result.weatherFavors", { tactic = T("tactic." .. favored), bonus = Weather.BONUS })
+		end
+		add(label(text, {
+			Name = "WeatherResult",
+			TextSize = 16,
+			TextColor3 = COLORS.muted,
 			TextXAlignment = Enum.TextXAlignment.Center,
 		}))
 	end
