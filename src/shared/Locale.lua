@@ -1,10 +1,11 @@
 --[[
 	Locale
-	Textes du jeu en plusieurs langues (français et anglais).
+	Textes du jeu en plusieurs langues : français, anglais, espagnol, portugais (Brésil).
 
-	- Tous les textes visibles sont dans Lang/fr.lua et Lang/en.lua, une clé par texte.
+	- Tous les textes visibles sont dans Lang/fr.lua, en.lua, es.lua et pt.lua, une clé par texte.
 	- La langue vient de la langue du compte Roblox du joueur (Player.LocaleId) :
-	  « fr-… » donne le français, toute autre langue donne l'anglais (langue par défaut).
+	  « fr-… » donne le français, « es-… » l'espagnol, « pt-… » le portugais,
+	  toute autre langue donne l'anglais (langue par défaut).
 	- Le joueur peut changer de langue dans les Paramètres (attribut « Language »).
 	- Locale.T(lang, clé, { nom = valeur }) remplace les {nom} du texte.
 
@@ -17,23 +18,26 @@ local Lang = script.Parent.Lang
 local Locale = {}
 
 Locale.DEFAULT = "en"
-Locale.SUPPORTED = { "fr", "en" }
+Locale.SUPPORTED = { "fr", "en", "es", "pt" }
 Locale.Strings = {
 	fr = require(Lang.fr),
 	en = require(Lang.en),
+	es = require(Lang.es),
+	pt = require(Lang.pt),
 }
 
 -- Clés demandées mais absentes de toutes les langues (doit rester vide).
 Locale.Missing = {}
 
 -- Nom de la langue dans sa propre langue (bouton des Paramètres).
-Locale.NativeNames = { fr = "Français", en = "English" }
+Locale.NativeNames = { fr = "Français", en = "English", es = "Español", pt = "Português" }
 
 function Locale.IsSupported(lang: any): boolean
 	return type(lang) == "string" and Locale.Strings[lang] ~= nil
 end
 
--- « fr-fr », « fr_CA », « FR » -> "fr" ; langue non gérée -> "en".
+-- « fr-fr », « fr_CA », « FR » -> "fr" ; « es-mx » -> "es" ; « pt-br », « pt-PT » -> "pt" ;
+-- langue non gérée -> "en".
 function Locale.FromLocaleId(localeId: any): string
 	if type(localeId) ~= "string" then
 		return Locale.DEFAULT

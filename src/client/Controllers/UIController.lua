@@ -2005,12 +2005,15 @@ function renderers.Settings(profile)
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		}),
 	})
+	-- Largeur relative : les 4 langues tiennent sur une ligne, même sur téléphone.
+	local share = 1 / #Locale.SUPPORTED
 	for index, lang in Locale.SUPPORTED do
 		button(Locale.NativeNames[lang], function()
 			UIController.SetLanguage(lang)
 		end, {
 			Name = "Language_" .. lang,
 			LayoutOrder = index,
+			Size = UDim2.new(share, -8, 0, 44),
 			BackgroundColor3 = if lang == current then COLORS.accent else COLORS.disabled,
 			Parent = row,
 		})
