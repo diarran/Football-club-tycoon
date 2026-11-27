@@ -1,4 +1,4 @@
-# Tester le jeu (environ 35 minutes)
+# Tester le jeu (environ 37 minutes)
 
 ## 1. Récupérer le fichier du jeu
 
@@ -31,7 +31,7 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier (22 points, environ 35 minutes)
+## 5. Ce qu'il faut vérifier (23 points, environ 37 minutes)
 
 Note ✅ ou ❌ pour chaque point, avec son numéro. Si c'est ❌, fais une capture
 d'écran. Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne
@@ -57,67 +57,75 @@ rouge**.
    semaine** et **Soutiens le jeu**. La carte **Événement de la semaine** montre le
    thème, tes points et 3 étapes ; sous le solde (en haut à gauche), une ligne verte
    affiche l'événement et **« fin dans … »**.
-5. **Match en 3D** : dans **Matchs**, clique **Jouer** sous un adversaire ; le match se
+5. **Réputation et presse** : dans **Accueil**, la carte **Réputation du club** montre
+   « … / 100 · Club local » avec une barre dorée. Gagne un match par 3 buts d'écart ou
+   plus (ou monte de division) : le résultat affiche **« Réputation : +… »** et **« Les
+   journalistes veulent te parler ! »**. Clique **Continuer** : la fenêtre **🎤
+   Conférence de presse** pose une question avec **3 réponses** (humble, ambitieuse,
+   provocante) et **Ne pas répondre**. Choisis une réponse : un message vert confirme
+   l'effet, et la carte de l'accueil affiche le bonus (ex. « 🔥 Les fans sont
+   chauds… »). Rien n'est jamais perdu en argent.
+6. **Match en 3D** : dans **Matchs**, clique **Jouer** sous un adversaire ; le match se
    joue sur ton terrain, les buts font jaillir des **confettis** avec un son. À la fin,
    la fenêtre de résultat montre les buteurs (une ligne par équipe), les récompenses et
    **« +… points d'événement »** ; la mission « Joue … matchs » avance.
-6. **Tactique** : en haut de **Matchs**, **5 boutons** (Équilibrée, Offensive,
+7. **Tactique** : en haut de **Matchs**, **5 boutons** (Équilibrée, Offensive,
    Défensive, Contre-attaque, Pressing) et une phrase dit ce que bat le style choisi.
    Sous chaque adversaire, une ligne **« Style de jeu : … »** et un conseil. Clique le
    style conseillé : la ligne devient verte **« ✓ Avantage tactique »** ; un style
    contré la rend rouge **« ✗ Attention »**. Joue avec l'avantage : le match 3D
    commence par **« … contre … : coup d'envoi ! »** et le résultat affiche
    **« Avantage tactique : … »**.
-7. **Météo et jour/nuit** : en haut de **Matchs**, la carte **« Météo au stade : … »**
+8. **Météo et jour/nuit** : en haut de **Matchs**, la carte **« Météo au stade : … »**
    dit le temps du moment (☀️ Beau temps, ☁️ Nuageux, 🌧️ Pluie, 💨 Vent ; ❄️ Neige
    seulement de décembre à février), le style avantagé et la météo suivante. Le ciel
    suit : pluie qui tombe, léger brouillard. Une journée dure **20 minutes** : à la
    nuit, les **projecteurs** du stade et les lampadaires s'allument. Un match de nuit
    ou sous la pluie commence par « … · 🌧️ Pluie · 🌙 Nuit ». Dans **Paramètres**,
    **Effets météo** sur **Désactivé** fait disparaître la pluie et le brouillard.
-8. **Coupe nationale** : dans **Matchs**, **sous les adversaires du championnat**, la
+9. **Coupe nationale** : dans **Matchs**, **sous les adversaires du championnat**, la
    carte **🏆 Coupe nationale** montre « 16es de finale : contre … (Division …,
    note … ) », le style de l'adversaire et la prime. Clique **Lancer le match de
    coupe** : le match se joue en 3D, puis le résultat dit **« Qualifié ! +… FC
    Coins »** (ou « Éliminé… »). La carte affiche le tour joué (✅ ou ❌) et
    **« Prochain tour possible dans 20 min »** ; l'énergie des joueurs et les points de
    division n'ont pas bougé.
-9. **Entraînement et composition** : dans **Effectif**, clique **Entraîner** sous un
+10. **Entraînement et composition** : dans **Effectif**, clique **Entraîner** sous un
    joueur : sa ligne **XP** augmente et le bouton passe en **Repos**. Recrute jusqu'à
    6 joueurs : **Faire jouer** sur un remplaçant le rend **Titulaire** à la place d'un
    autre (il y a toujours 5 titulaires).
-10. **Blessures et cartons** : joue une dizaine de matchs d'affilée (les joueurs se
+11. **Blessures et cartons** : joue une dizaine de matchs d'affilée (les joueurs se
     fatiguent) : de temps en temps, la fenêtre de résultat montre une ligne
     **Infirmerie** (🤕 blessé quelques minutes, 🟨 carton jaune, 🟥 carton rouge).
     Dans **Effectif**, ce joueur est marqué **Indisponible** avec le temps de retour,
     et un remplaçant joue à sa place. Après le match suivant, « ✅ … a purgé sa
     suspension » s'affiche pour un joueur suspendu.
-11. **Gestion** : **Embaucher** le Médecin fait baisser le solde (ou reste à ∞ avec le
+12. **Gestion** : **Embaucher** le Médecin fait baisser le solde (ou reste à ∞ avec le
     code admin) ; **Signer le contrat** d'un sponsor le fait passer dans « Les contrats
     de sponsoring ».
-12. **Prestige** : la salle des trophées et les objets de personnalisation s'affichent
+13. **Prestige** : la salle des trophées et les objets de personnalisation s'affichent
     (la boutique Robux reste cachée tant que ses numéros ne sont pas renseignés).
-13. **Succès** : gagne un match : un message annonce **« Succès débloqué : Première
+14. **Succès** : gagne un match : un message annonce **« Succès débloqué : Première
     victoire »** et l'**Accueil** montre une carte dorée avec **Voir mes succès**. Ce
     bouton ouvre **Prestige**, où la carte **Succès : 1/20** liste les 20 succès avec
     leur progression (ex. « Progression : 1/10 »). **Récupérer 100 FC** ajoute 100 FC
     et la ligne passe à « Récompense déjà récupérée ». (Les badges Roblox ne se donnent
     pas dans Studio : c'est normal, voir GUIDE_BADGES.md.)
-14. **Couleurs et maillot du club** : dans **Prestige**, tout en haut, la carte
+15. **Couleurs et maillot du club** : dans **Prestige**, tout en haut, la carte
     **Identité du club**. Clique une pastille de **Couleur principale** (par exemple
     violet) : un ✓ apparaît, l'aperçu du maillot change, et ton terrain (sièges des
     tribunes, drapeaux, portique) se repeint. Choisis un **Motif du maillot**
     (Moitié-moitié est gratuit) puis un **Écusson** (1 à 6) : l'écusson du HUD change.
     Lance un match : tes joueurs portent le motif et un short à ta couleur secondaire.
     **Tout remettre d'origine** remet tout comme avant.
-15. **Classement** : la carte **Classement mondial** et ses 3 boutons (Cette semaine,
+16. **Classement** : la carte **Classement mondial** et ses 3 boutons (Cette semaine,
     Meilleurs clubs, Trophées) ; dans Studio elle dit « Mode test : seulement les clubs
     de ce serveur ». Sur la place, le grand panneau **CLASSEMENT MONDIAL** change de
     tableau toutes les 12 secondes.
-16. **Langue et son** : dans **Paramètres**, **English** traduit tout le menu (aucun
+17. **Langue et son** : dans **Paramètres**, **English** traduit tout le menu (aucun
     mot français), puis remets **Français**. **Volume du son** sur **Muet** coupe les
     sons.
-17. **Téléphone** : onglet **Test** > **Device**, choisis un téléphone. Les onglets
+18. **Téléphone** : onglet **Test** > **Device**, choisis un téléphone. Les onglets
     passent sur **2 rangées de 4**, tous lisibles, et le contenu reste dessous. Dans
     **Matchs**, le premier bouton **Jouer** arrive avant la Coupe nationale. Joue un
     match : si la fenêtre de résultat est plus haute que l'écran, on peut la faire
@@ -125,20 +133,20 @@ rouge**.
 
 **À 2 joueurs (Local Server, 2 Players)**
 
-18. **Deux clubs** : chaque joueur a son terrain et voit l'autre dans **Classement**.
-19. **Défi** : dans **Matchs**, le joueur 1 clique **Défier** ; le joueur 2 accepte :
+19. **Deux clubs** : chaque joueur a son terrain et voit l'autre dans **Classement**.
+20. **Défi** : dans **Matchs**, le joueur 1 clique **Défier** ; le joueur 2 accepte :
     les deux voient le résultat.
-20. **Visiteur et tournoi** : le joueur 2 va sur le terrain du joueur 1, qui lance un
+21. **Visiteur et tournoi** : le joueur 2 va sur le terrain du joueur 1, qui lance un
     match : le joueur 2 voit le match se jouer, sans que sa caméra bouge. Environ
     **3 minutes** après le Start, inscris les deux joueurs au **tournoi** dans
     **Matchs** ; un vainqueur est annoncé.
 
-21. **Couleurs vues par l'autre** : le joueur 1 change ses couleurs dans **Prestige** ;
+22. **Couleurs vues par l'autre** : le joueur 1 change ses couleurs dans **Prestige** ;
     le joueur 2 voit le terrain du joueur 1 se repeindre.
 
 **Dans le jeu publié (sauvegarde active)**
 
-22. **Retour au jeu** : joue un peu, quitte, attends **5 minutes** et reviens : ton
+23. **Retour au jeu** : joue un peu, quitte, attends **5 minutes** et reviens : ton
     solde, ton staff, tes contrats, tes titulaires, ta coupe et tes couleurs sont toujours là, et une
     fenêtre **« Pendant ton absence… »** indique ce que ton club a rapporté.
 
