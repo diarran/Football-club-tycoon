@@ -9,6 +9,8 @@
 	sert que pour l'affichage.
 ]]
 
+local Tactics = require(script.Parent.Tactics)
+
 local Divisions = {}
 
 -- pointsToPromote : points de division nécessaires pour monter (nil en D1).
@@ -142,6 +144,7 @@ function Divisions.GetRival(divisionId: string, rivalIndex: number)
 		rating = division.opponentRating + rival.offset,
 		points = math.floor(reference * rival.share),
 		rewardFactor = 1 + rival.offset * Divisions.RIVAL_REWARD_PER_POINT,
+		tactic = Tactics.RivalStyle(division.index, rivalIndex), -- style fixe, affiché avant le match
 	}
 end
 

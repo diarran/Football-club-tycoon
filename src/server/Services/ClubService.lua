@@ -201,6 +201,7 @@ function ClubService.GetClubList()
 				stats = table.clone(data.club.stats),
 				rating = averageRating(data.squad),
 				squadSize = #data.squad,
+				tactic = data.tactic, -- dernier style joué (visible avant un match)
 				slot = slotIndex,
 				buildings = table.clone(data.buildings),
 				trophies = #Trophies.Earned(data.club.division, data.club.stats, data.trophies.titles),

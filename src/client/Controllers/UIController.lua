@@ -32,6 +32,7 @@ local Net = require(Shared.Net)
 local Onboarding = require(Shared.Onboarding)
 local PlayerConfig = require(Shared.PlayerConfig)
 local Staff = require(Shared.Staff)
+local Tactics = require(Shared.Tactics)
 local Training = require(Shared.Training)
 local TutorialSteps = require(Shared.TutorialSteps)
 local WorldConfig = require(Shared.WorldConfig)
@@ -978,27 +979,45 @@ end
 function renderers.Matches(profile)
 	tournamentCard()
 	challengeCards()
-	-- Tactique
-	local tacticRow = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, {
-		create("UIListLayout", {
-			FillDirection = Enum.FillDirection.Horizontal,
-			Padding = UDim.new(0, 8),
-			SortOrder = Enum.SortOrder.LayoutOrder,
-		}),
-	})
-	for index, tacticId in { "Defensive", "Balanced", "Offensive" } do
-		local selected = state.selectedTactic == tacticId
-		button(T("tactic." .. tacticId), function()
-			state.selectedTactic = tacticId
-			UIController.Refresh()
-		end, {
-			LayoutOrder = index,
-			Size = UDim2.new(0.32, -6, 0, 44),
-			BackgroundColor3 = if selected then COLORS.accent else COLORS.panel,
-		}).Parent =
-			tacticRow
+	-- Tactique : 5 styles sur 2 rangées (lisible au téléphone), puis ce que
+	-- bat le style choisi. Le premier affichage reprend le dernier style joué.
+	if not state.tacticLoaded then
+		state.tacticLoaded = true
+		state.selectedTactic = Tactics.Sanitize(profile.tactic)
 	end
-	card({ label(T("matches.tactic"), { Font = Enum.Font.GothamBold }), tacticRow }).Parent = content
+	local mine = Tactics.Sanitize(state.selectedTactic)
+	local function tacticEntries(ids)
+		local entries = {}
+		for _, tacticId in ids do
+			table.insert(entries, {
+				text = T("tactic." .. tacticId),
+				color = if mine == tacticId then COLORS.accent else COLORS.panel,
+				onClick = function()
+					state.selectedTactic = tacticId
+					UIController.Refresh()
+				end,
+			})
+		end
+		return entries
+	end
+	local beaten, beatenBy = Tactics.BEATS[mine], Tactics.BeatenBy(mine)
+	card({
+		label(T("matches.tactic"), { Font = Enum.Font.GothamBold }),
+		buttonRow(tacticEntries({ "Balanced", "Offensive", "Defensive" })),
+		buttonRow(tacticEntries({ "Counter", "Pressing" })),
+		label(
+			if beaten and beatenBy
+				then T("matches.tacticBeats", {
+					tactic = T("tactic." .. mine),
+					beaten = T("tactic." .. beaten),
+					beatenBy = T("tactic." .. beatenBy),
+				})
+				else T("matches.tacticSafe", { tactic = T("tactic." .. mine) }),
+			{ TextSize = 16 }
+		),
+		label(T("matches.tacticCycle"), { TextColor3 = COLORS.muted, TextSize = 14 }),
+	}).Parent =
+		content
 
 	local cooldown = math.max(0, math.ceil(state.cooldownEndsAt - os.clock()))
 	if cooldown > 0 then
@@ -1006,10 +1025,37 @@ function renderers.Matches(profile)
 			content
 	end
 
-	local function opponentCard(title: string, subtitle: string, opponentId: string)
+	-- Style de l'adversaire et conseil tactique (même calcul que le serveur).
+	local function tacticLines(theirs)
+		theirs = Tactics.Sanitize(theirs)
+		local edge = Tactics.Matchup(mine, theirs)
+		local counter = Tactics.CounterOf(theirs)
+		local params = {
+			mine = T("tactic." .. mine),
+			theirs = T("tactic." .. theirs),
+			counter = if counter then T("tactic." .. counter) else "",
+		}
+		local hint, color
+		if edge > 0 then
+			hint, color = T("matches.edgeWin", params), COLORS.accent
+		elseif edge < 0 then
+			hint, color = T("matches.edgeLose", params), COLORS.error
+		elseif not counter then
+			hint, color = T("matches.edgeNone", params), COLORS.muted
+		else
+			hint, color = T("matches.edgeNeutral", params), COLORS.gold
+		end
+		return label(T("matches.rivalStyle", { tactic = params.theirs }), { TextSize = 16 }),
+			label(hint, { TextColor3 = color, TextSize = 16, Name = "TacticHint" })
+	end
+
+	local function opponentCard(title: string, subtitle: string, opponentId: string, theirs)
+		local styleLine, hintLine = tacticLines(theirs)
 		card({
 			label(title, { Font = Enum.Font.GothamBold }),
 			label(subtitle, { TextColor3 = COLORS.muted, TextSize = 16 }),
+			styleLine,
+			hintLine,
 			button(T("matches.play"), function()
 				Net.Get("RequestMatch"):FireServer(opponentId, state.selectedTactic)
 			end, { BackgroundColor3 = if cooldown > 0 then COLORS.disabled else COLORS.accent }),
@@ -1034,7 +1080,8 @@ function renderers.Matches(profile)
 				rating = rival.rating,
 				reward = math.floor(rival.rewardFactor * 100 + 0.5),
 			}),
-			rival.id
+			rival.id,
+			rival.tactic
 		)
 	end
 	if humans > 0 then
@@ -1059,6 +1106,7 @@ function renderers.Matches(profile)
 	end
 	for _, club in state.clubs do
 		if club.id ~= myId then
+			local styleLine, hintLine = tacticLines(club.tactic)
 			card({
 				label(club.clubName .. (if isFriendClub(profile, club.id) then "  · " .. T("friends.tag") else ""), {
 					Font = Enum.Font.GothamBold,
@@ -1069,6 +1117,8 @@ function renderers.Matches(profile)
 					rating = club.rating,
 					count = club.squadSize,
 				}), { TextColor3 = COLORS.muted, TextSize = 16 }),
+				styleLine,
+				hintLine,
 				buttonRow({
 					{
 						text = T("matches.play"),
@@ -2158,6 +2208,17 @@ function UIController.ShowMatchResult(result)
 			{ Font = Enum.Font.GothamBold, TextXAlignment = Enum.TextXAlignment.Center }
 		)
 	)
+	-- Duel tactique (le joueur est toujours l'équipe à domicile d'un match normal).
+	local duel = result.tactics
+	if type(duel) == "table" and Tactics.IsValid(duel.home) and Tactics.IsValid(duel.away) and duel.edge ~= 0 then
+		local params = { mine = T("tactic." .. duel.home), theirs = T("tactic." .. duel.away) }
+		add(label(T(if duel.edge > 0 then "result.tacticWin" else "result.tacticLose", params), {
+			Name = "TacticResult",
+			TextSize = 16,
+			TextColor3 = if duel.edge > 0 then COLORS.accent else COLORS.error,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}))
+	end
 	for _, event in result.events do
 		local team = if event.side == "home" then result.homeName else result.awayName
 		add(label(("%d' ⚽ %s (%s)"):format(event.minute, event.scorer, team), {

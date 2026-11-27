@@ -295,8 +295,15 @@ local function placeCrowd(state)
 	end
 end
 
+-- Hauteur du bloc selon la tactique (studs vers le but adverse, gardien exclu).
+local LINE_SHIFT = { Offensive = 6, Pressing = 9, Defensive = -7, Counter = -4, Balanced = 0 }
+
 local function setupPlayers(state)
 	state.squad = {}
+	local shifts = {
+		home = LINE_SHIFT[state.replay.homeTactic] or 0,
+		away = LINE_SHIFT[state.replay.awayTactic] or 0,
+	}
 	for index, parts in state.pool.players do
 		local team = if index <= 11 then "home" else "away"
 		local slot = FORMATION[(index - 1) % 11 + 1]
@@ -306,13 +313,14 @@ local function setupPlayers(state)
 			color = if team == "home" then Color3.fromRGB(250, 200, 40) else Color3.fromRGB(120, 220, 90)
 		end
 		parts.body.Color = color
+		local slotX = slot[1] + (if slot[3] == "GK" then 0 else shifts[team])
 		local member = {
 			parts = parts,
 			team = team,
 			keeper = slot[3] == "GK",
-			baseX = slot[1] * dir,
+			baseX = slotX * dir,
 			baseZ = slot[2] * dir,
-			x = slot[1] * dir,
+			x = slotX * dir,
 			z = slot[2] * dir,
 			facing = CFrame.Angles(0, if team == "home" then -math.pi / 2 else math.pi / 2, 0),
 		}
@@ -587,9 +595,17 @@ function MatchReplayController.Play(replay, options): boolean
 			state.hud = getHud()
 			if state.hud then
 				state.hud.gui.Enabled = true
-				state.hud.banner.Text = T("replay.kickoff")
-				state.bannerText = T("replay.kickoff")
-				state.bannerUntil = 2
+				-- Coup d'envoi : rappel du duel tactique (« Offensive contre Défensive »).
+				local kickoff = T("replay.kickoff")
+				if type(replay.homeTactic) == "string" and type(replay.awayTactic) == "string" then
+					kickoff = T("replay.kickoffTactics", {
+						home = T("tactic." .. replay.homeTactic),
+						away = T("tactic." .. replay.awayTactic),
+					})
+				end
+				state.hud.banner.Text = kickoff
+				state.bannerText = kickoff
+				state.bannerUntil = 2.5
 			end
 			state.camera = workspace.CurrentCamera
 			if state.camera then
