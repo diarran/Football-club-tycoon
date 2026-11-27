@@ -1,4 +1,4 @@
-# Tester le jeu (environ 29 minutes)
+# Tester le jeu (environ 31 minutes)
 
 ## 1. Récupérer le fichier du jeu
 
