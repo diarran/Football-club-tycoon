@@ -779,6 +779,7 @@ function H.boot(modules)
 		Buildings = mock.run(modules.Buildings),
 		Divisions = mock.run(modules.Divisions),
 		PlayerConfig = mock.run(modules.PlayerConfig),
+		Training = mock.run(modules.Training),
 	}
 end
 
