@@ -28,6 +28,7 @@ local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
 local Staff = require(Shared.Staff)
 local Tactics = require(Shared.Tactics)
+local Weather = require(Shared.Weather)
 local WorldConfig = require(Shared.WorldConfig)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
@@ -89,15 +90,17 @@ local function positionPenalty(squad): number
 end
 
 -- Calcule la force d'une équipe : note globale, postes, forme, bonus, et
--- tactique face à celle de l'adversaire (pierre-feuille-ciseaux, Tactics.lua).
-local function teamStrength(team, opponentTactic)
+-- tactique face à celle de l'adversaire (pierre-feuille-ciseaux, Tactics.lua)
+-- et météo du stade (Weather.lua : +1 au style avantagé, pour les deux équipes).
+local function teamStrength(team, opponentTactic, weather)
 	local base = average(team.squad, "rating") - positionPenalty(team.squad)
 	local energyModifier = (average(team.squad, "energy") - 70) / 10
 	local attackMod, defenseMod = Tactics.Modifiers(team.tactic, opponentTactic)
+	local weatherAttack, weatherDefense = Weather.Modifiers(weather, Tactics.Sanitize(team.tactic))
 	local overall = base + energyModifier + team.bonus
 	return {
-		attack = overall + attackMod,
-		defense = overall + defenseMod,
+		attack = overall + attackMod + weatherAttack,
+		defense = overall + defenseMod + weatherDefense,
 	}
 end
 
@@ -172,9 +175,10 @@ end
 
 -- Simulation ------------------------------------------------------------
 
-function MatchService.Simulate(home, away)
-	local homeStrength = teamStrength(home, away.tactic)
-	local awayStrength = teamStrength(away, home.tactic)
+-- `weather` (facultatif) : météo du stade (Weather.At). Sans météo, aucun effet.
+function MatchService.Simulate(home, away, weather)
+	local homeStrength = teamStrength(home, away.tactic, weather)
+	local awayStrength = teamStrength(away, home.tactic, weather)
 	local homeGoals = poisson(expectedGoals(homeStrength.attack, awayStrength.defense))
 	local awayGoals = poisson(expectedGoals(awayStrength.attack, homeStrength.defense))
 
@@ -343,7 +347,9 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		bonus = homeBonus,
 	}
 
-	local score = MatchService.Simulate(home, away)
+	-- Météo du stade au coup d'envoi (la même que celle que voit le joueur).
+	local weather = Weather.Describe(now)
+	local score = MatchService.Simulate(home, away, weather.kind)
 	data.lastMatchAt = now
 
 	-- Résultat et récompenses (calculés ici, jamais par le client)
@@ -431,6 +437,10 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		warn("[Match] replay non construit : " .. tostring(replay))
 		replay = nil
 	end
+	if replay then
+		replay.weather = weather.kind -- ambiance du replay (pluie, neige, match de nuit)
+		replay.night = weather.night
+	end
 
 	return {
 		homeName = home.name,
@@ -440,6 +450,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		events = score.events,
 		outcome = outcome,
 		tactics = score.tactics,
+		weather = weather,
 		rewards = {
 			match = matchReward,
 			tickets = tickets,
