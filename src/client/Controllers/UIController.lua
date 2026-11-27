@@ -1317,118 +1317,121 @@ function renderers.Matches(profile)
 	end
 
 	-- Coupe d'Europe : clubs de vrais joueurs de tous les serveurs (D3+).
-	local euro = type(profile.euro) == "table" and profile.euro or nil
-	if euro then
-		local children = {
-			label(T("euro.title"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
-		}
-		if not euro.eligible then
-			table.insert(children, label(T("euro.locked", { division = divisionLabel(euro.unlockDivision or "D3") }), {
-				Name = "EuroLocked",
-				TextColor3 = COLORS.muted,
-				TextSize = 14,
-			}))
-		else
-			table.insert(children, label(T("euro.info"), { TextColor3 = COLORS.muted, TextSize = 14 }))
-			local endsIn = math.max(0, euro.endsIn or 0)
-			table.insert(children, label(T("euro.endsIn", {
-				days = math.floor(endsIn / 86400),
-				hours = math.floor((endsIn % 86400) / 3600),
-			}), { TextColor3 = COLORS.muted, TextSize = 14 }))
-			if euro.status == "idle" then
-				table.insert(children, button(T("euro.join"), function()
-					Net.Get("RequestEuroJoin"):FireServer()
-				end, { BackgroundColor3 = COLORS.accent }))
-			else
-				if euro.scope == "server" then
-					table.insert(children, label(T("euro.scopeServer"), { TextColor3 = COLORS.muted, TextSize = 14 }))
-				end
-				table.insert(children, label(T("euro.tableHeader", { count = euro.qualifiedCount or 4 }), {
-					Font = Enum.Font.GothamBold,
-					TextSize = 15,
+	-- Affichée après le championnat et la coupe (téléphone : moins de défilement).
+	local function euroCard()
+		local euro = type(profile.euro) == "table" and profile.euro or nil
+		if euro then
+			local children = {
+				label(T("euro.title"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
+			}
+			if not euro.eligible then
+				table.insert(children, label(T("euro.locked", { division = divisionLabel(euro.unlockDivision or "D3") }), {
+					Name = "EuroLocked",
+					TextColor3 = COLORS.muted,
+					TextSize = 14,
 				}))
-				for _, row in euro.standings or {} do
-					local params = table.clone(row)
-					params.tag = if row.me then T("euro.tagMe") elseif row.human then T("euro.tagHuman") else ""
-					table.insert(children, label(T("euro.row", params), {
-						Name = if row.me then "EuroRowMe" else "EuroRow",
-						TextSize = 14,
-						TextColor3 = if row.me then COLORS.gold
-							elseif row.position <= (euro.qualifiedCount or 4) then COLORS.text
-							else COLORS.muted,
-					}))
-				end
-				table.insert(children, label(T("euro.humanLegend"), { TextColor3 = COLORS.muted, TextSize = 13 }))
-				for _, entry in euro.history or {} do
-					local key = if entry.outcome == "Win" then "euro.historyWin"
-						elseif entry.outcome == "Draw" then "euro.historyDraw"
-						else "euro.historyLoss"
-					local text = T(key, {
-						stage = T("euro.short." .. tostring(entry.stage)),
-						mine = profile.club.name,
-						club = entry.name,
-						myGoals = entry.myGoals,
-						theirGoals = entry.theirGoals,
-						coins = formatCoins(entry.coins or 0),
-					})
-					if entry.penalties then
-						text ..= T("euro.historyPenalties")
-					end
-					table.insert(children, label(text, {
-						TextSize = 14,
-						TextColor3 = if entry.outcome == "Win" then COLORS.accent
-							elseif entry.outcome == "Draw" then COLORS.text
-							else COLORS.error,
-					}))
-				end
-				local nextIn = math.max(0, math.ceil(state.euroReadyAt - os.clock()))
-				local rival = euro.opponent
-				if type(rival) == "table" then
-					local stage = if euro.status == "group"
-						then T("euro.stage.group", { round = euro.round, rounds = euro.rounds or 7 })
-						else T("euro.stage." .. tostring(euro.status))
-					table.insert(children, label(T("euro.next", {
-						stage = stage,
-						club = rival.name,
-						division = divisionLabel(rival.division),
-						rating = rival.rating or "?",
-					}), { Font = Enum.Font.GothamBold, TextSize = 16 }))
-					if rival.human then
-						table.insert(children, label(T("euro.nextHuman"), { TextColor3 = COLORS.accent, TextSize = 14 }))
-					end
-					local styleLine, hintLine = tacticLines(rival.tactic)
-					table.insert(children, styleLine)
-					table.insert(children, hintLine)
-					table.insert(children, label(T("euro.nextReward", { coins = formatCoins(euro.nextReward or 0) }), {
-						TextColor3 = COLORS.gold,
-						TextSize = 14,
-					}))
-					if nextIn > 0 then
-						table.insert(children, label(T("euro.wait", { minutes = math.max(1, math.ceil(nextIn / 60)) }), {
-							Name = "EuroWait",
-							TextColor3 = COLORS.muted,
-							TextSize = 16,
-						}))
-					else
-						table.insert(children, button(T("euro.play"), function()
-							Net.Get("RequestEuroMatch"):FireServer(state.selectedTactic)
-						end, { BackgroundColor3 = COLORS.accent }))
-					end
-				elseif euro.status == "champion" then
-					table.insert(children, label(T("euro.champion"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold, TextSize = 16 }))
+			else
+				table.insert(children, label(T("euro.info"), { TextColor3 = COLORS.muted, TextSize = 14 }))
+				local endsIn = math.max(0, euro.endsIn or 0)
+				table.insert(children, label(T("euro.endsIn", {
+					days = math.floor(endsIn / 86400),
+					hours = math.floor((endsIn % 86400) / 3600),
+				}), { TextColor3 = COLORS.muted, TextSize = 14 }))
+				if euro.status == "idle" then
+					table.insert(children, button(T("euro.join"), function()
+						Net.Get("RequestEuroJoin"):FireServer()
+					end, { BackgroundColor3 = COLORS.accent }))
 				else
-					table.insert(children, label(T("euro.out"), { TextColor3 = COLORS.muted, TextSize = 16 }))
+					if euro.scope == "server" then
+						table.insert(children, label(T("euro.scopeServer"), { TextColor3 = COLORS.muted, TextSize = 14 }))
+					end
+					table.insert(children, label(T("euro.tableHeader", { count = euro.qualifiedCount or 4 }), {
+						Font = Enum.Font.GothamBold,
+						TextSize = 15,
+					}))
+					for _, row in euro.standings or {} do
+						local params = table.clone(row)
+						params.tag = if row.me then T("euro.tagMe") elseif row.human then T("euro.tagHuman") else ""
+						table.insert(children, label(T("euro.row", params), {
+							Name = if row.me then "EuroRowMe" else "EuroRow",
+							TextSize = 14,
+							TextColor3 = if row.me then COLORS.gold
+								elseif row.position <= (euro.qualifiedCount or 4) then COLORS.text
+								else COLORS.muted,
+						}))
+					end
+					table.insert(children, label(T("euro.humanLegend"), { TextColor3 = COLORS.muted, TextSize = 13 }))
+					for _, entry in euro.history or {} do
+						local key = if entry.outcome == "Win" then "euro.historyWin"
+							elseif entry.outcome == "Draw" then "euro.historyDraw"
+							else "euro.historyLoss"
+						local text = T(key, {
+							stage = T("euro.short." .. tostring(entry.stage)),
+							mine = profile.club.name,
+							club = entry.name,
+							myGoals = entry.myGoals,
+							theirGoals = entry.theirGoals,
+							coins = formatCoins(entry.coins or 0),
+						})
+						if entry.penalties then
+							text ..= T("euro.historyPenalties")
+						end
+						table.insert(children, label(text, {
+							TextSize = 14,
+							TextColor3 = if entry.outcome == "Win" then COLORS.accent
+								elseif entry.outcome == "Draw" then COLORS.text
+								else COLORS.error,
+						}))
+					end
+					local nextIn = math.max(0, math.ceil(state.euroReadyAt - os.clock()))
+					local rival = euro.opponent
+					if type(rival) == "table" then
+						local stage = if euro.status == "group"
+							then T("euro.stage.group", { round = euro.round, rounds = euro.rounds or 7 })
+							else T("euro.stage." .. tostring(euro.status))
+						table.insert(children, label(T("euro.next", {
+							stage = stage,
+							club = rival.name,
+							division = divisionLabel(rival.division),
+							rating = rival.rating or "?",
+						}), { Font = Enum.Font.GothamBold, TextSize = 16 }))
+						if rival.human then
+							table.insert(children, label(T("euro.nextHuman"), { TextColor3 = COLORS.accent, TextSize = 14 }))
+						end
+						local styleLine, hintLine = tacticLines(rival.tactic)
+						table.insert(children, styleLine)
+						table.insert(children, hintLine)
+						table.insert(children, label(T("euro.nextReward", { coins = formatCoins(euro.nextReward or 0) }), {
+							TextColor3 = COLORS.gold,
+							TextSize = 14,
+						}))
+						if nextIn > 0 then
+							table.insert(children, label(T("euro.wait", { minutes = math.max(1, math.ceil(nextIn / 60)) }), {
+								Name = "EuroWait",
+								TextColor3 = COLORS.muted,
+								TextSize = 16,
+							}))
+						else
+							table.insert(children, button(T("euro.play"), function()
+								Net.Get("RequestEuroMatch"):FireServer(state.selectedTactic)
+							end, { BackgroundColor3 = COLORS.accent }))
+						end
+					elseif euro.status == "champion" then
+						table.insert(children, label(T("euro.champion"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold, TextSize = 16 }))
+					else
+						table.insert(children, label(T("euro.out"), { TextColor3 = COLORS.muted, TextSize = 16 }))
+					end
+				end
+				table.insert(children, label(T("euro.maxReward", { coins = formatCoins(euro.maxReward or 0) }), {
+					TextColor3 = COLORS.muted,
+					TextSize = 14,
+				}))
+				if (euro.euroWon or 0) > 0 then
+					table.insert(children, label(T("euro.myTitles", { count = euro.euroWon }), { TextColor3 = COLORS.gold, TextSize = 14 }))
 				end
 			end
-			table.insert(children, label(T("euro.maxReward", { coins = formatCoins(euro.maxReward or 0) }), {
-				TextColor3 = COLORS.muted,
-				TextSize = 14,
-			}))
-			if (euro.euroWon or 0) > 0 then
-				table.insert(children, label(T("euro.myTitles", { count = euro.euroWon }), { TextColor3 = COLORS.gold, TextSize = 14 }))
-			end
+			card(children).Parent = content
 		end
-		card(children).Parent = content
 	end
 
 	local function opponentCard(title: string, subtitle: string, opponentId: string, theirs)
@@ -1467,6 +1470,7 @@ function renderers.Matches(profile)
 		)
 	end
 	cupCard()
+	euroCard()
 	if humans > 0 then
 		-- Mise des défis : une valeur parmi celles acceptées par le serveur.
 		local entries = {}
