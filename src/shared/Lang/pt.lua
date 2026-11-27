@@ -683,7 +683,7 @@ return {
 	["identity.crest"] = "Emblema do clube",
 	["identity.crestSlot"] = "O original",
 	["identity.default"] = "Cores originais",
-	["identity.reset"] = "Restaurar todas as configurações padrão",
+	["identity.reset"] = "Redefinir tudo",
 	["identity.current"] = "Camisa atual: {pattern}",
 	["identity.prestigeWorn"] = "Um item da aba “Prestígio” está em destaque: ele tem prioridade sobre essa escolha, desde que você não altere nada aqui.",
 	["identity.choose"] = "Escolher",

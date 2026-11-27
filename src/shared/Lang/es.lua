@@ -683,7 +683,7 @@ return {
 	["identity.crest"] = "Escudo del club",
 	["identity.crestSlot"] = "El original",
 	["identity.default"] = "Colores originales",
-	["identity.reset"] = "Restablecer todo a los valores predeterminados",
+	["identity.reset"] = "Restablecer todo",
 	["identity.current"] = "Camiseta actual: {pattern}",
 	["identity.prestigeWorn"] = "Se ha destacado un elemento de la pestaña «Prestigio»: tendrá prioridad sobre esta selección mientras no cambies nada aquí.",
 	["identity.choose"] = "Elegir",

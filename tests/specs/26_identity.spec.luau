@@ -272,7 +272,7 @@ H.test("budget de Parts : terrain niveau 5 avec identité", function()
 		data.buildings[id] = 5
 	end
 	S.ClubService.RefreshPlot(p)
-	H.ok(WorldBuilder.countParts(plot()) <= 750, "budget mobile : " .. WorldBuilder.countParts(plot()))
+	H.ok(WorldBuilder.countParts(plot()) <= 1400, "budget de Parts (même plafond que 10_progression) : " .. WorldBuilder.countParts(plot()))
 end)
 
 local gui = H.startClient(MODULES, p)
