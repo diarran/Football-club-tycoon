@@ -42,6 +42,7 @@ Net.Requests = {
 	"RequestHireStaff", -- (staffId: string) embaucher ou faire monter un membre du staff
 	"RequestSignSponsor", -- (offerId: number) signer une offre de sponsor
 	"RequestCancelSponsor", -- (contractId: number) arrêter un contrat de sponsor
+	"RequestEventClaim", -- () récupérer les paliers atteints de l'événement de la semaine
 }
 
 -- Serveur -> client (notifications)

@@ -7,7 +7,7 @@ local store = H.getStore(S.Config.DATASTORE_NAME)
 -- Champs ajoutés après la version testée dans Studio (PR #14).
 local NEW_FIELDS = {
 	"purchases", "boost", "admin", "community", "friends", "staff", "sponsors",
-	"daily", "missions", "season", "lastSeenAt",
+	"daily", "missions", "season", "lastSeenAt", "events",
 }
 
 -- Fabrique un profil « ancien » : un vrai profil dont on retire les nouveautés.

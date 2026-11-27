@@ -86,6 +86,7 @@ local tabBar, tabGrid -- barre d'onglets et sa grille (1 ou 2 rangées selon l'�
 local TAB_HEIGHT = 44
 local TAB_GAP = 4
 local shownWelcome = nil -- dernier résumé « Pendant ton absence… » affiché
+local shownEventWeek = nil -- dernier événement de la semaine annoncé
 local currentTab = "Home"
 
 -- Outils de construction ------------------------------------------------
@@ -273,6 +274,50 @@ local function dailyCards(daily)
 	end
 end
 
+-- Événement de la semaine (accueil). event = instantané d'EventService.
+local function eventCard(event)
+	if type(event) ~= "table" or type(event.theme) ~= "string" then
+		return
+	end
+	local endsIn = math.max(0, (state.eventEndsAt or 0) - os.clock())
+	local lines = {
+		label(T("event.title", { event = T("event.theme." .. event.theme) }), {
+			Font = Enum.Font.GothamBold,
+			TextColor3 = COLORS.gold,
+		}),
+		label(T("event.desc." .. event.theme), { TextSize = 16 }),
+		label(T("event.status", { points = event.points or 0, time = formatDuration(endsIn) }), { TextColor3 = COLORS.accent }),
+	}
+	local claimable = false
+	for index, tier in event.tiers or {} do
+		local reward = formatCoins(tier.coins)
+		if tier.cosmetic then
+			reward ..= " + " .. T("cosmetic." .. tier.cosmetic)
+		end
+		local key = if tier.claimed then "event.tierClaimed" elseif tier.reached then "event.tierReady" else "event.tier"
+		claimable = claimable or (tier.reached and not tier.claimed)
+		table.insert(lines, label(T(key, { n = index, points = tier.points, reward = reward }), {
+			Name = "EventTier_" .. index,
+			TextSize = 16,
+			TextColor3 = if tier.claimed then COLORS.muted elseif tier.reached then COLORS.gold else COLORS.text,
+		}))
+	end
+	if claimable then
+		table.insert(lines, button(T("event.claim"), function()
+			Net.Get("RequestEventClaim"):FireServer()
+		end, { Name = "EventClaim", Size = UDim2.new(0, 260, 0, 44), BackgroundColor3 = COLORS.gold }))
+	end
+	table.insert(lines, label(
+		if event.weekend
+			then T("event.cupNow", { percent = math.floor(((event.cupMultiplier or 1) - 1) * 100 + 0.5) })
+			else T("event.cupSoon", { time = formatDuration(math.max(0, (state.eventWeekendAt or 0) - os.clock())) }),
+		{ TextColor3 = COLORS.muted, TextSize = 16 }
+	))
+	local eventFrame = card(lines)
+	eventFrame.Name = "WeeklyEvent"
+	eventFrame.Parent = content
+end
+
 -- Contenu des onglets ---------------------------------------------------
 
 local renderers = {}
@@ -377,6 +422,7 @@ function renderers.Home(profile)
 	}).Parent =
 		content
 
+	eventCard(profile.event)
 	dailyCards(profile.daily)
 
 	local nameBox = create("TextBox", {
@@ -790,7 +836,16 @@ local function tournamentCard()
 	end
 	local myId = "player:" .. player.UserId
 	local secondsLeft = math.max(0, math.ceil(state.tournamentEndsAt - os.clock()))
-	local children = { label(T("tournament.title"), { Font = Enum.Font.GothamBold }) }
+	local cup = tournament.weekendCup == true
+	local children = { label(T(if cup then "event.cupTitle" else "tournament.title"), {
+		Font = Enum.Font.GothamBold,
+		TextColor3 = if cup then COLORS.gold else COLORS.text,
+	}) }
+	if cup then
+		table.insert(children, label(T("event.cupInfo", {
+			percent = math.floor(((tournament.cupMultiplier or 1) - 1) * 100 + 0.5),
+		}), { TextColor3 = COLORS.accent, TextSize = 16 }))
+	end
 	local registered = false
 	for _, entrant in tournament.entrants do
 		registered = registered or entrant.id == myId
@@ -1270,7 +1325,7 @@ function renderers.Prestige(profile)
 	local ownedCount = 0
 	for id in cosmetics.owned do
 		local item = Cosmetics.Get(id)
-		if item and not item.robux then
+		if item and not item.robux and not item.event then
 			ownedCount += 1
 		end
 	end
@@ -1324,6 +1379,13 @@ function renderers.Prestige(profile)
 				table.insert(items, item)
 			end
 		end
+		-- Objets des événements : visibles une fois gagnés, ou pendant leur semaine.
+		local currentEvent = type(profile.event) == "table" and profile.event.theme or nil
+		for _, item in Cosmetics.EVENT do
+			if item.category == category and (cosmetics.owned[item.id] or item.event == currentEvent) then
+				table.insert(items, item)
+			end
+		end
 		for _, item in items do
 			local action
 			if cosmetics.owned[item.id] then
@@ -1336,6 +1398,8 @@ function renderers.Prestige(profile)
 						Net.Get("RequestEquipCosmetic"):FireServer(category, item.id)
 					end)
 				end
+			elseif item.event then
+				action = label(T("event.locked", { event = T("event.theme." .. item.event) }), { TextColor3 = COLORS.accent, TextSize = 16 })
 			elseif item.robux then
 				local product = Monetization.ForCosmetic(item.id)
 				action = button(T("shop.buyRobux"), function()
@@ -1363,6 +1427,8 @@ function renderers.Prestige(profile)
 			local name = T("cosmetic." .. item.id)
 			if item.robux then
 				name = T("shop.exclusiveTag", { name = name })
+			elseif item.event then
+				name = T("event.itemTag", { name = name })
 			end
 			card({ label(name, { Font = Enum.Font.GothamBold }), action }).Parent = content
 		end
@@ -1539,6 +1605,14 @@ local function buildHud()
 			Font = Enum.Font.GothamBold,
 			TextSize = 22,
 			LayoutOrder = 3,
+		}),
+		-- Événement de la semaine et compte à rebours (mis à jour chaque seconde).
+		label("", {
+			Name = "Event",
+			TextColor3 = COLORS.accent,
+			TextSize = 14,
+			LayoutOrder = 4,
+			Visible = false,
 		}),
 	})
 
@@ -1843,6 +1917,7 @@ function UIController.Refresh()
 			.. (if profile.temporary then " · " .. T("hud.testMode") else "")
 		hud.Coins.Text = if profile.adminUnlimited then T("admin.infiniteCoins") else formatCoins(profile.coins)
 		refreshCrestBadge(profile)
+		UIController.RefreshEventHud()
 	end
 	if not panel.Visible then
 		return
@@ -1858,9 +1933,37 @@ function UIController.Refresh()
 	end
 end
 
+-- Ligne du HUD : thème de la semaine, ou Coupe du week-end, avec compte à rebours.
+function UIController.RefreshEventHud()
+	local event = state.profile and state.profile.event
+	local line = hud and hud:FindFirstChild("Event")
+	if not line then
+		return
+	end
+	if type(event) ~= "table" or type(event.theme) ~= "string" then
+		line.Visible = false
+		return
+	end
+	local endsIn = math.max(0, (state.eventEndsAt or 0) - os.clock())
+	line.Visible = true
+	line.Text = if event.weekend
+		then T("event.hudCup", { event = T("event.theme." .. event.theme), time = formatDuration(endsIn) })
+		else T("event.hud", { event = T("event.theme." .. event.theme), time = formatDuration(endsIn) })
+end
+
 function UIController.SetProfile(profile)
 	if not profile then
 		return
+	end
+	local event = type(profile.event) == "table" and profile.event or nil
+	if event then
+		state.eventEndsAt = os.clock() + (event.endsIn or 0)
+		state.eventWeekendAt = os.clock() + (event.weekendIn or 0)
+		-- Annonce d'un nouvel événement (arrivée ou lundi en pleine partie).
+		if event.week ~= shownEventWeek then
+			shownEventWeek = event.week
+			UIController.Notify(T("event.announce", { event = T("event.theme." .. tostring(event.theme)) }), "info")
+		end
 	end
 	state.profile = profile
 	state.cooldownEndsAt = os.clock() + (profile.matchCooldown or 0)
@@ -2005,6 +2108,17 @@ function UIController.ShowMatchResult(result)
 			{ TextColor3 = COLORS.gold, TextXAlignment = Enum.TextXAlignment.Center }
 		)
 	)
+	if (rewards.event or 0) > 0 or (result.eventPoints or 0) > 0 then
+		local theme = state.profile and type(state.profile.event) == "table" and state.profile.event.theme
+		add(label(T("result.event", {
+			event = T("event.theme." .. (theme or "tickets")),
+			coins = formatCoins(rewards.event or 0),
+			points = result.eventPoints or 0,
+		}), {
+			TextColor3 = COLORS.gold,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}))
+	end
 	if (rewards.contracts or 0) > 0 then
 		add(label(T("result.sponsorContracts", { coins = formatCoins(rewards.contracts) }), {
 			TextColor3 = COLORS.gold,
@@ -2057,6 +2171,10 @@ task.spawn(function()
 		local ticking = state.cooldownEndsAt > os.clock() - 1 or state.tournamentEndsAt > os.clock() - 1
 		if panel and panel.Visible and currentTab == "Matches" and ticking then
 			UIController.Refresh()
+		end
+		-- Compte à rebours de l'événement de la semaine dans le HUD.
+		if hud then
+			UIController.RefreshEventHud()
 		end
 	end
 end)

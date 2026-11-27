@@ -190,10 +190,12 @@ H.test("tournoi à 2 joueurs : 8 clubs, 3 tours, un vainqueur, récompenses born
 	H.eq(#s.rounds[3].matches, 1, "une finale")
 	local champion = s.rounds[3].matches[1].winnerName
 	H.eq(s.lastWinner.clubName, champion, "vainqueur annoncé")
-	local mult = S.Divisions.Get(da.club.division).rewardMultiplier
+	-- Coupe du week-end (samedi, dimanche) : récompenses majorées (Events.lua).
+	local mult = S.Divisions.Get(da.club.division).rewardMultiplier * S.Events.TournamentMultiplier(os.time())
+	local cup = S.Events.TournamentMultiplier(os.time())
 	local gainA, gainB = da.coins - ca, db.coins - cb
 	H.ok(gainA >= TC.Rewards.Quarter * mult and gainA <= TC.Rewards.Winner * mult, "gain d'Alice dans les bornes : " .. gainA)
-	H.ok(gainB >= TC.Rewards.Quarter and gainB <= TC.Rewards.Winner * 3, "gain de Bruno dans les bornes : " .. gainB)
+	H.ok(gainB >= TC.Rewards.Quarter and gainB <= TC.Rewards.Winner * 3 * cup, "gain de Bruno dans les bornes : " .. gainB)
 	H.eq(da.squad[1].energy >= energyA, true, "pas d'énergie dépensée")
 	H.eq(da.club.divisionPoints, pointsA, "pas de points de division")
 	if champion == da.club.name or champion == db.club.name then
@@ -243,7 +245,7 @@ H.test("50 tournois de suite : gains totaux bornés par le temps", function()
 		H.fire(a, "RequestTournamentJoin")
 		waitPhase("waiting")
 	end
-	local maxPer = TC.Rewards.Winner * S.Divisions.Get("D1").rewardMultiplier
+	local maxPer = TC.Rewards.Winner * S.Divisions.Get("D1").rewardMultiplier * S.Events.WEEKEND_CUP_MULTIPLIER
 	H.ok(da.coins - start <= 50 * maxPer, "au plus une récompense par tournoi")
 	H.ok(da.coins - start >= 50 * TC.Rewards.Quarter, "chaque participation récompensée")
 end)

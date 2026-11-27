@@ -342,6 +342,31 @@ fait nettement avancer son stade, sans changer le rythme sportif (D5 ~40 min,
 D1 ~32 h pour un joueur actif). Nouvelle alerte en CI si plus de la moitié des gains
 vient sans jouer. Aucune source de monnaie infinie détectée.
 
+## Événements de la semaine et Coupe du week-end (27/11/2026)
+
+Règles et montants : `src/shared/Events.lua` (service : `EventService`). Mêmes
+semaines que les saisons (lundi 00:00 UTC), horloge du serveur uniquement.
+
+| Mécanique | Règle | Montant |
+| --- | --- | --- |
+| Thème de la semaine (4 en rotation) | Billetterie +50 % · Derbys : prime de match +50 % (+100 % et points ×2 contre un vrai club) · Fête des buts : +1 point et 40 FC par but · Supporters : sponsors + boutique +50 % | ~10 % des gains de match |
+| Points d'événement | victoire 3, nul 2, défaite 1 (+ bonus du thème) | — |
+| 3 étapes | 15 / 40 / 80 points, à récupérer dans l'accueil ; oubliées = versées le lundi suivant | 800 / 2 000 / 3 500 × échelle de division, + objet d'événement à la 3e |
+| Objet d'événement | couleurs, tenue, statue ou projecteurs du thème ; gagné en jouant, jamais vendu | — |
+| Coupe du week-end | samedi et dimanche UTC : tournoi du serveur ×1,5 et points selon le tour (15 / 8 / 4 / 2) | plafond 5 400 par tournoi en D1 |
+
+Simulateur (10 parties par profil), avant → après :
+
+| | Joueur actif | Joueur occasionnel |
+| --- | --- | --- |
+| D1 | 30,5 → 29,9 h | 43,4 → 43,6 h |
+| Tout le stade acheté | 458 → 378 min | 442 → 395 min |
+| Dernière étape atteinte | 10 semaines sur 10 | 9,9 semaines sur 10 |
+| Part des étapes dans les gains | 0,7 % | 5,5 % |
+
+Le rythme sportif ne change pas (D1 ~30 h pour un joueur actif). Nouvelle alerte en
+CI si l'événement pèse plus de 15 % des gains. Aucune source de monnaie infinie.
+
 ## Staff du club et sponsors (26/11/2026)
 
 **Staff** (`src/shared/Staff.lua`) : 4 postes à 4 niveaux, chacun payé une fois
