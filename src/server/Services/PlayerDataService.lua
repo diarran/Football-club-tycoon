@@ -104,6 +104,9 @@ local function defaultData()
 		tutorial = { step = 1, completed = false },
 		-- Objectifs de départ après le tutoriel (OnboardingService, shared/Onboarding.lua).
 		onboarding = { goal = 1, done = false },
+		-- Succès (AchievementService, shared/Achievements.lua) : date de déblocage,
+		-- primes récupérées, badges Roblox donnés ({ [id] = … }).
+		achievements = { unlocked = {}, claimed = {}, badges = {} },
 		-- Objectifs quotidiens et saisons (DailyService, shared/Daily.lua).
 		-- Le jour de la création, le solde de départ tient lieu de cadeau du jour 1.
 		daily = { lastClaimDay = Daily.Day(os.time()), streak = 1 }, -- jour UTC de la dernière récompense
