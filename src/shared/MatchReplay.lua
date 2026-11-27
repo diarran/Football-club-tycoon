@@ -154,6 +154,19 @@ function MatchReplay.Build(events, seed: number?, tactics)
 		nextFree = action.t + actionSeconds + gap
 		action.path = buildPath(rand, action.side, action.kind, styles[action.side])
 	end
+	-- Beaucoup d'actions en fin de match : on les avance (dans l'ordre, sans
+	-- chevauchement) pour qu'elles finissent toutes avant le coup de sifflet.
+	-- Toutes les actions tiennent dans `available`, donc la 1re reste après
+	-- le coup d'envoi.
+	local limit = MatchReplay.MAX_SECONDS - MatchReplay.OUTRO_SECONDS
+	for index = #actions, 1, -1 do
+		local action = actions[index]
+		action.t = math.min(action.t, limit - actionSeconds)
+		limit = action.t - gap
+	end
+	if #actions > 0 then
+		nextFree = actions[#actions].t + actionSeconds + gap
+	end
 	local duration = math.max(MatchReplay.INTRO_SECONDS + MatchReplay.PLAY_SECONDS, nextFree - gap)
 		+ MatchReplay.OUTRO_SECONDS
 	return {
