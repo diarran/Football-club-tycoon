@@ -85,8 +85,8 @@ Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne roug
    Meilleurs clubs, Trophées) ; dans Studio elle dit « Mode test : seulement les clubs
    de ce serveur ». Sur la place, le grand panneau **CLASSEMENT MONDIAL** change de
    tableau toutes les 12 secondes.
-8. **Paramètres** : **English** traduit tout le menu (aucun mot français), puis remets
-   **Français**. **Volume du son** sur **Muet** coupe les sons. La carte **Code admin**
+8. **Paramètres** : 4 boutons de langue. **English**, **Español** puis **Português**
+   traduisent tout le menu et les panneaux du stade, puis remets **Français**. **Volume du son** sur **Muet** coupe les sons. La carte **Code admin**
    est là (tu es le créateur) : ton code active l'argent illimité (**∞ FC**), le même
    code le désactive et rend ton solde.
 8 bis. **Météo et jour/nuit** : en haut de **Matchs**, la carte **« Météo au stade : … »**
