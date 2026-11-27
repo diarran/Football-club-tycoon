@@ -45,6 +45,7 @@ Net.Requests = {
 	"RequestCancelSponsor", -- (contractId: number) arrêter un contrat de sponsor
 	"RequestEventClaim", -- () récupérer les paliers atteints de l'événement de la semaine
 	"RequestCupMatch", -- (tactic: string) jouer le tour en cours de la Coupe nationale (CupService)
+	"RequestAchievementClaim", -- () récupérer les primes des succès débloqués (AchievementService)
 }
 
 -- Serveur -> client (notifications)
