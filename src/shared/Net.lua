@@ -44,13 +44,14 @@ Net.Requests = {
 	"RequestSignSponsor", -- (offerId: number) signer une offre de sponsor
 	"RequestCancelSponsor", -- (contractId: number) arrêter un contrat de sponsor
 	"RequestEventClaim", -- () récupérer les paliers atteints de l'événement de la semaine
+	"RequestCupMatch", -- (tactic: string) jouer le tour en cours de la Coupe nationale (CupService)
 }
 
 -- Serveur -> client (notifications)
 Net.Events = {
 	"ProfileUpdated", -- (snapshot) état complet du club du joueur
 	"ClubsUpdated", -- (list) clubs présents sur le serveur
-	"MatchResult", -- (result) match, ou défi si result.mode == "challenge" ; result.replay = replay 3D
+	"MatchResult", -- (result) match, ou défi si result.mode == "challenge", Coupe nationale si "cup" ; result.replay = replay 3D
 	"MatchReplay", -- (replay) replay 3D d'un match joué par un autre club (visiteurs)
 	"ChallengeUpdated", -- ({ incoming, outgoing }) défis du joueur
 	"TournamentUpdated", -- (state) tournoi du serveur

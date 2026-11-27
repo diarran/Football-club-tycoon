@@ -379,6 +379,26 @@ Simulateur (10 parties par profil), avant → après :
 Le rythme sportif ne change pas (D1 ~30 h pour un joueur actif). Nouvelle alerte en
 CI si l'événement pèse plus de 15 % des gains. Aucune source de monnaie infinie.
 
+## Coupe nationale (27/11/2026)
+
+Règles et montants : `src/shared/NationalCup.lua` (service : `CupService`). Une
+édition par saison (lundi 00:00 UTC), 5 tours joués quand le joueur veut, au plus
+un toutes les 20 minutes. Adversaires : clubs fictifs, une division plus bas au
+1er tour puis une division de plus à chaque tour (finale = 3 divisions plus haut,
+jamais au-dessus de D1). Match neutre : ni énergie, ni points de division.
+
+| Tour gagné | 16es | 8es | Quarts | Demies | Finale | Total |
+| --- | --- | --- | --- | --- | --- | --- |
+| Prime de base | 200 | 300 | 500 | 800 | 1 600 | 3 400 |
+
+Prime × multiplicateur de la division (D1 : ×3, soit 10 200 FC par édition au
+maximum), +50 % pour un exploit (victoire contre une division plus haute, jamais
+possible en D1). Une seule édition par semaine : pour un joueur actif (~10 h par
+semaine, ~1 200 FC par victoire de match en D1), la coupe pèse moins de 2 % des
+gains. Le rythme vers la D1 (~30 h) ne change pas ; le simulateur n'a donc pas
+été modifié. Aucune source de monnaie infinie : le tour avance dès que la prime
+est versée, et la prime n'existe que pour les tours gagnés.
+
 ## Staff du club et sponsors (26/11/2026)
 
 **Staff** (`src/shared/Staff.lua`) : 4 postes à 4 niveaux, chacun payé une fois

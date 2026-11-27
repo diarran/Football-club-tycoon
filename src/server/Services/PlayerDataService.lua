@@ -67,6 +67,8 @@ local function defaultData()
 				challengesWon = 0, -- défis gagnés (ChallengeService)
 				tournamentsWon = 0, -- tournois du serveur gagnés (TournamentService)
 				seasonsWon = 0, -- saisons terminées à la 1re place (DailyService)
+				cupsWon = 0, -- Coupes nationales gagnées (CupService)
+				cupGiantKills = 0, -- victoires de coupe contre un club d'une division plus haute
 			},
 		},
 		buildings = Buildings.DefaultLevels(),
@@ -110,6 +112,10 @@ local function defaultData()
 		-- Événement de la semaine (EventService, shared/Events.lua) : semaine,
 		-- points d'événement, paliers déjà versés.
 		events = { week = Events.Week(os.time()), points = 0, claimed = 0 },
+		-- Coupe nationale (CupService, shared/NationalCup.lua) : édition = saison,
+		-- tour à jouer, statut, heure du dernier tour, adversaire tiré, tours joués.
+		-- edition = -1 : tirage fait par CupService au premier affichage.
+		cup = { edition = -1, round = 1, status = "playing", lastPlayedAt = 0, opponent = { division = "", rival = 0 }, history = {} },
 		lastSeenAt = os.time(), -- dernière sauvegarde : base des revenus hors ligne
 		lastMatchAt = 0,
 		lastEnergyUpdate = os.time(),
