@@ -158,6 +158,18 @@ pourront le combler.
   31,9 h à 31,5 h : le rythme reste quasiment le même. Le joueur occasionnel
   (15 min par jour) tombe rarement sur un tournoi. Aucune source anormale détectée.
 
+## Tactiques (27/11/2026)
+
+- 5 styles (Tactics.lua) : effets fixes modestes (attaque + défense ≤ +1 pour chacun)
+  et un cycle Contre-attaque > Offensive > Défensive > Pressing > Contre-attaque.
+  Le style gagnant du duel reçoit +2 en attaque et en défense, le perdant rien de plus.
+  Équilibrée est neutre. Les clubs fictifs ont un style fixe, affiché avant le match.
+- Simulation : le **joueur actif** choisit toujours le style conseillé (cas le plus
+  favorable), le **joueur occasionnel** joue toujours Équilibrée. Joueur actif :
+  D1 en **29,5 h** (avant : ~31 h), victoires +5 à +8 points selon la division ;
+  D5 toujours en ~36-40 min. Bien jouer sa tactique fait gagner un peu de temps,
+  sans casser la progression.
+
 ## Dernier rapport (30 parties par profil)
 
 # Simulation de l'économie (30 parties par profil)

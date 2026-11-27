@@ -27,6 +27,7 @@ local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
 local Staff = require(Shared.Staff)
+local Tactics = require(Shared.Tactics)
 local WorldConfig = require(Shared.WorldConfig)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
@@ -87,15 +88,16 @@ local function positionPenalty(squad): number
 	return penalty
 end
 
--- Calcule la force d'une équipe : note globale, postes, forme, tactique, bonus.
-local function teamStrength(team)
+-- Calcule la force d'une équipe : note globale, postes, forme, bonus, et
+-- tactique face à celle de l'adversaire (pierre-feuille-ciseaux, Tactics.lua).
+local function teamStrength(team, opponentTactic)
 	local base = average(team.squad, "rating") - positionPenalty(team.squad)
 	local energyModifier = (average(team.squad, "energy") - 70) / 10
-	local tactic = Config.Tactics[team.tactic] or Config.Tactics[Config.DEFAULT_TACTIC]
+	local attackMod, defenseMod = Tactics.Modifiers(team.tactic, opponentTactic)
 	local overall = base + energyModifier + team.bonus
 	return {
-		attack = overall + tactic.attack,
-		defense = overall + tactic.defense,
+		attack = overall + attackMod,
+		defense = overall + defenseMod,
 	}
 end
 
@@ -139,7 +141,7 @@ local function buildAiTeam(divisionId: string, rivalIndex: number)
 		id = rival.id,
 		name = rival.name,
 		squad = squad,
-		tactic = Config.DEFAULT_TACTIC,
+		tactic = rival.tactic or Config.DEFAULT_TACTIC, -- style fixe du club fictif
 		bonus = 0,
 		rewardFactor = rival.rewardFactor,
 	}
@@ -157,7 +159,7 @@ function MatchService.ClubTeam(player: Player)
 		id = "player:" .. player.UserId,
 		name = data.club.name,
 		squad = SquadService.Starters(data), -- titulaires (lecture seule)
-		tactic = data.tactic,
+		tactic = Tactics.Sanitize(data.tactic),
 		bonus = (Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0)
 			+ Staff.Effect(data.staff, "teamBonus")
 			- SquadService.MissingPenalty(data), -- blessés / suspendus sans remplaçant
@@ -171,8 +173,8 @@ end
 -- Simulation ------------------------------------------------------------
 
 function MatchService.Simulate(home, away)
-	local homeStrength = teamStrength(home)
-	local awayStrength = teamStrength(away)
+	local homeStrength = teamStrength(home, away.tactic)
+	local awayStrength = teamStrength(away, home.tactic)
 	local homeGoals = poisson(expectedGoals(homeStrength.attack, awayStrength.defense))
 	local awayGoals = poisson(expectedGoals(awayStrength.attack, homeStrength.defense))
 
@@ -193,7 +195,17 @@ function MatchService.Simulate(home, away)
 		return a.minute < b.minute
 	end)
 
-	return { homeGoals = homeGoals, awayGoals = awayGoals, events = events }
+	return {
+		homeGoals = homeGoals,
+		awayGoals = awayGoals,
+		events = events,
+		-- Duel tactique (affichage) : 1 = l'équipe à domicile avait l'avantage.
+		tactics = {
+			home = Tactics.Sanitize(home.tactic),
+			away = Tactics.Sanitize(away.tactic),
+			edge = Tactics.Matchup(home.tactic, away.tactic),
+		},
+	}
 end
 
 -- Replay 3D (purement visuel) --------------------------------------------
@@ -251,7 +263,13 @@ function MatchService.BuildReplay(player: Player, data, home, away, score, oppon
 		homeColor = colorArray(homeColor),
 		awayColor = colorArray(awayColor),
 		crowdLevel = data.buildings.Stands or 1,
-		timeline = MatchReplay.Build(score.events, os.time() + player.UserId + replaySeed * 7919),
+		homeTactic = Tactics.Sanitize(home.tactic),
+		awayTactic = Tactics.Sanitize(away.tactic),
+		timeline = MatchReplay.Build(
+			score.events,
+			os.time() + player.UserId + replaySeed * 7919,
+			{ home = home.tactic, away = away.tactic }
+		),
 	}
 end
 
@@ -265,8 +283,8 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	if type(opponentId) ~= "string" then
 		return nil, Locale.TP(player, "error.invalidOpponent")
 	end
-	if type(tactic) ~= "string" or not Config.Tactics[tactic] then
-		tactic = data.tactic
+	if not Tactics.IsValid(tactic) then
+		tactic = Tactics.Sanitize(data.tactic) -- ancienne sauvegarde ou valeur inconnue : style par défaut
 	end
 
 	local now = os.time()
@@ -304,7 +322,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 			id = opponentId,
 			name = opponentData.club.name,
 			squad = SquadService.Starters(opponentData), -- titulaires, lecture seule
-			tactic = opponentData.tactic,
+			tactic = Tactics.Sanitize(opponentData.tactic),
 			bonus = trainingBonus,
 		}
 	end
@@ -421,6 +439,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		awayGoals = score.awayGoals,
 		events = score.events,
 		outcome = outcome,
+		tactics = score.tactics,
 		rewards = {
 			match = matchReward,
 			tickets = tickets,

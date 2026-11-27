@@ -9,6 +9,8 @@ monter dans les divisions. Monnaie : **FC Coins**.
 
 🚀 **Pour publier le jeu et y jouer sur téléphone : [GUIDE_PUBLICATION.md](GUIDE_PUBLICATION.md)**
 
+🖼️ **Pour mettre le vrai logo et les écussons : [GUIDE_IMAGES.md](GUIDE_IMAGES.md)** · Jeu publié : https://www.roblox.com/games/75942746782438
+
 ✅ **Tests automatiques (sans Studio) : [tests/README.md](tests/README.md)**
 
 ## Structure du dépôt

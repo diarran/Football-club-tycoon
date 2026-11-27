@@ -34,7 +34,9 @@ local print = H.realPrint -- les print du jeu restent dans le journal du harnais
 -- la fin du délai : il regarde le résultat, se promène, achète…).
 local PROFILS = {
 -- postSessions : sessions jouées au plus après la D1 (phase de fin de partie).
-	{ id = "actif", label = "Joueur actif", sessionMinutes = 40, pauseHours = 6, matchEvery = 75, maxSessions = 200, postSessions = 200 },
+-- smartTactics : le joueur choisit le style qui bat celui du club fictif (Tactics.lua) ;
+-- sinon il joue toujours Équilibré (aucun avantage ni désavantage).
+	{ id = "actif", label = "Joueur actif", sessionMinutes = 40, pauseHours = 6, matchEvery = 75, maxSessions = 200, postSessions = 200, smartTactics = true },
 	{ id = "occasionnel", label = "Joueur occasionnel", sessionMinutes = 15, pauseHours = 24, matchEvery = 120, maxSessions = 365, postSessions = 60 },
 }
 
@@ -296,7 +298,12 @@ local function playRun(profil)
 			end
 			local coins = data.coins
 			local divisionBefore = data.club.division
-			local result, err = S.MatchService.TryStartMatch(player, "ai", "Balanced")
+			local tactic = "Balanced"
+			if profil.smartTactics then
+				local rival = Divisions.GetRival(data.club.division, Divisions.DEFAULT_RIVAL)
+				tactic = S.Tactics.CounterOf(rival.tactic) or "Balanced"
+			end
+			local result, err = S.MatchService.TryStartMatch(player, "ai", tactic)
 			if result then
 				run.matches += 1
 				if result.outcome == "Win" then

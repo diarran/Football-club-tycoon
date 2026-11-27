@@ -785,6 +785,9 @@ function H.boot(modules)
 		Injuries = mock.run(modules.Injuries),
 		Onboarding = mock.run(modules.Onboarding),
 		OnboardingService = mock.run(modules.OnboardingService),
+		Tactics = mock.run(modules.Tactics),
+		Locale = mock.run(modules.Locale),
+		MatchReplay = mock.run(modules.MatchReplay),
 	}
 end
 

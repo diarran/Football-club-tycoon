@@ -44,14 +44,31 @@ local function newRng(seed: number)
 	end
 end
 
+-- Mise en scène de chaque style (Tactics.lua) : nombre d'occasions, point de
+-- départ des actions (x, 0 = milieu ; négatif = dans son camp) et passes.
+MatchReplay.STYLES = {
+	Balanced = { chances = 1 },
+	Offensive = { chances = 1.4 },
+	Defensive = { chances = 0.7, startX = -0.2 },
+	Counter = { chances = 1, startX = -0.55, passes = 1 }, -- départ de loin, une passe en profondeur
+	Pressing = { chances = 1.2, startX = 0.4, passes = 1 }, -- ballon récupéré haut
+}
+
 -- Construit le trajet du ballon d'une action : 2 à 3 passes, puis le tir.
-local function buildPath(rand, side: string, kind: string)
+-- style (facultatif) : entrée de MatchReplay.STYLES.
+local function buildPath(rand, side: string, kind: string, style)
 	local dir = if side == "home" then 1 else -1
 	local path = {}
 	local x = (rand() - 0.5) * 0.4 -- départ vers le milieu de terrain
 	local z = (rand() - 0.5) * 1.2
+	if style and style.startX then
+		x = style.startX + x * 0.5
+	end
 	table.insert(path, { x * dir, z })
 	local passes = 2 + math.floor(rand() * 2)
+	if style and style.passes then
+		passes = style.passes
+	end
 	for i = 1, passes do
 		x = x + (0.75 - x) * (i / passes) * 0.8 + rand() * 0.1
 		z = math.clamp(z + (rand() - 0.5) * 0.9, -0.85, 0.85)
@@ -74,8 +91,14 @@ end
 
 -- events : buts déjà décidés par le serveur ({ minute, side, scorer }).
 -- seed : graine du replay (n'importe quel nombre). Ne modifie pas `events`.
-function MatchReplay.Build(events, seed: number?)
+-- tactics (facultatif) : { home = style, away = style } pour la mise en scène :
+-- un club offensif se crée plus d'occasions, une contre-attaque part de loin…
+function MatchReplay.Build(events, seed: number?, tactics)
 	local rand = newRng(seed or 1)
+	local styles = {
+		home = tactics and MatchReplay.STYLES[tactics.home],
+		away = tactics and MatchReplay.STYLES[tactics.away],
+	}
 	local actions = {}
 	for _, event in events or {} do
 		table.insert(actions, {
@@ -87,11 +110,19 @@ function MatchReplay.Build(events, seed: number?)
 		})
 	end
 	-- Occasions manquées pour rythmer le replay (sans effet sur le score).
-	local chances = math.min(2 + math.floor(rand() * 3), math.max(0, MatchReplay.MAX_ACTIONS - #actions))
+	-- Avec des tactiques : plus d'occasions pour les styles qui attaquent.
+	local homeWeight = if styles.home then styles.home.chances else 1
+	local awayWeight = if styles.away then styles.away.chances else 1
+	local baseChances = 2 + math.floor(rand() * 3)
+	if tactics then
+		baseChances = math.floor(baseChances * (homeWeight + awayWeight) / 2 + 0.5)
+	end
+	local chances = math.min(baseChances, math.max(0, MatchReplay.MAX_ACTIONS - #actions))
+	local homeShare = homeWeight / (homeWeight + awayWeight)
 	for _ = 1, chances do
 		table.insert(actions, {
 			minute = 1 + math.floor(rand() * 90),
-			side = if rand() < 0.5 then "home" else "away",
+			side = if rand() < homeShare then "home" else "away",
 			kind = if rand() < 0.5 then "save" else "miss",
 			order = #actions + 1,
 		})
@@ -121,7 +152,7 @@ function MatchReplay.Build(events, seed: number?)
 		local wanted = MatchReplay.INTRO_SECONDS + (action.minute / 90) * MatchReplay.PLAY_SECONDS - actionSeconds
 		action.t = math.max(wanted, nextFree)
 		nextFree = action.t + actionSeconds + gap
-		action.path = buildPath(rand, action.side, action.kind)
+		action.path = buildPath(rand, action.side, action.kind, styles[action.side])
 	end
 	local duration = math.max(MatchReplay.INTRO_SECONDS + MatchReplay.PLAY_SECONDS, nextFree - gap)
 		+ MatchReplay.OUTRO_SECONDS

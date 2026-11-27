@@ -58,6 +58,13 @@ Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne roug
 4. **Match en 3D** : lance un match dans **Matchs** ; il se joue sur ton terrain, les
    buts font jaillir des **confettis** avec un son. À la fin, la fenêtre de résultat
    s'affiche et la mission « Joue … matchs » avance.
+4 bis. **Tactique** : en haut de **Matchs**, **5 boutons** (Équilibrée, Offensive,
+   Défensive, Contre-attaque, Pressing) et une phrase dit ce que bat le style choisi.
+   Sous chaque adversaire, une ligne **« Style de jeu : … »** et un conseil. Clique le
+   style conseillé : la ligne devient verte **« ✓ Avantage tactique »** ; un style
+   contré la rend rouge **« ✗ Attention »**. Joue avec l'avantage : le match 3D
+   commence par **« … contre … : coup d'envoi ! »** et le résultat affiche
+   **« Avantage tactique : … »**.
 5. **Gestion** : **Embaucher** le Médecin (2 500 FC) fait baisser le solde ; **Signer
    le contrat** d'un sponsor le fait passer dans « Les contrats de sponsoring ».
 6. **Prestige** : la salle des trophées et les objets de personnalisation s'affichent
