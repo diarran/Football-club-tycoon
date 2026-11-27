@@ -31,7 +31,7 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier (14 points, environ 20 minutes)
+## 5. Ce qu'il faut vérifier (15 points, environ 22 minutes)
 
 Note ✅ ou ❌ pour chaque point. Si c'est ❌, fais une capture d'écran.
 Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne rouge**.
@@ -62,6 +62,10 @@ Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne roug
    code le désactive et rend ton solde.
 9. **Téléphone** : onglet **Test** > **Device**, choisis un téléphone : les onglets
    passent sur **2 rangées de 4**, tous lisibles, et le contenu reste dessous.
+9 bis. **Entraînement** : dans **Effectif**, clique **Entraîner** sous un joueur : le
+   solde baisse, sa ligne **XP** augmente et le bouton passe en **Repos**. Recrute
+   jusqu'à 6 joueurs : **Faire jouer** sur un remplaçant le rend **Titulaire** à la
+   place d'un autre (il y a toujours 5 titulaires).
 
 **À 2 joueurs (Local Server, 2 Players)**
 

@@ -377,3 +377,20 @@ l'ordre des prix. Contrôles ajoutés : les contrats ne dépassent jamais leur
 plafond (2 contrats de D1 avec prestige et directeur commercial au maximum) ;
 le gain par match hors bonus de division et hors contrats reste sous 5 000 (max 4 931).
 Aucune monnaie infinie.
+
+## Entraînement et composition (27/11/2026)
+
+`src/shared/Training.lua` : séance d'entraînement par joueur (40 + note²/10 FC, 30 d'énergie,
+5 min de repos, 40 XP × zone d'entraînement × entraîneur × âge), note +1 tous les 100 XP
+jusqu'au potentiel, +1 an par saison, 5 titulaires (seuls à jouer, se fatiguer et gagner
+l'XP de match ; la moyenne d'XP de match reprend l'ancienne chance de progresser).
+Le simulateur entraîne les titulaires en forme (énergie ≥ 90) en gardant 4 fois le prix.
+
+| Profil actif (8 parties) | Avant | Après |
+| --- | --- | --- |
+| Montée en D5 | 40 min | 40,6 min |
+| D1 | 30,3 h | 30,9 h |
+| Séances / dépense | — | 43,5 / ~21 700 FC |
+
+Premier essai (30 XP, 60 + note²/8, entraînement même fatigué) : D5 à 46 min, car les
+joueurs arrivaient fatigués aux matchs et la séance coûtait trop cher pour son effet.
