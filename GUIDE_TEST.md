@@ -128,9 +128,10 @@ rouge**.
     Meilleurs clubs, Trophées) ; dans Studio elle dit « Mode test : seulement les clubs
     de ce serveur ». Sur la place, le grand panneau **CLASSEMENT MONDIAL** change de
     tableau toutes les 12 secondes.
-18. **Langue et son** : dans **Paramètres**, **English** traduit tout le menu (aucun
-    mot français), puis remets **Français**. **Volume du son** sur **Muet** coupe les
-    sons.
+18. **Langue et son** : dans **Paramètres**, 4 boutons de langue. **English**,
+    **Español** puis **Português** traduisent tout le menu et les panneaux du stade
+    (aucun mot français), puis remets **Français**. **Volume du son** sur **Muet**
+    coupe les sons.
 19. **Téléphone** : onglet **Test** > **Device**, choisis un téléphone. Les onglets
     passent sur **2 rangées de 4**, tous lisibles, et le contenu reste dessous. Dans
     **Matchs**, le premier bouton **Jouer** arrive avant la Coupe nationale. Joue un
