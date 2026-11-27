@@ -156,7 +156,7 @@ function MatchService.ClubTeam(player: Player)
 	return {
 		id = "player:" .. player.UserId,
 		name = data.club.name,
-		squad = table.clone(data.squad),
+		squad = SquadService.Starters(data), -- titulaires (lecture seule)
 		tactic = data.tactic,
 		bonus = (Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0)
 			+ Staff.Effect(data.staff, "teamBonus"),
@@ -297,7 +297,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		away = {
 			id = opponentId,
 			name = opponentData.club.name,
-			squad = table.clone(opponentData.squad), -- lecture seule
+			squad = SquadService.Starters(opponentData), -- titulaires, lecture seule
 			tactic = opponentData.tactic,
 			bonus = trainingBonus,
 		}
@@ -313,7 +313,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	local home = {
 		id = "player:" .. player.UserId,
 		name = data.club.name,
-		squad = data.squad,
+		squad = SquadService.Starters(data), -- titulaires choisis (onglet Effectif)
 		tactic = tactic,
 		bonus = homeBonus,
 	}

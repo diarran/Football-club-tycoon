@@ -16,11 +16,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
+local Daily = require(Shared.Daily)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
 local Staff = require(Shared.Staff)
+local Training = require(Shared.Training)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
@@ -57,6 +59,8 @@ local function generateFootballer(
 		energy = PlayerConfig.MAX_ENERGY,
 		value = rating * 30,
 		salary = rating * 2,
+		xp = 0,
+		trainedAt = 0,
 	}
 	data.nextPlayerId += 1
 	return footballer
@@ -221,6 +225,8 @@ function SquadService.TrySignProspect(player: Player, prospectId): (boolean, str
 		value = prospect.rating * 30,
 		salary = prospect.rating * 2,
 		youth = true, -- formé au club : progression accélérée
+		xp = 0,
+		trainedAt = 0,
 	})
 	PlayerDataService.MarkChanged(player)
 	DailyService.Track(player, "recruit") -- mission du jour
@@ -261,8 +267,6 @@ function SquadService.TryRelease(player: Player, footballerId): (boolean, string
 	return true, Locale.TP(player, "squad.released", { name = footballer.name })
 end
 
--- Après un match : fatigue et petite chance de progresser vers le potentiel.
--- Les jeunes formés au club ont la chance en plus du centre de formation.
 -- Joueur le moins bien noté de l'effectif (celui que remplace un transfert).
 function SquadService.GetWeakest(squad)
 	local weakest = nil
@@ -307,6 +311,13 @@ function SquadService.TryTransfer(player: Player): (boolean, string)
 	)
 	local slot = table.find(data.squad, weakest)
 	data.squad[slot] = newcomer
+	-- Le nouveau joueur prend la place du partant dans la composition.
+	if type(data.lineup) == "table" then
+		local index = table.find(data.lineup, weakest.id)
+		if index then
+			data.lineup[index] = newcomer.id
+		end
+	end
 	PlayerDataService.MarkChanged(player)
 	DailyService.Track(player, "recruit") -- mission du jour
 	local lang = Locale.ForPlayer(player)
@@ -319,19 +330,185 @@ function SquadService.TryTransfer(player: Player): (boolean, string)
 		})
 end
 
+-- Entraînement et composition (shared/Training.lua) ---------------------------
+
+-- Titulaires du club (tables de data.squad). Utilisé par les matchs.
+function SquadService.Starters(data)
+	return Training.Starters(data.squad, data.lineup)
+end
+
+local function findFootballer(data, footballerId)
+	if type(footballerId) ~= "number" then
+		return nil
+	end
+	for _, footballer in data.squad do
+		if footballer.id == footballerId then
+			return footballer
+		end
+	end
+	return nil
+end
+
+-- Complète les champs ajoutés avec l'entraînement (anciens profils, joueurs
+-- abîmés) et vieillit l'effectif d'un an par saison écoulée.
+function SquadService.RefreshTraining(data)
+	for _, footballer in data.squad do
+		local xp = tonumber(footballer.xp)
+		footballer.xp = if xp and xp == xp and xp >= 0 and xp < Training.XP_PER_POINT then math.floor(xp) else 0
+		local trainedAt = tonumber(footballer.trainedAt)
+		footballer.trainedAt = if trainedAt and trainedAt == trainedAt then trainedAt else 0
+	end
+	local season = Daily.SeasonId(os.time())
+	local state = data.training
+	if type(state.ageSeason) ~= "number" or state.ageSeason ~= state.ageSeason or state.ageSeason > season then
+		state.ageSeason = season
+	end
+	local years = math.min(Training.MAX_AGE_STEPS, season - state.ageSeason)
+	if years > 0 then
+		for _, footballer in data.squad do
+			footballer.age = (tonumber(footballer.age) or PlayerConfig.AGE_MIN) + years
+		end
+	end
+	state.ageSeason = season
+	data.lineup = Training.Normalize(data.squad, data.lineup)
+end
+
+-- Séance d'entraînement d'un joueur : prix en FC Coins, énergie, délai.
+function SquadService.TryTrain(player: Player, footballerId): (boolean, string)
+	local data = PlayerDataService.GetData(player)
+	if not data then
+		return false, Locale.TP(player, "error.profileNotLoaded")
+	end
+	local footballer = findFootballer(data, footballerId)
+	if not footballer then
+		return false, Locale.TP(player, "error.unknownFootballer")
+	end
+	SquadService.RefreshEnergy(data)
+	if footballer.rating >= footballer.potential then
+		return false, Locale.TP(player, "training.atPotential", { name = footballer.name })
+	end
+	local wait = Training.CooldownLeft(footballer, os.time())
+	if wait > 0 then
+		return false, Locale.TP(player, "training.cooldown", { name = footballer.name, seconds = math.ceil(wait) })
+	end
+	if footballer.energy < Training.MIN_ENERGY then
+		return false, Locale.TP(player, "training.tired", { name = footballer.name, energy = Training.MIN_ENERGY })
+	end
+	local cost = Training.SessionCost(footballer.rating)
+	if not EconomyService.TrySpend(player, cost, "training") then
+		return false, Locale.TP(player, "error.notEnoughCoinsTraining", { currency = Config.CURRENCY_NAME })
+	end
+	local teamBonus = Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0
+	local xp = Training.SessionXp(footballer, teamBonus, Staff.Effect(data.staff, "growthBonus"))
+	footballer.energy = math.max(0, footballer.energy - Training.SESSION_ENERGY)
+	footballer.trainedAt = os.time()
+	local gained = Training.AddXp(footballer, xp)
+	PlayerDataService.MarkChanged(player)
+	if gained > 0 then
+		return true, Locale.TP(player, "training.levelUp", { name = footballer.name, rating = footballer.rating })
+	end
+	return true, Locale.TP(player, "training.done", { name = footballer.name, xp = xp })
+end
+
+-- Fait entrer un remplaçant (starter = true) ou met un titulaire sur le banc.
+-- La composition garde toujours Training.STARTERS joueurs (ou tout l'effectif).
+function SquadService.TrySetStarter(player: Player, footballerId, starter): (boolean, string)
+	local data = PlayerDataService.GetData(player)
+	if not data then
+		return false, Locale.TP(player, "error.profileNotLoaded")
+	end
+	local footballer = findFootballer(data, footballerId)
+	if not footballer or type(starter) ~= "boolean" then
+		return false, Locale.TP(player, "error.unknownFootballer")
+	end
+	if #data.squad <= Training.STARTERS then
+		return false, Locale.TP(player, "lineup.everyonePlays", { count = Training.STARTERS })
+	end
+	local starters = Training.Starters(data.squad, data.lineup)
+	local set = {}
+	for _, s in starters do
+		set[s.id] = true
+	end
+	if set[footballer.id] == starter then
+		return true, "" -- déjà fait
+	end
+	local outId, inId
+	if starter then
+		-- Sort le titulaire le moins bien noté au même poste, sinon le moins bien noté
+		-- (on ne sort le seul gardien que pour un autre gardien).
+		local samePosition, anyPosition
+		local keepers = 0
+		for _, s in starters do
+			keepers += if s.position == "GK" then 1 else 0
+		end
+		for _, s in starters do
+			if s.position == footballer.position and (not samePosition or s.rating < samePosition.rating) then
+				samePosition = s
+			end
+			local protected = s.position == "GK" and keepers <= 1
+			if not protected and (not anyPosition or s.rating < anyPosition.rating) then
+				anyPosition = s
+			end
+		end
+		local out = samePosition or anyPosition or starters[#starters]
+		outId, inId = out.id, footballer.id
+	else
+		-- Entre le meilleur remplaçant au même poste, sinon le meilleur remplaçant.
+		local samePosition, anyPosition
+		for _, b in data.squad do
+			if not set[b.id] then
+				if b.position == footballer.position and (not samePosition or b.rating > samePosition.rating) then
+					samePosition = b
+				end
+				if not anyPosition or b.rating > anyPosition.rating then
+					anyPosition = b
+				end
+			end
+		end
+		local incoming = samePosition or anyPosition
+		outId, inId = footballer.id, incoming.id
+	end
+	local lineup = {}
+	for _, s in starters do
+		table.insert(lineup, if s.id == outId then inId else s.id)
+	end
+	data.lineup = lineup
+	PlayerDataService.MarkChanged(player)
+	local inName, outName
+	for _, f in data.squad do
+		if f.id == inId then
+			inName = f.name
+		elseif f.id == outId then
+			outName = f.name
+		end
+	end
+	return true, Locale.TP(player, "lineup.swapped", { inName = inName, outName = outName })
+end
+
+-- Composition automatique : les meilleurs joueurs, avec un gardien.
+function SquadService.TryAutoLineup(player: Player): (boolean, string)
+	local data = PlayerDataService.GetData(player)
+	if not data then
+		return false, Locale.TP(player, "error.profileNotLoaded")
+	end
+	data.lineup = Training.Normalize(data.squad, {})
+	PlayerDataService.MarkChanged(player)
+	return true, Locale.TP(player, "lineup.auto")
+end
+
+-- Après un match : les titulaires se fatiguent et gagnent de l'XP (les jeunes
+-- formés au club ont en plus le bonus du centre de formation). Les remplaçants
+-- se reposent.
 function SquadService.ApplyMatchEffects(data)
 	local trainingLevel = data.buildings.Training or 1
 	local teamBonus = Buildings.GetEffects("Training", trainingLevel).teamBonus or 0
 	local youthGrowth = Buildings.GetEffects("Academy", data.buildings.Academy or 1).youthGrowth or 0
-	-- Entraîneur du staff : un peu plus de chance de progresser.
+	-- Entraîneur du staff : un peu plus d'XP.
 	local baseChance = 0.2 + 0.1 * teamBonus + Staff.Effect(data.staff, "growthBonus")
-	for _, footballer in data.squad do
+	for _, footballer in SquadService.Starters(data) do
 		footballer.energy = math.max(0, footballer.energy - Config.ENERGY_COST_PER_MATCH)
-		local progressChance = if footballer.youth then baseChance + youthGrowth else baseChance
-		if footballer.rating < footballer.potential and rng:NextNumber() < progressChance then
-			footballer.rating += 1
-			footballer.value = footballer.rating * 30
-		end
+		local chance = if footballer.youth then baseChance + youthGrowth else baseChance
+		Training.AddXp(footballer, Training.MatchXp(footballer, chance))
 	end
 end
 
@@ -352,6 +529,7 @@ function SquadService.OnPlayerReady(_player: Player, profile)
 	end
 	SquadService.RefreshEnergy(data)
 	SquadService.RefreshProspects(data)
+	SquadService.RefreshTraining(data)
 end
 
 function SquadService.Init()
@@ -367,6 +545,21 @@ function SquadService.Init()
 		Net.FireClient("Notify", player, message, if ok then "success" else "error")
 		if ok then
 			ClubService.BroadcastClubs()
+		end
+	end)
+	Net.Handle("RequestTrain", function(player, id)
+		local ok, message = SquadService.TryTrain(player, id)
+		Net.FireClient("Notify", player, message, if ok then "success" else "error")
+	end)
+	Net.Handle("RequestLineup", function(player, id, starter)
+		local ok, message
+		if id == "auto" then
+			ok, message = SquadService.TryAutoLineup(player)
+		else
+			ok, message = SquadService.TrySetStarter(player, id, starter)
+		end
+		if message ~= "" then
+			Net.FireClient("Notify", player, message, if ok then "success" else "error")
 		end
 	end)
 	for _, name in { "RequestSignProspect", "RequestRelease" } do

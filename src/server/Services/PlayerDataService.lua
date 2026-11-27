@@ -28,6 +28,7 @@ local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local Sponsors = require(Shared.Sponsors)
 local Staff = require(Shared.Staff)
+local Training = require(Shared.Training)
 local Trophies = require(Shared.Trophies)
 local AdminAccess = require(script.Parent.Parent.Admin.AdminAccess)
 
@@ -70,6 +71,9 @@ local function defaultData()
 		},
 		buildings = Buildings.DefaultLevels(),
 		squad = {}, -- rempli par SquadService au premier chargement
+		-- Composition (titulaires, identifiants) et vieillissement (SquadService, Training.lua).
+		lineup = {},
+		training = { ageSeason = Daily.SeasonId(os.time()) },
 		nextPlayerId = 1,
 		-- Centre de formation : jeunes repérés en attente de signature (SquadService).
 		academy = { prospects = {}, lastScoutAt = 0 },
@@ -426,6 +430,7 @@ function PlayerDataService.BuildSnapshot(player: Player)
 		club = table.clone(data.club),
 		buildings = table.clone(data.buildings),
 		squad = data.squad,
+		lineup = Training.Normalize(data.squad, data.lineup),
 		prospects = data.academy.prospects,
 		tactic = data.tactic,
 		staff = table.clone(data.staff),

@@ -25,6 +25,8 @@ Net.Requests = {
 	"RequestTransfer", -- () remplace le joueur le moins bien noté (effectif complet, D5+)
 	"RequestSignProspect", -- (prospectId: number) signer un jeune du centre de formation
 	"RequestRelease", -- (footballerId: number) libérer un joueur de l'effectif
+	"RequestTrain", -- (footballerId: number) séance d'entraînement d'un joueur
+	"RequestLineup", -- (footballerId: number, starter: boolean) ou ("auto") composition
 	"RequestMatch", -- (opponentId: string, tactic: string)
 	"RequestRename", -- (newName: string)
 	"RequestTutorialStep", -- (stepId: string) étapes purement informatives (menu ouvert…)

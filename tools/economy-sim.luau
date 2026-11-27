@@ -85,6 +85,8 @@ local RECRUITS = Config.MAX_SQUAD_SIZE - Config.STARTING_PLAYERS
 for n = 1, RECRUITS do
 	table.insert(ITEMS, { key = "Recrue " .. n, recruit = n, cost = PlayerConfig.RECRUIT_COST })
 end
+-- Entraînement : le joueur garde au moins N fois le prix d'une séance.
+local TRAIN_RESERVE = 4
 -- Fin de partie : seuil d'alerte (heures de jeu après la D1 avant de tout posséder).
 local MIN_ENDGAME_HOURS = 15
 local CHECK_HOURS = 10 -- « objets achetés N heures après la D1 »
@@ -131,6 +133,8 @@ local function playRun(profil)
 		eventCosmetics = 0, -- objets d'événement gagnés
 		topWeeks = {}, -- semaines où la dernière étape de l'événement est atteinte
 		weeks = {}, -- semaines jouées
+		trainingSessions = 0, -- séances d'entraînement (Training.lua)
+		trainingSpent = 0,
 	}
 	local function stamp()
 		return { minutes = run.playSeconds / 60, matches = run.matches, session = run.sessions }
@@ -212,6 +216,26 @@ local function playRun(profil)
 		end
 	end
 
+	-- Entraînement : le joueur entraîne ses titulaires prêts, s'il garde de
+	-- quoi acheter (réserve de TRAIN_RESERVE fois le prix de la séance) et
+	-- seulement s'ils sont en forme (une séance fatigue avant le match).
+	local function train(player, data)
+		local now = os.time()
+		for _, footballer in S.SquadService.Starters(data) do
+			local cost = S.Training.SessionCost(footballer.rating)
+			if footballer.rating < footballer.potential
+				and S.Training.CooldownLeft(footballer, now) <= 0
+				and footballer.energy >= 90
+				and data.coins >= cost * TRAIN_RESERVE
+			then
+				if S.SquadService.TryTrain(player, footballer.id) then
+					run.trainingSessions += 1
+					run.trainingSpent += cost
+				end
+			end
+		end
+	end
+
 	while run.sessions < profil.maxSessions and not run.allCosmeticsAt and run.postSessions < profil.postSessions do
 		run.sessions += 1
 		if run.reach[TOP] and run.allBoughtAt then
@@ -241,6 +265,7 @@ local function playRun(profil)
 				table.insert(run.tournamentGains, data.coins - beforeWait)
 			end
 			shop(player, data)
+			train(player, data)
 			-- Sponsors : le joueur signe l'offre la plus payante dès qu'il a une place.
 			while #data.sponsors.contracts < S.Sponsors.MaxActive(Divisions.Get(data.club.division).tier) do
 				S.StaffService.RefreshOffers(data)
@@ -456,6 +481,12 @@ for _, profil in PROFILS do
 		table.insert(transfers, run.transfers)
 		table.insert(transferSpent, run.transferSpent)
 	end
+	local sessions, spent = {}, {}
+	for _, run in runs do
+		table.insert(sessions, run.trainingSessions)
+		table.insert(spent, run.trainingSpent)
+	end
+	print(("Entraînement : médiane %s séances (dépense %s FC Coins)"):format(fmt(median(sessions)), fmt(median(spent))))
 	print(("Transferts : médiane %s (dépense %s FC Coins)"):format(fmt(median(transfers)), fmt(median(transferSpent))))
 
 	-- Fin de partie : personnalisation achetée après la D1.

@@ -31,6 +31,7 @@ local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
 local Staff = require(Shared.Staff)
+local Training = require(Shared.Training)
 local WorldConfig = require(Shared.WorldConfig)
 
 local player = Players.LocalPlayer
@@ -480,6 +481,27 @@ function renderers.Stadium(profile)
 	end
 end
 
+-- Ligne de boutons côte à côte (largeur relative : lisible sur téléphone).
+local function buttonRow(entries)
+	local row = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, {
+		create("UIListLayout", {
+			FillDirection = Enum.FillDirection.Horizontal,
+			Padding = UDim.new(0, 6),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	})
+	local width = 1 / #entries
+	for index, entry in entries do
+		button(entry.text, entry.onClick, {
+			LayoutOrder = index,
+			Size = UDim2.new(width, -6, 0, 44),
+			BackgroundColor3 = entry.color or COLORS.accent,
+		}).Parent =
+			row
+	end
+	return row
+end
+
 -- Effectif complet : bouton de transfert si la division a un marché.
 local function transferControl(profile)
 	local division = Divisions.Get(profile.club.division)
@@ -566,13 +588,44 @@ function renderers.Squad(profile)
 			content
 	end
 
+	-- Composition et entraînement (shared/Training.lua).
+	local starterSet = {}
+	for _, id in profile.lineup or Training.Normalize(squad, nil) do
+		starterSet[id] = true
+	end
+	local canSwap = #squad > Training.STARTERS
+	local trainingLevel = profile.buildings.Training or 1
+	local teamBonus = Buildings.GetEffects("Training", trainingLevel).teamBonus or 0
+	local growthBonus = Staff.Effect(profile.staff or {}, "growthBonus")
+	local lineupChildren = {
+		label(T("lineup.title", { count = math.min(Training.STARTERS, #squad) }), { Font = Enum.Font.GothamBold }),
+		label(T("lineup.hint"), { TextColor3 = COLORS.muted, TextSize = 16 }),
+		label(T("training.hint", { xp = Training.XP_PER_POINT }), { TextColor3 = COLORS.muted, TextSize = 16 }),
+	}
+	if canSwap then
+		table.insert(
+			lineupChildren,
+			button(T("lineup.autoButton"), function()
+				Net.Get("RequestLineup"):FireServer("auto")
+			end, { Size = UDim2.new(0, 240, 0, 44) })
+		)
+	end
+	card(lineupChildren).Parent = content
+
 	local canRelease = #squad > Config.STARTING_PLAYERS
+	local now = os.time()
 	for _, footballer in squad do
 		local position = if PlayerConfig.Positions[footballer.position]
 			then T("position." .. footballer.position)
 			else footballer.position
+		local isStarter = starterSet[footballer.id] == true
+		local roleText = if isStarter then T("lineup.starter") else T("lineup.bench")
+		local atPotential = footballer.rating >= footballer.potential
 		local children = {
-			label((if footballer.youth then "⭐ " else "") .. footballer.name, { Font = Enum.Font.GothamBold }),
+			label(
+				(if footballer.youth then "⭐ " else "") .. footballer.name .. " · " .. roleText,
+				{ Font = Enum.Font.GothamBold, TextColor3 = if isStarter then COLORS.text else COLORS.muted }
+			),
 			label(
 				T("squad.playerLine", {
 					position = position,
@@ -583,14 +636,52 @@ function renderers.Squad(profile)
 				}),
 				{ TextColor3 = COLORS.muted, TextSize = 16 }
 			),
+			label(
+				if atPotential
+					then T("training.atPotentialShort")
+					else T("training.xpLine", {
+						xp = math.floor(footballer.xp or 0),
+						max = Training.XP_PER_POINT,
+						gain = Training.SessionXp(footballer, teamBonus, growthBonus),
+					}),
+				{ TextColor3 = if atPotential then COLORS.gold else COLORS.muted, TextSize = 16 }
+			),
 		}
+		local entries = {}
+		if not atPotential then
+			local cost = Training.SessionCost(footballer.rating)
+			local wait = Training.CooldownLeft(footballer, now)
+			local ready = wait <= 0 and footballer.energy >= Training.MIN_ENERGY and profile.coins >= cost
+			table.insert(entries, {
+				text = if wait > 0
+					then T("training.wait", { seconds = math.ceil(wait) })
+					else T("training.button", { cost = formatCoins(cost) }),
+				onClick = function()
+					Net.Get("RequestTrain"):FireServer(footballer.id)
+				end,
+				color = if ready then COLORS.accent else COLORS.disabled,
+			})
+		end
+		if canSwap then
+			table.insert(entries, {
+				text = if isStarter then T("lineup.toBench") else T("lineup.toPitch"),
+				onClick = function()
+					Net.Get("RequestLineup"):FireServer(footballer.id, not isStarter)
+				end,
+				color = if isStarter then COLORS.disabled else COLORS.accent,
+			})
+		end
 		if canRelease then
-			table.insert(
-				children,
-				button(T("squad.release"), function()
+			table.insert(entries, {
+				text = T("squad.release"),
+				onClick = function()
 					Net.Get("RequestRelease"):FireServer(footballer.id)
-				end, { Size = UDim2.new(0, 160, 0, 44), BackgroundColor3 = COLORS.disabled })
-			)
+				end,
+				color = COLORS.disabled,
+			})
+		end
+		if #entries > 0 then
+			table.insert(children, buttonRow(entries))
 		end
 		card(children).Parent = content
 	end
@@ -735,27 +826,6 @@ function renderers.Management(profile)
 		}).Parent =
 			content
 	end
-end
-
--- Ligne de boutons côte à côte (largeur relative : lisible sur téléphone).
-local function buttonRow(entries)
-	local row = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 44) }, {
-		create("UIListLayout", {
-			FillDirection = Enum.FillDirection.Horizontal,
-			Padding = UDim.new(0, 6),
-			SortOrder = Enum.SortOrder.LayoutOrder,
-		}),
-	})
-	local width = 1 / #entries
-	for index, entry in entries do
-		button(entry.text, entry.onClick, {
-			LayoutOrder = index,
-			Size = UDim2.new(width, -6, 0, 44),
-			BackgroundColor3 = entry.color or COLORS.accent,
-		}).Parent =
-			row
-	end
-	return row
 end
 
 -- Tournoi du serveur : état, inscription, tableau des matchs joués.
