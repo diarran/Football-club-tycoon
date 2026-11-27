@@ -37,6 +37,7 @@ Le test `07_client` démarre aussi le vrai client (HUD, menus) et clique sur les
 | `10_progression` | 5 niveaux par installation, Boutique, modèles 3D au bon niveau |
 | `11_divisions` | D7 → D1, clubs fictifs, primes croissantes, transferts validés par le serveur, classement de division |
 | `10_progression` | 5 niveaux par installation, prix exacts, modèles 3D au niveau 5, Boutique |
+| `27_achievements` | succès : 20 succès calculés à partir du profil, prime versée une seule fois, anciens profils servis tout de suite, succès gardé après une baisse, profil abîmé réparé, badges Roblox seulement avec un numéro (une fois, nouvel essai après échec, déjà possédé), accueil + Prestige + bouton Récupérer |
 | `18_friends` | clubs entre amis : amis Roblox repérés par le serveur, match amical sans mise (petit bonus limité par jour), primes d'invitation (une fois par ami, plafonnées, versées même si l'inviteur était absent), valeurs invalides refusées, carte Amis et bouton Match amical |
 | `23_branding` | vraie identité visuelle : numéros d'images collés sous toutes les formes, version dessinée tant que l'image manque ou n'est pas chargée, logo et écusson du HUD, écussons du portique et du toit des bureaux, lien du jeu publié copiable dans la carte Amis |
 | `24_tactics` | tactiques : 5 styles en pierre-feuille-ciseaux, style fixe des clubs fictifs, avantage dans la simulation, anciennes sauvegardes, replay 3D selon les styles, boutons et conseils de l'onglet Matchs |

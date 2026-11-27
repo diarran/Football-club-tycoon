@@ -37,6 +37,7 @@ local EventService = require(Services.EventService)
 local FriendService = require(Services.FriendService)
 local LeaderboardService = require(Services.LeaderboardService)
 local CupService = require(Services.CupService)
+local AchievementService = require(Services.AchievementService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
 local ORDERED_SERVICES = {
@@ -60,6 +61,8 @@ local ORDERED_SERVICES = {
 	{ name = "FriendService", module = FriendService },
 	{ name = "LeaderboardService", module = LeaderboardService },
 	{ name = "CupService", module = CupService },
+	-- Après les autres : les succès lisent les titres mis à jour par CosmeticService.
+	{ name = "AchievementService", module = AchievementService },
 }
 
 for _, entry in ORDERED_SERVICES do
