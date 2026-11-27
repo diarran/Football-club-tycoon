@@ -21,6 +21,7 @@ local Community = require(Shared.Community)
 local Buildings = require(Shared.Buildings)
 local Campus = require(Shared.Campus)
 local Config = require(Shared.Config)
+local ClubIdentity = require(Shared.ClubIdentity)
 local Cosmetics = require(Shared.Cosmetics)
 local Trophies = require(Shared.Trophies)
 local Divisions = require(Shared.Divisions)
@@ -1967,8 +1968,152 @@ function renderers.Ranking(profile)
 	end
 end
 
+-- Grille de petits boutons carrés (couleurs, écussons).
+local function swatchGrid(children)
+	return create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y }, {
+		create("UIGridLayout", {
+			CellSize = UDim2.new(0, 44, 0, 44),
+			CellPadding = UDim2.new(0, 6, 0, 6),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+		table.unpack(children),
+	})
+end
+
+-- Aperçu du maillot (2D) : maillot à la couleur principale + motif.
+local function kitPreview(kit)
+	local shirt = ClubIdentity.FromArray(kit.shirt, COLORS.accent)
+	local detail = ClubIdentity.FromArray(kit.detail, COLORS.text)
+	local strips = {
+		stripes = { { 0.18, 1, 0.25, 0.5, 0 }, { 0.18, 1, 0.75, 0.5, 0 } },
+		pinstripes = { { 0.06, 1, 0.3, 0.5, 0 }, { 0.06, 1, 0.5, 0.5, 0 }, { 0.06, 1, 0.7, 0.5, 0 } },
+		hoops = { { 1, 0.16, 0.5, 0.3, 0 }, { 1, 0.16, 0.5, 0.7, 0 } },
+		band = { { 1, 0.3, 0.5, 0.5, 0 } },
+		halves = { { 0.5, 1, 0.75, 0.5, 0 } },
+		sash = { { 0.16, 1.3, 0.5, 0.5, 40 } },
+		chevron = { { 0.14, 0.55, 0.36, 0.35, 55 }, { 0.14, 0.55, 0.64, 0.35, -55 } },
+	}
+	local children = { corner(6) }
+	for _, strip in strips[kit.pattern] or {} do
+		table.insert(children, create("Frame", {
+			Name = "PreviewStrip",
+			BorderSizePixel = 0,
+			BackgroundColor3 = detail,
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Size = UDim2.fromScale(strip[1], strip[2]),
+			Position = UDim2.fromScale(strip[3], strip[4]),
+			Rotation = strip[5],
+		}))
+	end
+	return create("Frame", {
+		Name = "KitPreview",
+		BackgroundColor3 = shirt,
+		ClipsDescendants = true,
+		Size = UDim2.new(0, 90, 0, 70),
+	}, children)
+end
+
+-- Identité du club : couleurs, motif du maillot, écusson (purement visuel).
+local function renderIdentity(profile)
+	local identity = profile.identity
+	if type(identity) ~= "table" then
+		return
+	end
+	local choice = identity.choice or {}
+	local cosmetics = profile.cosmetics or { owned = {}, equipped = {} }
+	local patternName = T("identity.pattern." .. tostring(identity.kit and identity.kit.pattern or "plain"))
+	local lines = {
+		label(T("identity.title"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
+		label(T("identity.intro"), { TextSize = 16 }),
+		kitPreview(identity.kit or { pattern = "plain" }),
+		label(T("identity.current", { pattern = patternName }), { TextColor3 = COLORS.muted, TextSize = 16 }),
+	}
+	if cosmetics.equipped.colors or cosmetics.equipped.kit then
+		table.insert(lines, label(T("identity.prestigeWorn"), { TextColor3 = COLORS.accent, TextSize = 16 }))
+	end
+
+	-- Couleurs : une pastille par couleur ; « ✓ » = couleur choisie.
+	for _, field in { "primary", "secondary" } do
+		table.insert(lines, label(T("identity." .. field), { Font = Enum.Font.GothamBold }))
+		local swatches = {
+			button(if choice[field] == "" then "✓" else "↺", function()
+				Net.Get("RequestSetIdentity"):FireServer(field, "default")
+			end, { Name = "Swatch_" .. field .. "_default", Size = UDim2.new(0, 44, 0, 44), LayoutOrder = 0, BackgroundColor3 = COLORS.disabled }),
+		}
+		for index, entry in ClubIdentity.COLORS do
+			table.insert(swatches, button(if choice[field] == entry.id then "✓" else "", function()
+				Net.Get("RequestSetIdentity"):FireServer(field, entry.id)
+			end, {
+				Name = "Swatch_" .. field .. "_" .. entry.id,
+				Size = UDim2.new(0, 44, 0, 44),
+				LayoutOrder = index,
+				BackgroundColor3 = entry.color,
+				TextColor3 = if entry.color.R + entry.color.G + entry.color.B > 1.8 then Color3.new(0, 0, 0) else Color3.new(1, 1, 1),
+			}))
+		end
+		table.insert(lines, swatchGrid(swatches))
+	end
+
+	-- Écusson : un des 6 écussons du jeu, ou celui de l'emplacement.
+	table.insert(lines, label(T("identity.crest"), { Font = Enum.Font.GothamBold }))
+	local crests = {
+		button(if (choice.crest or 0) == 0 then "✓" else "↺", function()
+			Net.Get("RequestSetIdentity"):FireServer("crest", 0)
+		end, { Name = "Crest_0", Size = UDim2.new(0, 44, 0, 44), LayoutOrder = 0, BackgroundColor3 = COLORS.disabled }),
+	}
+	for n = 1, ClubIdentity.CREST_COUNT do
+		local colors = WorldConfig.CLUB_COLORS[n] or WorldConfig.CLUB_COLORS[1]
+		local crestButton = button(if choice.crest == n then "✓" else tostring(n), function()
+			Net.Get("RequestSetIdentity"):FireServer("crest", n)
+		end, { Name = "Crest_" .. n, Size = UDim2.new(0, 44, 0, 44), LayoutOrder = n, BackgroundColor3 = colors.primary, TextColor3 = colors.secondary })
+		local image = Brand.CrestImage(n)
+		if image then
+			create("ImageLabel", { BackgroundTransparency = 1, Image = image, Size = UDim2.fromScale(1, 1), ZIndex = 0 }).Parent = crestButton
+		end
+		table.insert(crests, crestButton)
+	end
+	table.insert(lines, swatchGrid(crests))
+	card(lines).Parent = content
+
+	-- Motifs : choisir, acheter ou condition de déblocage.
+	label(T("identity.pattern"), { Font = Enum.Font.GothamBold }).Parent = content
+	local current = identity.kit and identity.kit.pattern
+	for _, pattern in ClubIdentity.PATTERNS do
+		local ok, reason = ClubIdentity.PatternUnlocked(pattern, profile.club.division, cosmetics.owned, identity.patterns)
+		local action
+		if ok and current == pattern.id and not cosmetics.equipped.kit then
+			action = label(T("identity.chosen"), { TextColor3 = COLORS.gold })
+		elseif ok then
+			action = button(T("identity.choose"), function()
+				Net.Get("RequestSetIdentity"):FireServer("pattern", pattern.id)
+			end, { Name = "Pattern_" .. pattern.id })
+		elseif reason == "division" then
+			action = label(T("identity.lockedDivision", { division = divisionLabel(pattern.requires.division) }), { TextColor3 = COLORS.muted, TextSize = 16 })
+		elseif reason == "coins" then
+			local affordable = profile.coins >= pattern.cost
+			action = button(T("identity.buy", { cost = formatCoins(pattern.cost) }), function()
+				Net.Get("RequestBuyPattern"):FireServer(pattern.id)
+			end, {
+				Name = "BuyPattern_" .. pattern.id,
+				Size = UDim2.new(0, 240, 0, 44),
+				BackgroundColor3 = if affordable then COLORS.accent else COLORS.disabled,
+			})
+		else
+			action = label(T("identity.lockedKit", { name = T("cosmetic." .. pattern.kit) }), { TextColor3 = COLORS.muted, TextSize = 16 })
+		end
+		card({ label(T("identity.pattern." .. pattern.id), { Font = Enum.Font.GothamBold }), action }).Parent = content
+	end
+	card({
+		button(T("identity.reset"), function()
+			Net.Get("RequestSetIdentity"):FireServer("reset")
+		end, { Name = "IdentityReset", Size = UDim2.new(0, 280, 0, 44), BackgroundColor3 = COLORS.disabled }),
+	}).Parent =
+		content
+end
+
 -- Prestige : salle des trophées et personnalisation (purement visuelle).
 function renderers.Prestige(profile)
+	renderIdentity(profile)
 	local trophies = profile.trophies or {}
 	local cosmetics = profile.cosmetics or { owned = {}, equipped = {} }
 	local titles = profile.titles or 0
@@ -2256,13 +2401,22 @@ end
 local function refreshCrestBadge(profile)
 	local slot = player:GetAttribute("ClubSlot")
 	local colors = WorldConfig.CLUB_COLORS[slot]
+	-- Identité choisie (couleurs, écusson), sinon celle de l'emplacement.
+	local identity = type(profile.identity) == "table" and profile.identity or nil
+	if identity and identity.primary then
+		colors = {
+			primary = ClubIdentity.FromArray(identity.primary, (colors or WorldConfig.CLUB_COLORS[1]).primary),
+			secondary = ClubIdentity.FromArray(identity.secondary, (colors or WorldConfig.CLUB_COLORS[1]).secondary),
+		}
+	end
 	if colors then
 		crestBadge.BackgroundColor3 = colors.primary
 		crestBadge.Stroke.Color = colors.secondary
 		crestBadge.Tag.TextColor3 = colors.secondary
 	end
 	crestBadge.Tag.Text = Brand.Tag(profile.club.name)
-	local image = Brand.CrestImage(slot)
+	local crestIndex = if identity and ClubIdentity.ValidCrest(identity.crest) then identity.crest else slot
+	local image = Brand.CrestImage(crestIndex)
 	crestBadge.Image.Image = image or ""
 	-- Écusson dessiné tant que l'image n'est pas chargée (ou pas encore validée).
 	local loaded = image ~= nil and crestBadge:GetAttribute("CrestLoaded") == image

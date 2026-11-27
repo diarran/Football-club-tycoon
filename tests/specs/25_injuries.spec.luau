@@ -190,7 +190,11 @@ H.test("jamais bloqué : tous blessés = attente courte, tous suspendus = suspen
 	for _, f in data.squad do
 		f.suspended = 1
 	end
+	-- Pas de nouveau carton pendant ce match : on vérifie seulement la levée.
+	local yellow, red = S.Injuries.YELLOW_CHANCE, S.Injuries.RED_CHANCE
+	S.Injuries.YELLOW_CHANCE, S.Injuries.RED_CHANCE = 0, 0
 	local result = play()
+	S.Injuries.YELLOW_CHANCE, S.Injuries.RED_CHANCE = yellow, red
 	H.ok(result, "que des suspendus : le match se joue")
 	for _, f in data.squad do
 		H.eq(f.suspended, 0, "suspensions levées")

@@ -17,12 +17,14 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
+local ClubIdentity = require(Shared.ClubIdentity)
 local Config = require(Shared.Config)
 local Cosmetics = require(Shared.Cosmetics)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local Trophies = require(Shared.Trophies)
+local WorldConfig = require(Shared.WorldConfig)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
@@ -131,6 +133,123 @@ function CosmeticService.TryEquip(player: Player, category, itemId): (boolean, s
 	return true, Locale.T(lang, "cosmetic.equipped", { name = itemName(lang, item) })
 end
 
+-- Identité du club (ClubIdentity) ---------------------------------------
+
+local function identityOf(data)
+	return data.identity
+end
+
+-- Change une partie de l'identité. field = "primary" / "secondary" (id de
+-- couleur ou "default"), "pattern" (id de motif débloqué), "crest" (1 à 6, ou
+-- 0 = écusson de l'emplacement), ou "reset" (tout revient à l'origine).
+-- Choisir des couleurs (ou un motif) retire l'objet Prestige porté de la
+-- catégorie, pour que le choix se voie tout de suite.
+function CosmeticService.TrySetIdentity(player: Player, field, value): (boolean, string)
+	local data = PlayerDataService.GetData(player)
+	if not data then
+		return false, Locale.TP(player, "error.profileNotLoaded")
+	end
+	local lang = Locale.ForPlayer(player)
+	local identity = identityOf(data)
+	if field == "reset" then
+		identity.primary, identity.secondary = "", ""
+		identity.pattern = ClubIdentity.DEFAULT_PATTERN
+		identity.crest = 0
+		data.cosmetics.equipped.colors = nil
+		data.cosmetics.equipped.kit = nil
+		PlayerDataService.MarkChanged(player)
+		return true, Locale.T(lang, "identity.resetDone")
+	elseif field == "primary" or field == "secondary" then
+		local id = if value == "default" then "" else value
+		if id ~= "" and not ClubIdentity.Color(id) then
+			return false, Locale.T(lang, "error.identityInvalid")
+		end
+		local slot = ClubService.GetSlot(player)
+		local choices = ClubIdentity.Choices(data)
+		choices[field] = ClubIdentity.Color(id)
+		local base = WorldConfig.CLUB_COLORS[slot or 1] or WorldConfig.CLUB_COLORS[1]
+		local primary = choices.primary or base.primary
+		local secondary = choices.secondary or base.secondary
+		if primary == secondary then
+			return false, Locale.T(lang, "error.identitySameColors")
+		end
+		identity[field] = id
+		data.cosmetics.equipped.colors = nil
+		PlayerDataService.MarkChanged(player)
+		return true, Locale.T(lang, "identity.colorsDone")
+	elseif field == "pattern" then
+		local pattern = ClubIdentity.Pattern(value)
+		if not pattern then
+			return false, Locale.T(lang, "error.identityInvalid")
+		end
+		local ok, reason = ClubIdentity.PatternUnlocked(pattern, data.club.division, data.cosmetics.owned, identity.patterns)
+		if not ok then
+			return false, Locale.T(lang, "error.patternLocked." .. (reason or "kit"))
+		end
+		identity.pattern = pattern.id
+		data.cosmetics.equipped.kit = nil
+		PlayerDataService.MarkChanged(player)
+		return true, Locale.T(lang, "identity.patternDone", { name = Locale.T(lang, "identity.pattern." .. pattern.id) })
+	elseif field == "crest" then
+		if value ~= 0 and not ClubIdentity.ValidCrest(value) then
+			return false, Locale.T(lang, "error.identityInvalid")
+		end
+		identity.crest = value
+		PlayerDataService.MarkChanged(player)
+		return true, Locale.T(lang, "identity.crestDone")
+	end
+	return false, Locale.T(lang, "error.identityInvalid")
+end
+
+-- Achète un motif en FC Coins (une seule fois), puis le porte.
+function CosmeticService.TryBuyPattern(player: Player, patternId): (boolean, string)
+	local data = PlayerDataService.GetData(player)
+	if not data then
+		return false, Locale.TP(player, "error.profileNotLoaded")
+	end
+	local lang = Locale.ForPlayer(player)
+	local pattern = ClubIdentity.Pattern(patternId)
+	if not pattern or not pattern.cost then
+		return false, Locale.T(lang, "error.identityInvalid")
+	end
+	local identity = identityOf(data)
+	if identity.patterns[pattern.id] then
+		return false, Locale.T(lang, "error.cosmeticOwned")
+	end
+	local ok, reason = ClubIdentity.PatternUnlocked(pattern, data.club.division, data.cosmetics.owned, { [pattern.id] = true })
+	if not ok then
+		return false, Locale.T(lang, "error.patternLocked." .. (reason or "kit"))
+	end
+	if not EconomyService.TrySpend(player, pattern.cost, "pattern:" .. pattern.id) then
+		return false, Locale.T(lang, "error.notEnoughCoins", { currency = Config.CURRENCY_NAME })
+	end
+	-- Aucun yield entre le débit et l'ajout.
+	identity.patterns[pattern.id] = true
+	identity.pattern = pattern.id
+	data.cosmetics.equipped.kit = nil
+	PlayerDataService.MarkChanged(player)
+	return true, Locale.T(lang, "identity.patternBought", { name = Locale.T(lang, "identity.pattern." .. pattern.id) })
+end
+
+-- Identité envoyée au client : choix bruts, couleurs et tenue résolues.
+local function identitySnapshot(player: Player, data)
+	local identity = identityOf(data)
+	local look = ClubIdentity.Resolve(data, ClubService.GetSlot(player))
+	return {
+		choice = {
+			primary = identity.primary,
+			secondary = identity.secondary,
+			pattern = identity.pattern,
+			crest = identity.crest,
+		},
+		patterns = table.clone(identity.patterns),
+		primary = ClubIdentity.ToArray(look.primary),
+		secondary = ClubIdentity.ToArray(look.secondary),
+		kit = ClubIdentity.KitToNet(look.kit),
+		crest = look.crest,
+	}
+end
+
 -- Titres de D1 et nouveaux trophées. Renvoie le nombre de nouveaux trophées.
 function CosmeticService.CheckTrophies(player: Player): number
 	local data = PlayerDataService.GetData(player)
@@ -190,6 +309,20 @@ function CosmeticService.Init()
 			ClubService.RefreshPlot(player)
 		end
 	end)
+	local function afterIdentity(player, ok, message)
+		Net.FireClient("Notify", player, message, if ok then "success" else "error")
+		if ok then
+			ClubService.RefreshPlot(player)
+			ClubService.BroadcastClubs()
+		end
+	end
+	Net.Handle("RequestSetIdentity", function(player, field, value)
+		afterIdentity(player, CosmeticService.TrySetIdentity(player, field, value))
+	end)
+	Net.Handle("RequestBuyPattern", function(player, patternId)
+		afterIdentity(player, CosmeticService.TryBuyPattern(player, patternId))
+	end)
+	PlayerDataService.AddSnapshotField("identity", identitySnapshot)
 	PlayerDataService.OnChanged(function(player)
 		CosmeticService.CheckTrophies(player)
 	end)
