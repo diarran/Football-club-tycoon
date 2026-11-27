@@ -109,10 +109,14 @@ WorldConfig.SLOTS = {
 	{ x = colStep, z = rowOffset, yaw = 0 },
 }
 
--- Taille totale du sol du quartier.
+-- Mode Création (Campus.lua) : zone de parcelles DERRIÈRE chaque terrain (+Z local),
+-- de z = PLOT_SIZE.Y / 2 à z = PLOT_SIZE.Y / 2 + CAMPUS_DEPTH.
+WorldConfig.CAMPUS_DEPTH = 176
+
+-- Taille totale du sol du quartier (terrains + zones de création des deux rangées).
 WorldConfig.DISTRICT_SIZE = Vector2.new(
 	3 * WorldConfig.PLOT_SIZE.X + 2 * WorldConfig.PLOT_GAP + 2 * WorldConfig.DISTRICT_MARGIN, -- 900
-	2 * WorldConfig.PLOT_SIZE.Y + WorldConfig.CORRIDOR_WIDTH + 2 * WorldConfig.DISTRICT_MARGIN -- 580
+	2 * (WorldConfig.PLOT_SIZE.Y + WorldConfig.CAMPUS_DEPTH) + WorldConfig.CORRIDOR_WIDTH + 2 * WorldConfig.DISTRICT_MARGIN -- 932
 )
 
 -- Renvoie le CFrame (centre au sol, orientation) de l'emplacement slotIndex (1 à 6).
@@ -173,7 +177,9 @@ WorldConfig.LANDSCAPE = {
 	hedges = {
 		{ Vector2.new(-128, -84), Vector2.new(-128, 98) },
 		{ Vector2.new(128, -84), Vector2.new(128, 98) },
-		{ Vector2.new(-127, 98), Vector2.new(127, 98) },
+		-- Haie du fond ouverte en x = 50 : passage vers la zone du mode Création.
+		{ Vector2.new(-127, 98), Vector2.new(45, 98) },
+		{ Vector2.new(55, 98), Vector2.new(127, 98) },
 	},
 	trees = trees,
 	lamps = {
@@ -190,6 +196,25 @@ WorldConfig.LANDSCAPE = {
 	benches = { Vector3.new(-80, 84, 180), Vector3.new(-20, 84, 180), Vector3.new(40, 84, 180) },
 	parking = { center = Vector2.new(111, -43), size = Vector2.new(20, 20) },
 }
+
+-- Parcelles du mode Création : grille de 4 colonnes × 3 rangées derrière le terrain.
+-- Chaque parcelle fait PARCEL_SIZE ; un bâtiment tient dans CAMPUS_FOOTPRINT (carré :
+-- il peut être tourné dans les 4 sens). Boulevard de 10 studs côté club, allées de 6.
+WorldConfig.PARCEL_SIZE = Vector2.new(56, 50)
+WorldConfig.CAMPUS_FOOTPRINT = Vector2.new(46, 46)
+WorldConfig.CAMPUS_BOULEVARD = 10
+WorldConfig.PARCELS = {}
+do
+	local back = WorldConfig.PLOT_SIZE.Y / 2
+	for row = 1, 3 do
+		for col = 1, 4 do
+			table.insert(WorldConfig.PARCELS, {
+				x = -93 + (col - 1) * 62,
+				z = back + WorldConfig.CAMPUS_BOULEVARD + WorldConfig.PARCEL_SIZE.Y / 2 + (row - 1) * (WorldConfig.PARCEL_SIZE.Y + 6),
+			})
+		end
+	end
+end
 
 -- Taille du terrain de la zone d'entraînement (clôture du niveau 3), centré sur LAYOUT.Training.
 WorldConfig.TRAINING_FIELD = Vector2.new(60, 44)

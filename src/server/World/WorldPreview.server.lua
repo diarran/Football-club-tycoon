@@ -67,6 +67,36 @@ local DEMO_STYLES = {
 		decor = { decor_flags = true, decor_flowers = true, decor_palms = true, decor_fountain = true, decor_arch = true, decor_walk = true },
 		trophies = Trophies.Earned("D1", { wins = 1200, played = 2100, goalsFor = 5200 }, 12),
 		titles = 12,
+		-- Mode Création : les 10 bâtiments au niveau 3, tournés dans plusieurs sens.
+		campus = {
+			parcels = { ["1"] = true, ["2"] = true, ["3"] = true, ["4"] = true, ["5"] = true, ["6"] = true, ["7"] = true, ["8"] = true, ["9"] = true, ["10"] = true, ["11"] = true, ["12"] = true },
+			placed = {
+				Champions = { parcel = 2, level = 3, rot = 0 },
+				Museum = { parcel = 1, level = 3, rot = 0 },
+				President = { parcel = 3, level = 3, rot = 0 },
+				Esport = { parcel = 4, level = 3, rot = 270 },
+				Recovery = { parcel = 6, level = 3, rot = 180 },
+				SportsComplex = { parcel = 5, level = 3, rot = 0 },
+				IndoorPitch = { parcel = 7, level = 3, rot = 0 },
+				Security = { parcel = 8, level = 3, rot = 90 },
+				Workshop = { parcel = 9, level = 3, rot = 0 },
+				Depot = { parcel = 10, level = 3, rot = 0 },
+			},
+		},
+	},
+	[4] = {
+		campus = {
+			parcels = { ["1"] = true, ["2"] = true, ["3"] = true, ["4"] = true, ["5"] = true, ["6"] = true, ["7"] = true, ["8"] = true },
+			placed = {
+				Esport = { parcel = 1, level = 1, rot = 0 },
+				Museum = { parcel = 2, level = 2, rot = 0 },
+				SportsComplex = { parcel = 3, level = 1, rot = 0 },
+				IndoorPitch = { parcel = 4, level = 1, rot = 0 },
+				Security = { parcel = 5, level = 1, rot = 0 },
+				Workshop = { parcel = 6, level = 1, rot = 0 },
+				Depot = { parcel = 7, level = 2, rot = 0 },
+			},
+		},
 	},
 }
 

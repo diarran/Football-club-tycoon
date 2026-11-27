@@ -15,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
+local Campus = require(Shared.Campus)
 local Config = require(Shared.Config)
 local Daily = require(Shared.Daily)
 local Divisions = require(Shared.Divisions)
@@ -117,6 +118,7 @@ function SquadService.RefreshEnergy(data)
 	local trainingLevel = data.buildings.Training or 1
 	local multiplier = (Buildings.GetEffects("Training", trainingLevel).energyRecovery or 1)
 		* Staff.Effect(data.staff, "energyRecovery") -- médecin du staff
+		* (1 + Campus.Effect(data.campus, "energyRecovery")) -- centre de récupération
 	local gain = minutes * Config.ENERGY_RECOVERY_PER_MINUTE * multiplier
 	for _, footballer in data.squad do
 		footballer.energy = math.min(PlayerConfig.MAX_ENERGY, footballer.energy + gain)
@@ -452,7 +454,7 @@ function SquadService.TryTrain(player: Player, footballerId): (boolean, string)
 		return false, Locale.TP(player, "error.notEnoughCoinsTraining", { currency = Config.CURRENCY_NAME })
 	end
 	local teamBonus = Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0
-	local xp = Training.SessionXp(footballer, teamBonus, Staff.Effect(data.staff, "growthBonus"))
+	local xp = Training.SessionXp(footballer, teamBonus, Staff.Effect(data.staff, "growthBonus") + Campus.Effect(data.campus, "growthBonus")) -- + complexe sportif
 	footballer.energy = math.max(0, footballer.energy - Training.SESSION_ENERGY)
 	footballer.trainedAt = os.time()
 	local gained = Training.AddXp(footballer, xp)
@@ -593,9 +595,11 @@ function SquadService.ApplyMatchEffects(data, starters)
 		end
 	end
 	local reduction = Staff.Effect(data.staff, "injuryReduction") -- médecin du staff
+		+ Campus.Effect(data.campus, "injuryReduction") -- centre de récupération
+	local energyCost = Config.ENERGY_COST_PER_MATCH * (1 - Campus.Effect(data.campus, "matchEnergy")) -- dépôt des véhicules
 	for _, footballer in starters do
 		local energyBefore = footballer.energy
-		footballer.energy = math.max(0, footballer.energy - Config.ENERGY_COST_PER_MATCH)
+		footballer.energy = math.max(0, footballer.energy - energyCost)
 		local chance = if footballer.youth then baseChance + youthGrowth else baseChance
 		Training.AddXp(footballer, Training.MatchXp(footballer, chance))
 		local event = Injuries.Roll(rng, footballer, energyBefore, reduction, now)

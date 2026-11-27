@@ -198,3 +198,19 @@ THREE_DIR=$PWD/package node tools/world-render.js build/world-parts.json vues.js
 
 `vues.json` liste les caméras (`pos`, `target`, `fov`). Ce rendu imite les
 matériaux de Roblox : il montre formes, couleurs et ambiance, pas l'image exacte de Studio.
+
+## Mode Création (zone derrière chaque terrain)
+
+Derrière chaque club, une zone de 12 parcelles (4 × 3, `WorldConfig.PARCELS`)
+se débloque petit à petit avec des FC Coins, à partir d'une division donnée
+(`src/shared/Campus.lua`). Dans l'onglet **Création**, le joueur choisit une
+parcelle, un bâtiment du catalogue et son orientation, puis peut le tourner,
+le déplacer (échange si la parcelle est prise) et l'améliorer (3 niveaux).
+
+- Données : `data.campus = { parcels = { ["1"] = true }, placed = { Museum = { parcel, level, rot } } }`
+  (clés texte : un DataStore n'enregistre pas les tableaux à trous).
+- Serveur : `CampusService` (remote `RequestCampus`) ; décor : `CampusZone` + `CampusBuildings`.
+- Pour ajouter un bâtiment : une entrée dans `Campus.Definitions`, une fonction
+  dans `CampusBuildings` (qui tient dans `CAMPUS_FOOTPRINT`), une ligne dans
+  `CampusZone.BUILDERS`, et les clés `campus.<id>.*` dans les deux langues.
+- La future ville pourra se brancher au boulevard nord de la zone (`CAMPUS_BOULEVARD`).
