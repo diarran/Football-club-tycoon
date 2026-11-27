@@ -44,6 +44,10 @@ Trophies.MILESTONES = {
 	{ id = "cups_1", stat = "cupsWon", value = 1, tier = "gold" },
 	{ id = "cups_5", stat = "cupsWon", value = 5, tier = "gold" },
 	{ id = "giantKills_10", stat = "cupGiantKills", value = 10, tier = "silver" },
+	-- Coupe d'Europe entre vrais joueurs (EuroService) : finales jouées et titres.
+	{ id = "euroFinal_1", stat = "euroFinals", value = 1, tier = "silver" },
+	{ id = "euro_1", stat = "euroWon", value = 1, tier = "gold" },
+	{ id = "euro_5", stat = "euroWon", value = 5, tier = "gold" },
 }
 
 -- Liste des trophées gagnés par un club, dans l'ordre de la vitrine.
