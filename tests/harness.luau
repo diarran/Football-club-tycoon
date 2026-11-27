@@ -787,6 +787,8 @@ function H.boot(modules)
 		Tactics = mock.run(modules.Tactics),
 		Locale = mock.run(modules.Locale),
 		MatchReplay = mock.run(modules.MatchReplay),
+		NationalCup = mock.run(modules.NationalCup),
+		CupService = mock.run(modules.CupService),
 	}
 end
 

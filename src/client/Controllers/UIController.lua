@@ -75,6 +75,7 @@ local state = {
 	profile = nil,
 	clubs = {},
 	cooldownEndsAt = 0,
+	cupReadyAt = 0, -- os.clock() où le prochain tour de Coupe nationale est jouable
 	selectedTactic = Config.DEFAULT_TACTIC,
 	selectedStake = Config.Challenge.STAKES[2],
 	challenges = { incoming = {}, outgoing = nil },
@@ -1097,6 +1098,84 @@ function renderers.Matches(profile)
 		end
 		return label(T("matches.rivalStyle", { tactic = params.theirs }), { TextSize = 16 }),
 			label(hint, { TextColor3 = color, TextSize = 16, Name = "TacticHint" })
+	end
+
+	-- Coupe nationale : tour en cours, adversaire et son style, puis les tours joués.
+	local cup = type(profile.cup) == "table" and profile.cup or nil
+	if cup then
+		local children = {
+			label(T("cup.title"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
+			label(T("cup.info"), { TextColor3 = COLORS.muted, TextSize = 14 }),
+		}
+		local endsIn = math.max(0, cup.endsIn or 0)
+		table.insert(children, label(T("cup.endsIn", {
+			days = math.floor(endsIn / 86400),
+			hours = math.floor((endsIn % 86400) / 3600),
+		}), { TextColor3 = COLORS.muted, TextSize = 14 }))
+		for _, entry in cup.history or {} do
+			local params = {
+				stage = T("cup.stage." .. tostring(entry.stage)),
+				mine = profile.club.name,
+				club = entry.name,
+				myGoals = entry.myGoals,
+				theirGoals = entry.theirGoals,
+				coins = formatCoins(entry.coins or 0),
+			}
+			local text = T(if entry.won then "cup.historyWin" else "cup.historyLoss", params)
+			if entry.penalties then
+				text ..= T("cup.historyPenalties")
+			end
+			if entry.giantKill then
+				text ..= T("cup.historyGiant")
+			end
+			table.insert(children, label(text, {
+				TextSize = 14,
+				TextColor3 = if entry.won then COLORS.accent else COLORS.error,
+			}))
+		end
+		local nextIn = math.max(0, math.ceil(state.cupReadyAt - os.clock()))
+		if cup.status == "playing" and type(cup.opponent) == "table" then
+			local rival = cup.opponent
+			table.insert(children, label(T("cup.next", {
+				stage = T("cup.stage." .. tostring(cup.stage)),
+				club = rival.name,
+				division = divisionLabel(rival.division),
+				rating = rival.rating,
+			}), { Font = Enum.Font.GothamBold, TextSize = 16 }))
+			if rival.giantKill then
+				table.insert(children, label(T("cup.giantWarning"), { TextColor3 = COLORS.gold, TextSize = 14 }))
+			end
+			local styleLine, hintLine = tacticLines(rival.tactic)
+			table.insert(children, styleLine)
+			table.insert(children, hintLine)
+			table.insert(children, label(T("cup.nextReward", { coins = formatCoins(cup.nextReward or 0) }), {
+				TextColor3 = COLORS.gold,
+				TextSize = 14,
+			}))
+			if nextIn > 0 then
+				table.insert(children, label(T("cup.wait", { minutes = math.max(1, math.ceil(nextIn / 60)) }), {
+					Name = "CupWait",
+					TextColor3 = COLORS.muted,
+					TextSize = 16,
+				}))
+			else
+				table.insert(children, button(T("cup.play"), function()
+					Net.Get("RequestCupMatch"):FireServer(state.selectedTactic)
+				end, { BackgroundColor3 = COLORS.accent }))
+			end
+		elseif cup.status == "champion" then
+			table.insert(children, label(T("cup.champion"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold, TextSize = 16 }))
+		else
+			table.insert(children, label(T("cup.out"), { TextColor3 = COLORS.muted, TextSize = 16 }))
+		end
+		table.insert(children, label(T("cup.maxReward", { coins = formatCoins(cup.maxReward or 0) }), {
+			TextColor3 = COLORS.muted,
+			TextSize = 14,
+		}))
+		if (cup.cupsWon or 0) > 0 then
+			table.insert(children, label(T("cup.myCups", { count = cup.cupsWon }), { TextColor3 = COLORS.gold, TextSize = 14 }))
+		end
+		card(children).Parent = content
 	end
 
 	local function opponentCard(title: string, subtitle: string, opponentId: string, theirs)
@@ -2162,6 +2241,7 @@ function UIController.SetProfile(profile)
 	end
 	state.profile = profile
 	state.cooldownEndsAt = os.clock() + (profile.matchCooldown or 0)
+	state.cupReadyAt = os.clock() + (if type(profile.cup) == "table" then profile.cup.nextIn or 0 else 0)
 	announceUnlocks(profile)
 	UIController.Refresh()
 	local welcome = type(profile.daily) == "table" and profile.daily.welcome
@@ -2297,6 +2377,33 @@ function UIController.ShowMatchResult(result)
 			TextXAlignment = Enum.TextXAlignment.Center,
 		}))
 	end
+	if result.mode == "cup" then
+		if result.penalties then
+			add(label(T("cup.result.penalties"), { TextColor3 = COLORS.muted, TextXAlignment = Enum.TextXAlignment.Center }))
+		end
+		if result.giantKill then
+			add(label(T("cup.result.giantKill"), {
+				Font = Enum.Font.GothamBold,
+				TextColor3 = COLORS.gold,
+				TextXAlignment = Enum.TextXAlignment.Center,
+			}))
+		end
+		local key = if result.champion
+			then "cup.result.champion"
+			elseif result.outcome == "Win" then "cup.result.qualified"
+			else "cup.result.eliminated"
+		add(label(T(key, { coins = formatCoins(result.coins or 0) }), {
+			Name = "CupResult",
+			Font = Enum.Font.GothamBold,
+			TextColor3 = if result.outcome == "Win" then COLORS.gold else COLORS.muted,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}))
+		add(button(T("result.continue"), function()
+			resultPopup.Visible = false
+		end))
+		resultPopup.Visible = true
+		return
+	end
 	if result.mode == "challenge" then
 		local change = result.coinsChange or 0
 		add(label(
@@ -2393,7 +2500,9 @@ end
 task.spawn(function()
 	while true do
 		task.wait(1)
-		local ticking = state.cooldownEndsAt > os.clock() - 1 or state.tournamentEndsAt > os.clock() - 1
+		local ticking = state.cooldownEndsAt > os.clock() - 1
+			or state.tournamentEndsAt > os.clock() - 1
+			or state.cupReadyAt > os.clock() - 1
 		if panel and panel.Visible and currentTab == "Matches" and ticking then
 			UIController.Refresh()
 		end
