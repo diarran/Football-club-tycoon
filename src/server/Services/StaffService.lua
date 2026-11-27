@@ -23,6 +23,7 @@ local Reputation = require(Shared.Reputation)
 local Net = require(Shared.Net)
 local Sponsors = require(Shared.Sponsors)
 local Staff = require(Shared.Staff)
+local Campus = require(Shared.Campus)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
@@ -136,7 +137,7 @@ end
 
 -- Part de l'argent des sponsors en plus grâce au directeur commercial.
 function StaffService.SponsorMultiplier(data): number
-	return 1 + Staff.Effect(data.staff, "sponsorBonus")
+	return 1 + Staff.Effect(data.staff, "sponsorBonus") + Campus.Effect(data.campus, "sponsorBonus") -- + bureau présidentiel
 end
 
 -- Prime fixe des contrats pour ce match (avant le boost de revenus).

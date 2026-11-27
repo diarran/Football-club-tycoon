@@ -19,6 +19,7 @@ local Audio = require(Shared.Audio)
 local Brand = require(Shared.Brand)
 local Community = require(Shared.Community)
 local Buildings = require(Shared.Buildings)
+local Campus = require(Shared.Campus)
 local Config = require(Shared.Config)
 local Cosmetics = require(Shared.Cosmetics)
 local Trophies = require(Shared.Trophies)
@@ -71,7 +72,7 @@ local COLORS = {
 }
 
 -- Nom affiché : clé « tab.<id> » de Locale.
-local TABS = { "Home", "Stadium", "Squad", "Management", "Matches", "Ranking", "Prestige", "Settings" }
+local TABS = { "Home", "Stadium", "Creation", "Squad", "Management", "Matches", "Ranking", "Prestige", "Settings" }
 
 local state = {
 	profile = nil,
@@ -87,6 +88,7 @@ local state = {
 	nextInjuryReturn = math.huge, -- os.time du prochain retour de blessure (onglet Effectif)
 	leaderboard = nil, -- classement mondial (LeaderboardService)
 	leaderboardBoard = "week", -- tableau affiché : week, club ou trophies
+	creation = { parcel = nil, rot = 0, moving = nil }, -- mode Création : parcelle choisie, orientation, bâtiment à déplacer
 	settings = {
 		managementCamera = true,
 		showTutorial = true,
@@ -614,6 +616,9 @@ function renderers.Stadium(profile)
 		local level = profile.buildings[def.id] or 1
 		local maxLevel = Buildings.MaxLevel(def.id)
 		local cost = Buildings.GetUpgradeCost(def.id, level)
+		if cost then
+			cost = Campus.DiscountedCost(profile.campus, cost) -- atelier technique (même calcul que le serveur)
+		end
 		local action
 		if cost then
 			local affordable = profile.coins >= cost
@@ -658,6 +663,172 @@ local function buttonRow(entries)
 	end
 	return row
 end
+
+-- Mode Création ----------------------------------------------------------
+
+local function campusRequest(action: string, ...)
+	Net.Get("RequestCampus"):FireServer(action, ...)
+end
+
+-- Grille des 12 parcelles (rangée 1 = côté club) : un bouton par parcelle.
+local function parcelGrid(profile, campus)
+	local selection = state.creation
+	local grid = create("Frame", { BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 3 * 62) }, {
+		create("UIGridLayout", {
+			CellSize = UDim2.new(0.25, -6, 0, 56),
+			CellPadding = UDim2.new(0, 6, 0, 6),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		}),
+	})
+	for index, rule in Campus.Parcels do
+		local id = Campus.BuildingOn(campus, index)
+		local text, color
+		if id then
+			text = T("campus." .. id .. ".label") .. "\n" .. T("creation.levelShort", { level = campus.placed[id].level })
+			color = COLORS.accentDark
+		elseif Campus.HasParcel(campus, index) then
+			text = T("creation.parcelFree", { index = index })
+			color = COLORS.card
+		else
+			text = T("creation.parcelLocked", { index = index, tier = Divisions.Get(rule.division).tier })
+			color = COLORS.disabled
+		end
+		if selection.parcel == index then
+			color = COLORS.accent
+		elseif selection.moving and Campus.HasParcel(campus, index) then
+			color = COLORS.gold
+		end
+		button(text, function()
+			local moving = selection.moving
+			if moving and Campus.HasParcel(campus, index) and campus.placed[moving] and campus.placed[moving].parcel ~= index then
+				campusRequest("move", moving, index)
+				selection.moving = nil
+				selection.parcel = index
+			else
+				selection.moving = nil
+				selection.parcel = index
+			end
+			UIController.Refresh()
+		end, { LayoutOrder = index, BackgroundColor3 = color, TextSize = 14, Size = UDim2.new(0, 0, 0, 56) }).Parent =
+			grid
+	end
+	return grid
+end
+
+-- Fiche d'un bâtiment du catalogue (construction sur la parcelle choisie).
+local function catalogueEntry(profile, campus, def, parcel: number?)
+	local built = campus.placed[def.id] ~= nil
+	local allowed = Campus.DivisionAllows(profile.club.division, def.division)
+	local cost = def.levels[1].cost
+	local status
+	if built then
+		status = T("creation.alreadyBuilt", { parcel = campus.placed[def.id].parcel })
+	elseif not allowed then
+		status = T("creation.requiresDivision", { tier = Divisions.Get(def.division).tier })
+	end
+	local children = {
+		label(T("campus." .. def.id .. ".label") .. " · " .. formatCoins(cost), { Font = Enum.Font.GothamBold }),
+		label(T("campus." .. def.id .. ".description"), { TextColor3 = COLORS.muted, TextSize = 16 }),
+	}
+	if status then
+		table.insert(children, label(status, { TextColor3 = COLORS.gold, TextSize = 16 }))
+	elseif parcel then
+		table.insert(children, button(T("creation.buildHere", { parcel = parcel }), function()
+			campusRequest("build", def.id, parcel, state.creation.rot)
+		end, {
+			Size = UDim2.new(1, 0, 0, 44),
+			BackgroundColor3 = if profile.coins >= cost then COLORS.accent else COLORS.disabled,
+		}))
+	end
+	card(children).Parent = content
+end
+
+function renderers.Creation(profile)
+	local campus = Campus.Sanitize(profile.campus)
+	local selection = state.creation
+	card({
+		label(T("creation.title"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
+		label(T("creation.intro"), { TextSize = 16 }),
+		label(T("creation.parcelCount", { count = Campus.ParcelCount(campus), max = #Campus.Parcels }), { TextColor3 = COLORS.muted, TextSize = 16 }),
+		label(if selection.moving then T("creation.moveHint", { name = T("campus." .. selection.moving .. ".label") }) else T("creation.gridHint"), {
+			TextColor3 = if selection.moving then COLORS.gold else COLORS.muted,
+			TextSize = 14,
+		}),
+		parcelGrid(profile, campus),
+	}).Parent =
+		content
+
+	local parcel = selection.parcel
+	if not parcel or not Campus.Parcels[parcel] then
+		for _, def in Campus.List() do
+			catalogueEntry(profile, campus, def, nil)
+		end
+		return
+	end
+	local id = Campus.BuildingOn(campus, parcel)
+	if id then
+		-- Bâtiment posé : améliorer, tourner, déplacer.
+		local level = campus.placed[id].level
+		local cost = Campus.NextCost(campus, id)
+		local actions = {}
+		table.insert(actions, {
+			text = if cost then T("stadium.upgrade", { cost = formatCoins(cost) }) else T("stadium.maxLevel"),
+			color = if cost and profile.coins >= cost then COLORS.accent else COLORS.disabled,
+			onClick = function()
+				if cost then
+					campusRequest("upgrade", id)
+				end
+			end,
+		})
+		table.insert(actions, { text = T("creation.rotate"), color = COLORS.card, onClick = function()
+			campusRequest("rotate", id)
+		end })
+		table.insert(actions, { text = T("creation.move"), color = COLORS.card, onClick = function()
+			selection.moving = id
+			UIController.Refresh()
+		end })
+		card({
+			label(T("stadium.levelLine", { name = T("campus." .. id .. ".label"), level = level, max = Campus.MAX_LEVEL }), { Font = Enum.Font.GothamBold }),
+			label(T("campus." .. id .. ".description"), { TextColor3 = COLORS.muted, TextSize = 16 }),
+			label(T("creation.rotation", { degrees = campus.placed[id].rot }), { TextColor3 = COLORS.muted, TextSize = 14 }),
+			buttonRow(actions),
+		}).Parent =
+			content
+	elseif Campus.HasParcel(campus, parcel) then
+		-- Parcelle libre : orientation puis catalogue.
+		card({
+			label(T("creation.freeTitle", { parcel = parcel }), { Font = Enum.Font.GothamBold }),
+			button(T("creation.orientation", { degrees = selection.rot }), function()
+				selection.rot = (selection.rot + 90) % 360
+				UIController.Refresh()
+			end, { Size = UDim2.new(1, 0, 0, 44), BackgroundColor3 = COLORS.card }),
+		}).Parent =
+			content
+		for _, def in Campus.List() do
+			catalogueEntry(profile, campus, def, parcel)
+		end
+	else
+		-- Parcelle à vendre.
+		local rule = Campus.Parcels[parcel]
+		local allowed = Campus.DivisionAllows(profile.club.division, rule.division)
+		local children = {
+			label(T("creation.lockedTitle", { parcel = parcel }), { Font = Enum.Font.GothamBold }),
+			label(T("creation.parcelPrice", { cost = formatCoins(rule.cost), tier = Divisions.Get(rule.division).tier }), { TextColor3 = COLORS.muted, TextSize = 16 }),
+		}
+		if allowed then
+			table.insert(children, button(T("creation.unlock", { cost = formatCoins(rule.cost) }), function()
+				campusRequest("unlock", parcel)
+			end, {
+				Size = UDim2.new(1, 0, 0, 44),
+				BackgroundColor3 = if profile.coins >= rule.cost then COLORS.accent else COLORS.disabled,
+			}))
+		else
+			table.insert(children, label(T("creation.requiresDivision", { tier = Divisions.Get(rule.division).tier }), { TextColor3 = COLORS.gold, TextSize = 16 }))
+		end
+		card(children).Parent = content
+	end
+end
+
 
 -- Effectif complet : bouton de transfert si la division a un marché.
 local function transferControl(profile)
@@ -2994,6 +3165,12 @@ function UIController.ShowMatchResult(result)
 			coins = formatCoins(rewards.event or 0),
 			points = result.eventPoints or 0,
 		}), {
+			TextColor3 = COLORS.gold,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}))
+	end
+	if (rewards.campus or 0) > 0 then
+		add(label(T("result.campus", { coins = formatCoins(rewards.campus) }), {
 			TextColor3 = COLORS.gold,
 			TextXAlignment = Enum.TextXAlignment.Center,
 		}))

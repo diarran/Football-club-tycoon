@@ -40,6 +40,7 @@ local CupService = require(Services.CupService)
 local ReputationService = require(Services.ReputationService)
 local EuroService = require(Services.EuroService)
 local AchievementService = require(Services.AchievementService)
+local CampusService = require(Services.CampusService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
 local ORDERED_SERVICES = {
@@ -65,6 +66,7 @@ local ORDERED_SERVICES = {
 	{ name = "CupService", module = CupService },
 	{ name = "ReputationService", module = ReputationService },
 	{ name = "EuroService", module = EuroService },
+	{ name = "CampusService", module = CampusService },
 	-- Après les autres : les succès lisent les titres mis à jour par CosmeticService.
 	{ name = "AchievementService", module = AchievementService },
 }
