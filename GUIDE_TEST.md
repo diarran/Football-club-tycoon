@@ -1,4 +1,4 @@
-# Tester le jeu (environ 33 minutes)
+# Tester le jeu (environ 35 minutes)
 
 ## 1. Récupérer le fichier du jeu
 
@@ -31,7 +31,7 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier (21 points, environ 33 minutes)
+## 5. Ce qu'il faut vérifier (22 points, environ 35 minutes)
 
 Note ✅ ou ❌ pour chaque point, avec son numéro. Si c'est ❌, fais une capture
 d'écran. Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne
@@ -97,21 +97,27 @@ rouge**.
     de sponsoring ».
 12. **Prestige** : la salle des trophées et les objets de personnalisation s'affichent
     (la boutique Robux reste cachée tant que ses numéros ne sont pas renseignés).
-13. **Couleurs et maillot du club** : dans **Prestige**, tout en haut, la carte
+13. **Succès** : gagne un match : un message annonce **« Succès débloqué : Première
+    victoire »** et l'**Accueil** montre une carte dorée avec **Voir mes succès**. Ce
+    bouton ouvre **Prestige**, où la carte **Succès : 1/20** liste les 20 succès avec
+    leur progression (ex. « Progression : 1/10 »). **Récupérer 100 FC** ajoute 100 FC
+    et la ligne passe à « Récompense déjà récupérée ». (Les badges Roblox ne se donnent
+    pas dans Studio : c'est normal, voir GUIDE_BADGES.md.)
+14. **Couleurs et maillot du club** : dans **Prestige**, tout en haut, la carte
     **Identité du club**. Clique une pastille de **Couleur principale** (par exemple
     violet) : un ✓ apparaît, l'aperçu du maillot change, et ton terrain (sièges des
     tribunes, drapeaux, portique) se repeint. Choisis un **Motif du maillot**
     (Moitié-moitié est gratuit) puis un **Écusson** (1 à 6) : l'écusson du HUD change.
     Lance un match : tes joueurs portent le motif et un short à ta couleur secondaire.
     **Tout remettre d'origine** remet tout comme avant.
-14. **Classement** : la carte **Classement mondial** et ses 3 boutons (Cette semaine,
+15. **Classement** : la carte **Classement mondial** et ses 3 boutons (Cette semaine,
     Meilleurs clubs, Trophées) ; dans Studio elle dit « Mode test : seulement les clubs
     de ce serveur ». Sur la place, le grand panneau **CLASSEMENT MONDIAL** change de
     tableau toutes les 12 secondes.
-15. **Langue et son** : dans **Paramètres**, **English** traduit tout le menu (aucun
+16. **Langue et son** : dans **Paramètres**, **English** traduit tout le menu (aucun
     mot français), puis remets **Français**. **Volume du son** sur **Muet** coupe les
     sons.
-16. **Téléphone** : onglet **Test** > **Device**, choisis un téléphone. Les onglets
+17. **Téléphone** : onglet **Test** > **Device**, choisis un téléphone. Les onglets
     passent sur **2 rangées de 4**, tous lisibles, et le contenu reste dessous. Dans
     **Matchs**, le premier bouton **Jouer** arrive avant la Coupe nationale. Joue un
     match : si la fenêtre de résultat est plus haute que l'écran, on peut la faire
@@ -119,20 +125,20 @@ rouge**.
 
 **À 2 joueurs (Local Server, 2 Players)**
 
-17. **Deux clubs** : chaque joueur a son terrain et voit l'autre dans **Classement**.
-18. **Défi** : dans **Matchs**, le joueur 1 clique **Défier** ; le joueur 2 accepte :
+18. **Deux clubs** : chaque joueur a son terrain et voit l'autre dans **Classement**.
+19. **Défi** : dans **Matchs**, le joueur 1 clique **Défier** ; le joueur 2 accepte :
     les deux voient le résultat.
-19. **Visiteur et tournoi** : le joueur 2 va sur le terrain du joueur 1, qui lance un
+20. **Visiteur et tournoi** : le joueur 2 va sur le terrain du joueur 1, qui lance un
     match : le joueur 2 voit le match se jouer, sans que sa caméra bouge. Environ
     **3 minutes** après le Start, inscris les deux joueurs au **tournoi** dans
     **Matchs** ; un vainqueur est annoncé.
 
-20. **Couleurs vues par l'autre** : le joueur 1 change ses couleurs dans **Prestige** ;
+21. **Couleurs vues par l'autre** : le joueur 1 change ses couleurs dans **Prestige** ;
     le joueur 2 voit le terrain du joueur 1 se repeindre.
 
 **Dans le jeu publié (sauvegarde active)**
 
-21. **Retour au jeu** : joue un peu, quitte, attends **5 minutes** et reviens : ton
+22. **Retour au jeu** : joue un peu, quitte, attends **5 minutes** et reviens : ton
     solde, ton staff, tes contrats, tes titulaires, ta coupe et tes couleurs sont toujours là, et une
     fenêtre **« Pendant ton absence… »** indique ce que ton club a rapporté.
 
