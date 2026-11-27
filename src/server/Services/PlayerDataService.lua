@@ -116,6 +116,18 @@ local function defaultData()
 		-- tour à jouer, statut, heure du dernier tour, adversaire tiré, tours joués.
 		-- edition = -1 : tirage fait par CupService au premier affichage.
 		cup = { edition = -1, round = 1, status = "playing", lastPlayedAt = 0, opponent = { division = "", rival = 0 }, history = {} },
+		-- Réputation et conférences de presse (ReputationService, shared/Reputation.lua).
+		-- score = -1 : calculée au chargement (nouveau club ou ancienne sauvegarde).
+		reputation = {
+			score = -1,
+			pending = { id = 0, topic = "", at = 0 },
+			buzz = { kind = "", matches = 0 },
+			sincePress = 4,
+			streak = 0,
+			nextId = 1,
+			answered = 0,
+			provocative = false,
+		},
 		lastSeenAt = os.time(), -- dernière sauvegarde : base des revenus hors ligne
 		lastMatchAt = 0,
 		lastEnergyUpdate = os.time(),

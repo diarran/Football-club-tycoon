@@ -37,6 +37,7 @@ local EventService = require(Services.EventService)
 local FriendService = require(Services.FriendService)
 local LeaderboardService = require(Services.LeaderboardService)
 local CupService = require(Services.CupService)
+local ReputationService = require(Services.ReputationService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
 local ORDERED_SERVICES = {
@@ -60,6 +61,7 @@ local ORDERED_SERVICES = {
 	{ name = "FriendService", module = FriendService },
 	{ name = "LeaderboardService", module = LeaderboardService },
 	{ name = "CupService", module = CupService },
+	{ name = "ReputationService", module = ReputationService },
 }
 
 for _, entry in ORDERED_SERVICES do
@@ -90,6 +92,7 @@ local function onPlayerAdded(player: Player)
 	-- des clubs affiche tout de suite une note correcte.
 	step("SquadService.OnPlayerReady", SquadService.OnPlayerReady, player, profile)
 	step("StaffService.OnPlayerReady", StaffService.OnPlayerReady, player, profile)
+	step("ReputationService.OnPlayerReady", ReputationService.OnPlayerReady, player, profile)
 	local ready, assigned = step("ClubService.OnPlayerReady", ClubService.OnPlayerReady, player, profile)
 	if not ready or not assigned then
 		-- Sans terrain, le joueur ne peut pas jouer : profil libéré (sauvegardé)

@@ -19,6 +19,7 @@ local Shared = ReplicatedStorage.Shared
 local Config = require(Shared.Config)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
+local Reputation = require(Shared.Reputation)
 local Net = require(Shared.Net)
 local Sponsors = require(Shared.Sponsors)
 local Staff = require(Shared.Staff)
@@ -139,12 +140,14 @@ function StaffService.SponsorMultiplier(data): number
 end
 
 -- Prime fixe des contrats pour ce match (avant le boost de revenus).
+-- La réputation du club l'augmente un peu (jusqu'à +10 %, Reputation.lua).
 function StaffService.ContractIncome(data): number
 	local total = 0
 	for _, contract in data.sponsors.contracts do
 		total += contract.perMatch
 	end
-	return math.floor(total * StaffService.SponsorMultiplier(data) + 0.5)
+	local score = type(data.reputation) == "table" and data.reputation.score or 0
+	return math.floor(total * StaffService.SponsorMultiplier(data) * Reputation.SponsorMultiplier(score) + 0.5)
 end
 
 -- Après un match validé : progression des objectifs, bonus et fins de contrat.

@@ -331,6 +331,11 @@ local function playRun(profil)
 				-- Les contrats de sponsoring sont contrôlés à part (plafond ci-dessous).
 				-- Le bonus de l'événement de la semaine est voulu lui aussi (contrôlé à part).
 				table.insert(run.baseIncomes, income - (result.rewards.match - Config.Rewards[result.outcome]) - result.rewards.contracts - (result.rewards.event or 0))
+				-- Conférence de presse : le joueur répond toujours (réponse provocante,
+				-- la plus rentable : billetterie +10 % pendant 3 matchs).
+				if data.reputation and data.reputation.pending and data.reputation.pending.id ~= 0 then
+					S.ReputationService.TryAnswer(player, "provocative")
+				end
 				-- Événement de la semaine : le joueur récupère ses paliers dès qu'ils sont atteints.
 				local beforeClaim, ownedBefore = data.coins, 0
 				for id in data.cosmetics.owned do

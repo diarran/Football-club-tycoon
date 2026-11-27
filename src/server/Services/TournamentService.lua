@@ -34,6 +34,7 @@ local Net = require(Shared.Net)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
 local MatchService = require(script.Parent.MatchService)
+local ReputationService = require(script.Parent.ReputationService)
 local EventService = require(script.Parent.EventService)
 
 local TournamentService = {}
@@ -127,6 +128,7 @@ local function finish(champion, finalScore: string)
 		local amount = reward(champion, "Winner")
 		if data then
 			data.club.stats.tournamentsWon += 1
+			ReputationService.OnTournamentWon(player)
 			PlayerDataService.MarkChanged(player)
 			local info = {
 				tournamentId = state.id,
