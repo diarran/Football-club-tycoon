@@ -1,4 +1,4 @@
-# Tester le jeu (environ 29 minutes)
+# Tester le jeu (environ 31 minutes)
 
 ## 1. Récupérer le fichier du jeu
 
@@ -31,7 +31,7 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier (17 points, environ 29 minutes)
+## 5. Ce qu'il faut vérifier (18 points, environ 31 minutes)
 
 Note ✅ ou ❌ pour chaque point. Si c'est ❌, fais une capture d'écran.
 Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne rouge**.
@@ -75,6 +75,12 @@ Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne roug
    le contrat** d'un sponsor le fait passer dans « Les contrats de sponsoring ».
 6. **Prestige** : la salle des trophées et les objets de personnalisation s'affichent
    (la boutique Robux reste cachée tant que ses numéros ne sont pas renseignés).
+6 bis. **Succès** : gagne un match : un message annonce **« Succès débloqué : Première
+   victoire »** et l'**Accueil** montre une carte dorée avec **Voir mes succès**. Ce
+   bouton ouvre **Prestige**, où la carte **Succès : 1/20** liste les 20 succès avec leur
+   progression (ex. « Progression : 1/10 »). **Récupérer 100 FC** ajoute 100 FC et la
+   ligne passe à « Récompense déjà récupérée ». (Les badges Roblox ne se donnent pas dans
+   Studio : c'est normal, voir GUIDE_BADGES.md.)
 7. **Classement** : la carte **Classement mondial** et ses 3 boutons (Cette semaine,
    Meilleurs clubs, Trophées) ; dans Studio elle dit « Mode test : seulement les clubs
    de ce serveur ». Sur la place, le grand panneau **CLASSEMENT MONDIAL** change de
