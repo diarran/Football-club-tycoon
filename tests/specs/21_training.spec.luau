@@ -163,6 +163,11 @@ end)
 H.test("transfert : le nouveau joueur prend la place du partant dans la composition", function()
 	data.club.division = "D5"
 	data.coins = 1e6
+	-- Le match d'avant peut avoir blessé ou suspendu quelqu'un (tirage au hasard).
+	for _, f in data.squad do
+		f.injuredUntil = 0
+		f.suspended = 0
+	end
 	local weakest = S.SquadService.GetWeakest(data.squad)
 	S.SquadService.TrySetStarter(p, weakest.id, true)
 	H.ok(table.find(data.lineup, weakest.id), "le moins bon est titulaire")
