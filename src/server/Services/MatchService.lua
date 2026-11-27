@@ -19,6 +19,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
 local ClubIdentity = require(Shared.ClubIdentity)
+local Campus = require(Shared.Campus)
 local Config = require(Shared.Config)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
@@ -166,6 +167,7 @@ function MatchService.ClubTeam(player: Player)
 		tactic = Tactics.Sanitize(data.tactic),
 		bonus = (Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0)
 			+ Staff.Effect(data.staff, "teamBonus")
+			+ Campus.Effect(data.campus, "teamBonus") -- terrain couvert
 			- SquadService.MissingPenalty(data), -- blessés / suspendus sans remplaçant
 	}
 end
@@ -327,6 +329,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		end
 		local trainingBonus = (Buildings.GetEffects("Training", opponentData.buildings.Training or 1).teamBonus or 0)
 			+ Staff.Effect(opponentData.staff, "teamBonus")
+			+ Campus.Effect(opponentData.campus, "teamBonus")
 			- SquadService.MissingPenalty(opponentData)
 		away = {
 			id = opponentId,
@@ -344,6 +347,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		+ (Buildings.GetEffects("Pitch", data.buildings.Pitch or 1).homeBonus or 0)
 		+ (Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0)
 		+ Staff.Effect(data.staff, "teamBonus") -- entraîneur du staff
+		+ Campus.Effect(data.campus, "teamBonus") -- terrain couvert
 		- SquadService.MissingPenalty(data) -- blessés / suspendus sans remplaçant
 	local home = {
 		id = "player:" .. player.UserId,
@@ -376,6 +380,8 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	-- Espace VIP : bonus sur la billetterie + revenu fixe des loges.
 	local vipEffects = Buildings.GetEffects("VIP", data.buildings.VIP or 1)
 	local vip = math.floor(tickets * (vipEffects.ticketBonus or 0)) + (vipEffects.vipIncome or 0)
+	-- Mode Création : musée, centre e-sport, place des champions… (Campus.lua).
+	local campus = math.floor(tickets * Campus.Effect(data.campus, "ticketBonus") + Campus.Effect(data.campus, "matchIncome"))
 	local currentDivision = Divisions.Get(data.club.division)
 	local matchReward = math.floor(
 		Config.Rewards[outcome] * currentDivision.rewardMultiplier * (away.rewardFactor or 1) + 0.5
@@ -389,7 +395,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	}, score.homeGoals, opponentData ~= nil)
 	-- Buzz de la dernière conférence de presse (fans ou sponsors) : petit bonus.
 	local pressBonus = ReputationService.MatchBonus(data, { tickets = tickets, sponsor = sponsor, contracts = contracts })
-	local totalReward = matchReward + tickets + sponsor + shop + vip + contracts + eventBonus + pressBonus
+	local totalReward = matchReward + tickets + sponsor + shop + vip + contracts + eventBonus + pressBonus + campus
 	-- Boost de revenus acheté en Robux : coupé par défaut (Monetization.BOOST_ENABLED).
 	totalReward = math.floor(totalReward * Monetization.BoostMultiplier(data, os.time()))
 	EconomyService.Add(player, totalReward, "match:" .. outcome)
@@ -473,6 +479,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 			sponsor = sponsor,
 			shop = shop,
 			vip = vip,
+			campus = campus,
 			contracts = contracts,
 			event = eventBonus,
 			press = pressBonus,

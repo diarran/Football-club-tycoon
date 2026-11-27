@@ -23,6 +23,7 @@ local Config = require(Shared.Config)
 local Daily = require(Shared.Daily)
 local Events = require(Shared.Events)
 local Buildings = require(Shared.Buildings)
+local Campus = require(Shared.Campus)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
@@ -72,6 +73,8 @@ local function defaultData()
 			},
 		},
 		buildings = Buildings.DefaultLevels(),
+		-- Mode Création : parcelles débloquées et bâtiments placés (Campus.lua, CampusService).
+		campus = Campus.Default(),
 		squad = {}, -- rempli par SquadService au premier chargement
 		-- Composition (titulaires, identifiants) et vieillissement (SquadService, Training.lua).
 		lineup = {},
@@ -203,6 +206,8 @@ local function migrate(data)
 			data.buildings[id] = 1
 		end
 	end
+	-- Mode Création : parcelles et bâtiments valides seulement (anciens profils, valeurs abîmées).
+	data.campus = Campus.Sanitize(data.campus)
 	-- Postes du staff : niveau entier entre 0 (vacant) et le maximum.
 	for id in Staff.Definitions do
 		local level = data.staff[id]

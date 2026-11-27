@@ -123,9 +123,25 @@ for slot = 1, WorldConfig.MAX_PLOTS do
 			local layout = WorldConfig.LAYOUT[facility]
 			for _, p in pts do
 				local lx, lz = toLocal(slot, p[1], p[2])
-				if math.abs(lx) > hx + EPS or math.abs(lz) > hz + EPS then
+				if math.abs(lx) > hx + EPS or lz < -hz - EPS or lz > hz + WorldConfig.CAMPUS_DEPTH + EPS then
 					fail(string.format("%s hors du terrain (%.1f, %.1f)", d:GetFullName(), lx, lz))
 					break
+				end
+				-- Bâtiment du mode Création : il doit tenir dans son carré (rotation libre).
+				local parcelModel = d.Parent
+				while parcelModel and parcelModel ~= plot and parcelModel:GetAttribute("Parcel") == nil do
+					parcelModel = parcelModel.Parent
+				end
+				if parcelModel == plot then
+					parcelModel = nil
+				end
+				if parcelModel and parcelModel:GetAttribute("State") == "built" then
+					local parcel = WorldConfig.PARCELS[parcelModel:GetAttribute("Parcel")]
+					local half = WorldConfig.CAMPUS_FOOTPRINT.X / 2
+					if math.abs(lx - parcel.x) > half + EPS or math.abs(lz - parcel.z) > half + EPS then
+						fail(string.format("%s dépasse le carré de sa parcelle (%.1f, %.1f)", d:GetFullName(), lx - parcel.x, lz - parcel.z))
+						break
+					end
 				end
 				if layout and d.Name ~= "Root" then
 					local fx, fz = layout.footprint.X / 2, layout.footprint.Y / 2

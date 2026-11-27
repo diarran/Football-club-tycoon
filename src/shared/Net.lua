@@ -51,6 +51,7 @@ Net.Requests = {
 	"RequestEuroJoin", -- () s'inscrire à la Coupe d'Europe de la semaine (EuroService)
 	"RequestEuroMatch", -- (tactic: string) jouer le prochain match de Coupe d'Europe (EuroService)
 	"RequestAchievementClaim", -- () récupérer les primes des succès débloqués (AchievementService)
+	"RequestCampus", -- (action: string, ...) mode Création : parcelles et bâtiments (CampusService)
 }
 
 -- Serveur -> client (notifications)

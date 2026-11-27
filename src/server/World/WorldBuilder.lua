@@ -35,7 +35,8 @@
 	  PrimaryPart : « Ground » (sol du terrain).
 	  « Spawn » : Part invisible, sans collision, juste derrière l'entrée (téléportation).
 	  Enfants installations : Pitch, Stands, LockerRoom, Training, Offices, Shop, Academy, VIP
-	  (+ Entrance, Paths, TrophyRoom, et selon le style Statue et Decor). Chaque installation est un Model avec les Attributes
+	  (+ Entrance, Paths, TrophyRoom, Landscape, Campus, et selon le style Statue et Decor).
+	  « Campus » = zone du mode Création derrière le terrain (CampusZone.lua). Chaque installation est un Model avec les Attributes
 	  Facility et Level et une PrimaryPart invisible « Root » (son empreinte au sol).
 ]]
 
@@ -58,6 +59,7 @@ local VipLounge = require(World:WaitForChild("VipLounge"))
 local Entrance = require(World:WaitForChild("Entrance"))
 local Prestige = require(World:WaitForChild("Prestige"))
 local Landscape = require(World:WaitForChild("Landscape"))
+local CampusZone = require(World:WaitForChild("CampusZone"))
 local Cosmetics = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Cosmetics"))
 local ClubIdentity = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ClubIdentity"))
 
@@ -73,6 +75,7 @@ export type Style = {
 	titles: number?,
 	-- Identité choisie (ClubIdentity.Choices) : couleurs, motif, écusson.
 	identity: { primary: Color3?, secondary: Color3?, pattern: string?, crest: number? }?,
+	campus: any?, -- mode Création : data.campus (parcelles et bâtiments placés)
 }
 type FacilityBuilder = (parent: Instance, origin: CFrame, level: number, ctx: BuildContext) -> Model
 
@@ -218,6 +221,7 @@ local function buildGround(plot: Model, slotIndex: number)
 	path(30, -88, 30, -83, 4) -- porte de l'espace VIP
 	path(-23, -88, -23, -79, 4) -- porte de la salle des trophées
 	path(111, -85, 111, -53, 5) -- accès au parking
+	path(50, 43, 50, 100, 6) -- vers la zone du mode Création (derrière le terrain)
 
 	local spawn = PartUtil.box(
 		plot,
@@ -326,6 +330,7 @@ function WorldBuilder.buildPlot(slotIndex: number, levelsOrOptions: { [string]: 
 		buildFacility(plot, slotIndex, id, finalLevels[id], ctx)
 	end
 	buildPrestige(plot, slotIndex, look, ctx)
+	CampusZone.build(plot, WorldConfig.getPlotCFrame(slotIndex), look.campus, ctx, { trophies = look.trophies or {}, titles = look.titles or 0 })
 
 	plot.Parent = Workspace
 	return plot
