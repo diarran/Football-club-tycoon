@@ -96,8 +96,9 @@ function Academy.build(parent: Instance, origin: CFrame, level: number, ctx: Bui
 		})
 	else
 		PartUtil.shell(model, buildingOrigin, size, {
-			wallColor = if level >= 4 then C.Concrete elseif level == 3 then C.Plaster else C.Brick,
-			wallMaterial = if level == 2 then Enum.Material.Brick else Enum.Material.SmoothPlastic,
+			wallColor = if level >= 4 then C.Charcoal elseif level == 3 then C.Plaster else C.Brick,
+			wallMaterial = if level == 2 then Enum.Material.Brick elseif level >= 4 then Enum.Material.Metal else Enum.Material.SmoothPlastic,
+			canopy = level >= 4,
 			roofColor = C.Roof,
 			windows = true,
 			glassFront = level >= 3,

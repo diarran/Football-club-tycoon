@@ -158,6 +158,39 @@ WorldConfig.LAYOUT = {
 	Statue = { x = 10, z = -74, footprint = Vector2.new(7, 7) },
 }
 
+-- Aménagement paysager (World/Landscape.lua), en coordonnées locales du terrain.
+-- Lampadaires, bancs et drapeaux : Vector3(x, z, orientation en degrés).
+-- Les arbres laissent la place aux décorations achetables (Prestige.buildDecor) :
+-- massifs de fleurs (z = 91), fontaine (95, 89), palmiers (x = ±125).
+local trees = {}
+for _, x in { -120, -104, -88, -72, -56, -40, -24, -8, 8, 24, 40, 56, 72, 120 } do
+	table.insert(trees, Vector2.new(x, 95))
+end
+for _, z in { -55, -25, 5, 35, 65 } do
+	table.insert(trees, Vector2.new(-124, z))
+end
+WorldConfig.LANDSCAPE = {
+	hedges = {
+		{ Vector2.new(-128, -84), Vector2.new(-128, 98) },
+		{ Vector2.new(128, -84), Vector2.new(128, 98) },
+		{ Vector2.new(-127, 98), Vector2.new(127, 98) },
+	},
+	trees = trees,
+	lamps = {
+		Vector3.new(46, -60, 90),
+		Vector3.new(46, -12, 90),
+		Vector3.new(46, 36, 90),
+		Vector3.new(-85, -92.5, 0),
+		Vector3.new(-42, -92.5, 0),
+		Vector3.new(55, -92.5, 0),
+		Vector3.new(105, -92.5, 0),
+		Vector3.new(120, -60, -90),
+	},
+	flags = { Vector3.new(-21, -95, 180), Vector3.new(-17, -95, 180), Vector3.new(17, -95, 0), Vector3.new(21, -95, 0) },
+	benches = { Vector3.new(-80, 84, 180), Vector3.new(-20, 84, 180), Vector3.new(40, 84, 180) },
+	parking = { center = Vector2.new(111, -43), size = Vector2.new(20, 20) },
+}
+
 -- Taille du terrain de la zone d'entraînement (clôture du niveau 3), centré sur LAYOUT.Training.
 WorldConfig.TRAINING_FIELD = Vector2.new(60, 44)
 
@@ -211,6 +244,10 @@ WorldConfig.COLORS = {
 	SignBack = Color3.fromRGB(24, 30, 40),
 	Gold = Color3.fromRGB(212, 175, 55),
 	Carpet = Color3.fromRGB(170, 24, 40),
+
+	-- Direction artistique « noir et or » (bâtiments haut de gamme).
+	Charcoal = Color3.fromRGB(44, 46, 52),
+	Graphite = Color3.fromRGB(64, 67, 74),
 }
 
 -- Couleurs de club par emplacement (fictives) : principale + secondaire.
