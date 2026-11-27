@@ -41,6 +41,7 @@ local StaffService = require(script.Parent.StaffService)
 local DailyService = require(script.Parent.DailyService)
 local EventService = require(script.Parent.EventService)
 local ReputationService = require(script.Parent.ReputationService)
+local CityService = require(script.Parent.CityService)
 
 local MatchService = {}
 
@@ -394,6 +395,8 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	-- Boost de revenus acheté en Robux : coupé par défaut (Monetization.BOOST_ENABLED).
 	totalReward = math.floor(totalReward * Monetization.BoostMultiplier(data, os.time()))
 	EconomyService.Add(player, totalReward, "match:" .. outcome)
+	-- Prêt de la banque du centre-ville : une part du gain le rembourse.
+	local loanRepaid = CityService.RepayFromMatch(player, data, totalReward)
 
 	local stats = data.club.stats
 	stats.played += 1
@@ -479,6 +482,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 			event = eventBonus,
 			press = pressBonus,
 			total = totalReward,
+			loanRepaid = loanRepaid, -- déjà prélevé sur le total (banque du centre-ville)
 		},
 		sponsorBonuses = sponsorReport.bonuses,
 		sponsorsEnded = sponsorReport.ended,

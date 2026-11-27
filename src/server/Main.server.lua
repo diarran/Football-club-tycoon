@@ -41,6 +41,7 @@ local ReputationService = require(Services.ReputationService)
 local EuroService = require(Services.EuroService)
 local AchievementService = require(Services.AchievementService)
 local CampusService = require(Services.CampusService)
+local CityService = require(Services.CityService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
 local ORDERED_SERVICES = {
@@ -67,6 +68,7 @@ local ORDERED_SERVICES = {
 	{ name = "ReputationService", module = ReputationService },
 	{ name = "EuroService", module = EuroService },
 	{ name = "CampusService", module = CampusService },
+	{ name = "CityService", module = CityService },
 	-- Après les autres : les succès lisent les titres mis à jour par CosmeticService.
 	{ name = "AchievementService", module = AchievementService },
 }
@@ -145,6 +147,7 @@ local function onPlayerRemoving(player: Player)
 	step("FriendService.OnPlayerLeaving", FriendService.OnPlayerLeaving, player)
 	step("LeaderboardService.OnPlayerLeaving", LeaderboardService.OnPlayerLeaving, player)
 	step("EuroService.OnPlayerLeaving", EuroService.OnPlayerLeaving, player)
+	step("CityService.OnPlayerLeaving", CityService.OnPlayerLeaving, player)
 	step("ClubService.OnPlayerLeaving", ClubService.OnPlayerLeaving, player)
 	step("AdminService.OnPlayerLeaving", AdminService.OnPlayerLeaving, player)
 	step("PlayerDataService.Release", PlayerDataService.Release, player)

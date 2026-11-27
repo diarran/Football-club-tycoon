@@ -176,6 +176,9 @@ local function teleportToPlot(player: Player)
 	end
 end
 
+-- Retour au club (bouton « Mon club » du centre-ville, CityService).
+ClubService.TeleportToPlot = teleportToPlot
+
 -- Liste des clubs -------------------------------------------------------
 
 local function averageRating(squad): number

@@ -40,7 +40,7 @@ const MODULES = [
     const n = f.slice(0, -4);
     return [`Lang_${n}`, ['ReplicatedStorage', 'Shared', 'Lang', n], 'ModuleScript', `src/shared/Lang/${f}`];
   }),
-  ...['PartUtil', 'Props', 'ModelLoader', 'Landscape', 'CampusBuildings', 'CampusFacilities', 'CampusZone', 'District', 'Pitch', 'Stands', 'LockerRoom', 'TrainingZone', 'Offices', 'Shop', 'Academy', 'VipLounge', 'Entrance', 'Prestige', 'WorldBuilder'].map(
+  ...['PartUtil', 'Props', 'ModelLoader', 'Landscape', 'CampusBuildings', 'CampusFacilities', 'CampusZone', 'CityBuildings', 'Downtown', 'District', 'Pitch', 'Stands', 'LockerRoom', 'TrainingZone', 'Offices', 'Shop', 'Academy', 'VipLounge', 'Entrance', 'Prestige', 'WorldBuilder'].map(
     (n) => [n, ['ServerScriptService', 'Server', 'World', n], 'ModuleScript', `src/server/World/${n}.lua`]
   ),
   ['WorldPreview', ['ServerScriptService', 'Server', 'World', 'WorldPreview'], 'Script', 'src/server/World/WorldPreview.server.lua'],
