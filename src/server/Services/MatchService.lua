@@ -18,9 +18,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
+local ClubIdentity = require(Shared.ClubIdentity)
 local Campus = require(Shared.Campus)
 local Config = require(Shared.Config)
-local Cosmetics = require(Shared.Cosmetics)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
 local MatchReplay = require(Shared.MatchReplay)
@@ -221,18 +221,11 @@ end
 local replaySeed = 0
 
 -- Couleur principale d'un club, en { r, g, b } (0-255) pour le réseau.
-local function colorArray(color: Color3)
-	return {
-		math.floor(color.R * 255 + 0.5),
-		math.floor(color.G * 255 + 0.5),
-		math.floor(color.B * 255 + 0.5),
-	}
-end
+local colorArray = ClubIdentity.ToArray
 
-local function clubColor(data, slotIndex: number?)
-	local item = Cosmetics.Get(data and data.cosmetics and data.cosmetics.equipped.colors)
-	local fallback = WorldConfig.CLUB_COLORS[slotIndex or 1] or WorldConfig.CLUB_COLORS[1]
-	return (item and item.primary) or fallback.primary
+-- Identité résolue d'un club (couleurs, tenue) : objet Prestige, identité ou emplacement.
+local function clubLook(data, slotIndex: number?)
+	return ClubIdentity.Resolve(data, slotIndex)
 end
 
 -- Couleur d'un club fictif : une couleur de la palette, différente de l'hôte.
@@ -256,11 +249,20 @@ end
 function MatchService.BuildReplay(player: Player, data, home, away, score, opponentData, opponentSlot)
 	replaySeed += 1
 	local slotIndex = ClubService.GetSlot(player)
-	local homeColor = clubColor(data, slotIndex)
-	local awayColor = if opponentData then clubColor(opponentData, opponentSlot) else rivalColor(away.id, homeColor)
-	if awayColor == homeColor then
-		awayColor = Color3.new(0.95, 0.95, 0.95)
+	local homeLook = clubLook(data, slotIndex)
+	local homeColor = homeLook.kit.shirt
+	local awayKit
+	if opponentData then
+		awayKit = clubLook(opponentData, opponentSlot).kit
+	else
+		local rival = rivalColor(away.id, homeColor)
+		awayKit = { pattern = "plain", shirt = rival, detail = Color3.new(0.95, 0.95, 0.95) }
 	end
+	if awayKit.shirt == homeColor then
+		-- Même maillot : l'équipe à l'extérieur joue en blanc.
+		awayKit = { pattern = "plain", shirt = Color3.new(0.95, 0.95, 0.95), detail = homeLook.kit.detail }
+	end
+	local awayColor = awayKit.shirt
 	return {
 		slotIndex = slotIndex,
 		hostUserId = player.UserId,
@@ -270,6 +272,9 @@ function MatchService.BuildReplay(player: Player, data, home, away, score, oppon
 		awayGoals = score.awayGoals,
 		homeColor = colorArray(homeColor),
 		awayColor = colorArray(awayColor),
+		-- Tenues complètes (motif, maillot, détails) des deux équipes.
+		homeKit = ClubIdentity.KitToNet(homeLook.kit),
+		awayKit = ClubIdentity.KitToNet(awayKit),
 		crowdLevel = data.buildings.Stands or 1,
 		homeTactic = Tactics.Sanitize(home.tactic),
 		awayTactic = Tactics.Sanitize(away.tactic),

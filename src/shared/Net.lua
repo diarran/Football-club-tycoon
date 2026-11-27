@@ -34,6 +34,8 @@ Net.Requests = {
 	"RequestLanguage", -- (lang: string) langue choisie dans les Paramètres ("fr", "en", "es" ou "pt")
 	"RequestBuyCosmetic", -- (itemId: string) acheter un objet de personnalisation (Cosmetics)
 	"RequestEquipCosmetic", -- (category: string, itemId: string) porter un objet, ou "default"
+	"RequestSetIdentity", -- (field: string, value) identité du club : "primary"/"secondary" (id de couleur), "pattern", "crest" (1-6), ou ("reset")
+	"RequestBuyPattern", -- (patternId: string) acheter un motif de maillot en FC Coins (ClubIdentity)
 	"RequestBuyExclusive", -- (key: string) ouvrir l'achat Robux d'un produit de Monetization
 	"RequestChallenge", -- (clubId: string, stake: number) défier un club du serveur
 	"RequestChallengeResponse", -- (challengeId: number, accept: boolean)
