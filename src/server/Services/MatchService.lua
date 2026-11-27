@@ -39,6 +39,7 @@ local TutorialService = require(script.Parent.TutorialService)
 local StaffService = require(script.Parent.StaffService)
 local DailyService = require(script.Parent.DailyService)
 local EventService = require(script.Parent.EventService)
+local ReputationService = require(script.Parent.ReputationService)
 
 local MatchService = {}
 
@@ -381,7 +382,9 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		sponsor = sponsor,
 		shop = shop,
 	}, score.homeGoals, opponentData ~= nil)
-	local totalReward = matchReward + tickets + sponsor + shop + vip + contracts + eventBonus
+	-- Buzz de la dernière conférence de presse (fans ou sponsors) : petit bonus.
+	local pressBonus = ReputationService.MatchBonus(data, { tickets = tickets, sponsor = sponsor, contracts = contracts })
+	local totalReward = matchReward + tickets + sponsor + shop + vip + contracts + eventBonus + pressBonus
 	-- Boost de revenus acheté en Robux : coupé par défaut (Monetization.BOOST_ENABLED).
 	totalReward = math.floor(totalReward * Monetization.BoostMultiplier(data, os.time()))
 	EconomyService.Add(player, totalReward, "match:" .. outcome)
@@ -418,6 +421,14 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 
 	-- Objectifs des contrats de sponsoring (bonus unique versé ici).
 	local sponsorReport = StaffService.OnMatchPlayed(player, data, outcome, score.homeGoals)
+	-- Réputation du club et, après un grand moment, conférence de presse.
+	local reputation = ReputationService.OnLeagueMatch(player, data, {
+		outcome = outcome,
+		goalsFor = score.homeGoals,
+		goalsAgainst = score.awayGoals,
+		vsClub = opponentData ~= nil,
+		promoted = promoted,
+	})
 
 	-- Fatigue, XP, blessures, cartons et suspensions (titulaires de ce match).
 	local infirmary = SquadService.ApplyMatchEffects(data, home.squad)
@@ -459,6 +470,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 			vip = vip,
 			contracts = contracts,
 			event = eventBonus,
+			press = pressBonus,
 			total = totalReward,
 		},
 		sponsorBonuses = sponsorReport.bonuses,
@@ -472,6 +484,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		previousDivision = previousDivision,
 		replay = replay,
 		infirmary = infirmary,
+		reputation = reputation,
 	}
 end
 

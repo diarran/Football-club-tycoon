@@ -37,6 +37,7 @@ local EventService = require(Services.EventService)
 local FriendService = require(Services.FriendService)
 local LeaderboardService = require(Services.LeaderboardService)
 local CupService = require(Services.CupService)
+local ReputationService = require(Services.ReputationService)
 local EuroService = require(Services.EuroService)
 local AchievementService = require(Services.AchievementService)
 
@@ -62,6 +63,7 @@ local ORDERED_SERVICES = {
 	{ name = "FriendService", module = FriendService },
 	{ name = "LeaderboardService", module = LeaderboardService },
 	{ name = "CupService", module = CupService },
+	{ name = "ReputationService", module = ReputationService },
 	{ name = "EuroService", module = EuroService },
 	-- Après les autres : les succès lisent les titres mis à jour par CosmeticService.
 	{ name = "AchievementService", module = AchievementService },
@@ -95,6 +97,7 @@ local function onPlayerAdded(player: Player)
 	-- des clubs affiche tout de suite une note correcte.
 	step("SquadService.OnPlayerReady", SquadService.OnPlayerReady, player, profile)
 	step("StaffService.OnPlayerReady", StaffService.OnPlayerReady, player, profile)
+	step("ReputationService.OnPlayerReady", ReputationService.OnPlayerReady, player, profile)
 	local ready, assigned = step("ClubService.OnPlayerReady", ClubService.OnPlayerReady, player, profile)
 	if not ready or not assigned then
 		-- Sans terrain, le joueur ne peut pas jouer : profil libéré (sauvegardé)

@@ -45,6 +45,7 @@ Net.Requests = {
 	"RequestCancelSponsor", -- (contractId: number) arrêter un contrat de sponsor
 	"RequestEventClaim", -- () récupérer les paliers atteints de l'événement de la semaine
 	"RequestCupMatch", -- (tactic: string) jouer le tour en cours de la Coupe nationale (CupService)
+	"RequestPressAnswer", -- (answer: string) conférence de presse : "humble", "ambitious", "provocative" ou "skip"
 	"RequestEuroJoin", -- () s'inscrire à la Coupe d'Europe de la semaine (EuroService)
 	"RequestEuroMatch", -- (tactic: string) jouer le prochain match de Coupe d'Europe (EuroService)
 	"RequestAchievementClaim", -- () récupérer les primes des succès débloqués (AchievementService)

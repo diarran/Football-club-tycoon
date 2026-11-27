@@ -852,6 +852,8 @@ function H.boot(modules)
 		MatchReplay = mock.run(modules.MatchReplay),
 		NationalCup = mock.run(modules.NationalCup),
 		CupService = mock.run(modules.CupService),
+		Reputation = mock.run(modules.Reputation),
+		ReputationService = mock.run(modules.ReputationService),
 		EuroCup = mock.run(modules.EuroCup),
 		EuroService = mock.run(modules.EuroService),
 	}

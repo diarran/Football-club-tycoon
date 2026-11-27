@@ -330,7 +330,19 @@ local function playRun(profil)
 				-- (prime de match ×1 à ×3), le gain doit rester sous 5 000.
 				-- Les contrats de sponsoring sont contrôlés à part (plafond ci-dessous).
 				-- Le bonus de l'événement de la semaine est voulu lui aussi (contrôlé à part).
-				table.insert(run.baseIncomes, income - (result.rewards.match - Config.Rewards[result.outcome]) - result.rewards.contracts - (result.rewards.event or 0))
+				-- Le bonus de la conférence de presse est voulu (au plus +15 % de la billetterie
+				-- et des sponsors pendant 3 matchs) : contrôlé à part.
+				local press = result.rewards.press or 0
+				run.pressBonus = (run.pressBonus or 0) + press
+				if press > math.ceil((result.rewards.tickets + result.rewards.sponsor + result.rewards.contracts) * 0.15) + 1 then
+					run.pressOverCap = true
+				end
+				table.insert(run.baseIncomes, income - (result.rewards.match - Config.Rewards[result.outcome]) - result.rewards.contracts - (result.rewards.event or 0) - press)
+				-- Conférence de presse : le joueur répond toujours (réponse provocante,
+				-- la plus rentable : billetterie +10 % pendant 3 matchs).
+				if data.reputation and data.reputation.pending and data.reputation.pending.id ~= 0 then
+					S.ReputationService.TryAnswer(player, "provocative")
+				end
 				-- Événement de la semaine : le joueur récupère ses paliers dès qu'ils sont atteints.
 				local beforeClaim, ownedBefore = data.coins, 0
 				for id in data.cosmetics.owned do
@@ -609,8 +621,16 @@ for _, profil in PROFILS do
 	))
 
 	-- Plafond des contrats : 2 contrats de D1 au maximum (tirage, prestige, directeur commercial).
+	-- Réputation : jusqu'à +10 % sur les contrats (Reputation.SPONSOR_MAX).
 	local sponsorCap = 2 * S.Sponsors.BASE_PER_MATCH.D1 * 1.2 * (1 + S.Sponsors.PRESTIGE_BONUS_MAX)
-		* (1 + S.Staff.Effect({ Commercial = S.Staff.MaxLevel("Commercial") }, "sponsorBonus")) + 10
+		* (1 + S.Staff.Effect({ Commercial = S.Staff.MaxLevel("Commercial") }, "sponsorBonus"))
+		* (1 + S.Reputation.SPONSOR_MAX) + 10
+	for _, run in runs do
+		if run.pressOverCap then
+			table.insert(problems, profil.label .. " : le bonus de la conférence de presse dépasse son plafond (source anormale)")
+			break
+		end
+	end
 	if (percentile(perMatchAll, 1) or 0) > sponsorCap then
 		table.insert(problems, profil.label .. " : les contrats de sponsoring dépassent leur plafond (source anormale)")
 	end
