@@ -159,7 +159,8 @@ function MatchService.ClubTeam(player: Player)
 		squad = SquadService.Starters(data), -- titulaires (lecture seule)
 		tactic = data.tactic,
 		bonus = (Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0)
-			+ Staff.Effect(data.staff, "teamBonus"),
+			+ Staff.Effect(data.staff, "teamBonus")
+			- SquadService.MissingPenalty(data), -- blessés / suspendus sans remplaçant
 	}
 end
 
@@ -276,6 +277,10 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	if #data.squad == 0 then
 		return nil, Locale.TP(player, "error.emptySquad")
 	end
+	if #SquadService.Starters(data) == 0 and not SquadService.ClearSuspensionsIfStuck(data) then
+		-- Tout l'effectif est blessé ou suspendu (très rare) : on attend quelques minutes.
+		return nil, Locale.TP(player, "injury.noneAvailable", { minutes = SquadService.NextReturnMinutes(data) })
+	end
 
 	-- Adversaire
 	local away, opponentData, opponentSlot
@@ -294,6 +299,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		end
 		local trainingBonus = (Buildings.GetEffects("Training", opponentData.buildings.Training or 1).teamBonus or 0)
 			+ Staff.Effect(opponentData.staff, "teamBonus")
+			- SquadService.MissingPenalty(opponentData)
 		away = {
 			id = opponentId,
 			name = opponentData.club.name,
@@ -310,6 +316,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		+ (Buildings.GetEffects("Pitch", data.buildings.Pitch or 1).homeBonus or 0)
 		+ (Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0)
 		+ Staff.Effect(data.staff, "teamBonus") -- entraîneur du staff
+		- SquadService.MissingPenalty(data) -- blessés / suspendus sans remplaçant
 	local home = {
 		id = "player:" .. player.UserId,
 		name = data.club.name,
@@ -388,7 +395,8 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	-- Objectifs des contrats de sponsoring (bonus unique versé ici).
 	local sponsorReport = StaffService.OnMatchPlayed(player, data, outcome, score.homeGoals)
 
-	SquadService.ApplyMatchEffects(data)
+	-- Fatigue, XP, blessures, cartons et suspensions (titulaires de ce match).
+	local infirmary = SquadService.ApplyMatchEffects(data, home.squad)
 	-- Saison et missions du jour (primes versées par DailyService).
 	DailyService.AddSeasonPoints(player, Config.DivisionPoints[outcome])
 	local missionReward = DailyService.Track(player, "play")
@@ -433,6 +441,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		promoted = promoted,
 		previousDivision = previousDivision,
 		replay = replay,
+		infirmary = infirmary,
 	}
 end
 

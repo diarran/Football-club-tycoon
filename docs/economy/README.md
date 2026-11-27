@@ -376,7 +376,7 @@ en FC Coins (pas de salaire). Coût total : 381 500 FC Coins.
 | --- | --- | --- | --- | --- | --- |
 | Entraîneur | 4 000 | 12 000 | 30 000 | 60 000 | équipe +1 en match, progression +8 % |
 | Recruteur | 3 000 | 9 000 | 22 000 | 45 000 | jeunes repérés 60 % plus souvent, note et potentiel +4 |
-| Médecin | 2 500 | 8 000 | 20 000 | 40 000 | récupération d'énergie +50 % |
+| Médecin | 2 500 | 8 000 | 20 000 | 40 000 | récupération d'énergie +50 %, blessures 60 % plus courtes |
 | Directeur commercial | 5 000 | 14 000 | 32 000 | 65 000 | argent des sponsors +20 % (bureaux et contrats) |
 
 **Sponsors** (`src/shared/Sponsors.lua`) : 3 offres renouvelées toutes les 4 h,

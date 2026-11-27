@@ -782,6 +782,7 @@ function H.boot(modules)
 		Divisions = mock.run(modules.Divisions),
 		PlayerConfig = mock.run(modules.PlayerConfig),
 		Training = mock.run(modules.Training),
+		Injuries = mock.run(modules.Injuries),
 		Onboarding = mock.run(modules.Onboarding),
 		OnboardingService = mock.run(modules.OnboardingService),
 	}

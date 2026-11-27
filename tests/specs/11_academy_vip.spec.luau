@@ -109,6 +109,10 @@ H.test("les jeunes formés au club progressent plus vite", function()
 	data.buildings.Training = 1
 	for _ = 1, 100 do
 		data.squad[1].energy, data.squad[2].energy = 100, 100
+		-- 100 matchs sans que le temps passe : on soigne blessures et suspensions.
+		for _, f in data.squad do
+			f.injuredUntil, f.suspended = 0, 0
+		end
 		S.SquadService.ApplyMatchEffects(data)
 	end
 	H.ok(data.squad[1].rating > data.squad[2].rating + 20, ("jeune %d contre %d"):format(data.squad[1].rating, data.squad[2].rating))

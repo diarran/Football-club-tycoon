@@ -19,6 +19,7 @@ local Staff = {}
 --   scoutSpeed : multiplie le rythme de repérage du centre de formation (recruteur)
 --   prospectBonus : points de note et de potentiel en plus pour les jeunes repérés
 --   energyRecovery : multiplie la récupération d'énergie (médecin)
+--   injuryReduction : part de la durée des blessures en moins (médecin, Injuries.lua)
 --   sponsorBonus : part en plus sur l'argent des sponsors (directeur commercial)
 Staff.Definitions = {
 	Coach = {
@@ -45,10 +46,10 @@ Staff.Definitions = {
 		id = "Doctor",
 		order = 3,
 		levels = {
-			{ cost = 2500, effects = { energyRecovery = 1.1 } },
-			{ cost = 8000, effects = { energyRecovery = 1.2 } },
-			{ cost = 20000, effects = { energyRecovery = 1.35 } },
-			{ cost = 40000, effects = { energyRecovery = 1.5 } },
+			{ cost = 2500, effects = { energyRecovery = 1.1, injuryReduction = 0.15 } },
+			{ cost = 8000, effects = { energyRecovery = 1.2, injuryReduction = 0.3 } },
+			{ cost = 20000, effects = { energyRecovery = 1.35, injuryReduction = 0.45 } },
+			{ cost = 40000, effects = { energyRecovery = 1.5, injuryReduction = 0.6 } },
 		},
 	},
 	Commercial = {
@@ -70,6 +71,7 @@ local NEUTRAL = {
 	scoutSpeed = 1,
 	prospectBonus = 0,
 	energyRecovery = 1,
+	injuryReduction = 0,
 	sponsorBonus = 0,
 }
 

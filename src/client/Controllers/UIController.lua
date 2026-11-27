@@ -26,6 +26,7 @@ local Divisions = require(Shared.Divisions)
 local Daily = require(Shared.Daily)
 local Leaderboard = require(Shared.Leaderboard)
 local Friends = require(Shared.Friends)
+local Injuries = require(Shared.Injuries)
 local Locale = require(Shared.Locale)
 local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
@@ -78,6 +79,7 @@ local state = {
 	challenges = { incoming = {}, outgoing = nil },
 	tournament = nil,
 	tournamentEndsAt = 0,
+	nextInjuryReturn = math.huge, -- os.time du prochain retour de blessure (onglet Effectif)
 	leaderboard = nil, -- classement mondial (LeaderboardService)
 	leaderboardBoard = "week", -- tableau affiché : week, club ou trophies
 	settings = { managementCamera = true, showTutorial = true, volume = Audio.DEFAULT_VOLUME, music = true },
@@ -592,9 +594,19 @@ function renderers.Squad(profile)
 	end
 
 	-- Composition et entraînement (shared/Training.lua).
+	local now = os.time()
 	local starterSet = {}
-	for _, id in profile.lineup or Training.Normalize(squad, nil) do
+	-- Composition voulue (serveur), sans les blessés / suspendus à cet instant.
+	for _, id in Training.Normalize(squad, profile.lineup, now) do
 		starterSet[id] = true
+	end
+	-- Prochain retour d'un blessé : l'onglet se rafraîchit à ce moment-là.
+	state.nextInjuryReturn = math.huge
+	for _, footballer in squad do
+		local left = Injuries.InjuryLeft(footballer, now)
+		if left > 0 then
+			state.nextInjuryReturn = math.min(state.nextInjuryReturn, now + left)
+		end
 	end
 	local canSwap = #squad > Training.STARTERS
 	local trainingLevel = profile.buildings.Training or 1
@@ -604,7 +616,15 @@ function renderers.Squad(profile)
 		label(T("lineup.title", { count = math.min(Training.STARTERS, #squad) }), { Font = Enum.Font.GothamBold }),
 		label(T("lineup.hint"), { TextColor3 = COLORS.muted, TextSize = 16 }),
 		label(T("training.hint", { xp = Training.XP_PER_POINT }), { TextColor3 = COLORS.muted, TextSize = 16 }),
+		label(T("injury.hint", { yellows = Injuries.YELLOWS_FOR_BAN }), { TextColor3 = COLORS.muted, TextSize = 16 }),
 	}
+	local missing = Training.MissingStarters(squad, now)
+	if missing > 0 then
+		table.insert(
+			lineupChildren,
+			label(T("injury.missing", { count = missing }), { TextColor3 = COLORS.error, TextSize = 16 })
+		)
+	end
 	if canSwap then
 		table.insert(
 			lineupChildren,
@@ -616,13 +636,18 @@ function renderers.Squad(profile)
 	card(lineupChildren).Parent = content
 
 	local canRelease = #squad > Config.STARTING_PLAYERS
-	local now = os.time()
 	for _, footballer in squad do
 		local position = if PlayerConfig.Positions[footballer.position]
 			then T("position." .. footballer.position)
 			else footballer.position
 		local isStarter = starterSet[footballer.id] == true
-		local roleText = if isStarter then T("lineup.starter") else T("lineup.bench")
+		local injuryLeft = Injuries.InjuryLeft(footballer, now)
+		local suspended = Injuries.IsSuspended(footballer)
+		local available = injuryLeft <= 0 and not suspended
+		local roleText = if not available
+			then T("injury.unavailable")
+			elseif isStarter then T("lineup.starter")
+			else T("lineup.bench")
 		local atPotential = footballer.rating >= footballer.potential
 		local children = {
 			label(
@@ -650,11 +675,38 @@ function renderers.Squad(profile)
 				{ TextColor3 = if atPotential then COLORS.gold else COLORS.muted, TextSize = 16 }
 			),
 		}
+		-- Blessure, suspension, cartons jaunes en cours.
+		if injuryLeft > 0 then
+			table.insert(
+				children,
+				label(
+					T("injury.status", { minutes = math.ceil(injuryLeft / 60) }),
+					{ Font = Enum.Font.GothamBold, TextColor3 = COLORS.error, TextSize = 16 }
+				)
+			)
+		end
+		if suspended then
+			table.insert(
+				children,
+				label(
+					T("suspension.status", { matches = footballer.suspended }),
+					{ Font = Enum.Font.GothamBold, TextColor3 = COLORS.error, TextSize = 16 }
+				)
+			)
+		elseif (tonumber(footballer.yellows) or 0) > 0 then
+			table.insert(
+				children,
+				label(T("suspension.yellows", { count = footballer.yellows }), { TextColor3 = COLORS.gold, TextSize = 16 })
+			)
+		end
 		local entries = {}
 		if not atPotential then
 			local cost = Training.SessionCost(footballer.rating)
 			local wait = Training.CooldownLeft(footballer, now)
-			local ready = wait <= 0 and footballer.energy >= Training.MIN_ENERGY and profile.coins >= cost
+			local ready = wait <= 0
+				and injuryLeft <= 0
+				and footballer.energy >= Training.MIN_ENERGY
+				and profile.coins >= cost
 			table.insert(entries, {
 				text = if wait > 0
 					then T("training.wait", { seconds = math.ceil(wait) })
@@ -665,7 +717,7 @@ function renderers.Squad(profile)
 				color = if ready then COLORS.accent else COLORS.disabled,
 			})
 		end
-		if canSwap then
+		if canSwap and available then
 			table.insert(entries, {
 				text = if isStarter then T("lineup.toBench") else T("lineup.toPitch"),
 				onClick = function()
@@ -708,6 +760,7 @@ local function staffEffectText(staffId: string, level: number): string
 		speed = pct((effects.scoutSpeed or 1) - 1),
 		bonus = if staffId == "Commercial" then pct(effects.sponsorBonus) else (effects.prospectBonus or 0),
 		recovery = pct((effects.energyRecovery or 1) - 1),
+		injury = pct(effects.injuryReduction),
 	})
 end
 
@@ -2196,6 +2249,30 @@ function UIController.ShowMatchResult(result)
 	for _, brand in result.sponsorsEnded or {} do
 		add(label(T("result.sponsorEnded", { brand = brand }), centered))
 	end
+	-- Infirmerie : blessures, cartons, suspensions purgées.
+	local infirmary = type(result.infirmary) == "table" and result.infirmary or {}
+	local infirmaryLines = {}
+	for _, event in infirmary.events or {} do
+		local key = if event.kind == "injury"
+			then "result.injury"
+			elseif event.kind == "red" then "result.red"
+			elseif event.banned then "result.yellowBan"
+			else "result.yellow"
+		table.insert(infirmaryLines, T(key, { name = event.name, minutes = event.minutes or 0 }))
+	end
+	for _, name in infirmary.returned or {} do
+		table.insert(infirmaryLines, T("result.returned", { name = name }))
+	end
+	if #infirmaryLines > 0 then
+		add(label(T("result.infirmaryTitle"), {
+			Font = Enum.Font.GothamBold,
+			TextSize = 16,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}))
+		for _, line in infirmaryLines do
+			add(label(line, { TextSize = 16, TextColor3 = COLORS.muted, TextXAlignment = Enum.TextXAlignment.Center }))
+		end
+	end
 	if result.promoted then
 		local promotedText = T("result.promoted", { division = divisionLabel(result.division) })
 		if (result.promotionReward or 0) > 0 then
@@ -2232,6 +2309,13 @@ task.spawn(function()
 		local ticking = state.cooldownEndsAt > os.clock() - 1 or state.tournamentEndsAt > os.clock() - 1
 		if panel and panel.Visible and currentTab == "Matches" and ticking then
 			UIController.Refresh()
+		end
+		-- Un blessé est rétabli : l'onglet Effectif se met à jour.
+		if (state.nextInjuryReturn or math.huge) <= os.time() then
+			state.nextInjuryReturn = math.huge
+			if panel and panel.Visible and currentTab == "Squad" then
+				UIController.Refresh()
+			end
 		end
 		-- Compte à rebours de l'événement de la semaine dans le HUD.
 		if hud then
