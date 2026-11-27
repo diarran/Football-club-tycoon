@@ -17,6 +17,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local WorldConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("WorldConfig"))
 local Locale = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Locale"))
+local Brand = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Brand"))
 local PartUtil = require(script.Parent:WaitForChild("PartUtil"))
 
 type BuildContext = PartUtil.BuildContext
@@ -120,7 +121,7 @@ function Offices.build(parent: Instance, origin: CFrame, level: number, ctx: Bui
 			Enum.Material.SmoothPlastic,
 			{ shape = Enum.PartType.Cylinder, rotY = 90 }
 		)
-		PartUtil.box(
+		local crestDisc = PartUtil.box(
 			model,
 			origin,
 			"Crest",
@@ -130,6 +131,22 @@ function Offices.build(parent: Instance, origin: CFrame, level: number, ctx: Bui
 			Enum.Material.SmoothPlastic,
 			{ shape = Enum.PartType.Cylinder, rotY = 90 }
 		)
+		-- Écusson importé (shared/Brand.lua) sur les deux faces du disque.
+		local crestImage = Brand.CrestImage(ctx.slotIndex)
+		if crestImage then
+			for _, face in { Enum.NormalId.Left, Enum.NormalId.Right } do
+				local surface = Instance.new("SurfaceGui")
+				surface.Name = "CrestImage" .. face.Name
+				surface.Face = face
+				surface.LightInfluence = 0.2
+				surface.Parent = crestDisc
+				local image = Instance.new("ImageLabel")
+				image.BackgroundTransparency = 1
+				image.Size = UDim2.fromScale(1, 1)
+				image.Image = crestImage
+				image.Parent = surface
+			end
+		end
 		PartUtil.cylinder(model, origin, "Antenna", 0.4, 10, Vector3.new(size.X / 2 - 3, roofTop, size.Z / 2 - 3), C.Metal, Enum.Material.Metal)
 	end
 
