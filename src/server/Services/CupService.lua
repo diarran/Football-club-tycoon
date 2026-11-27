@@ -10,7 +10,7 @@
 	- Le prochain adversaire est tiré dès le tour précédent (et gardé dans le
 	  profil) : le joueur voit son nom, sa division et son style avant de jouer.
 	- Match neutre (MatchService.ClubTeam / RivalTeam / Simulate) : pas
-	  d'énergie, pas de points de division. Nul : tirs au but 50/50.
+	  d'énergie, pas de points de division. Météo du stade comme en championnat. Nul : tirs au but 50/50.
 	- Prime versée par le serveur à chaque tour gagné, une seule fois (le tour
 	  avance aussitôt). Coupe gagnée : stat cupsWon (trophée de la vitrine).
 
@@ -26,10 +26,12 @@ local Locale = require(Shared.Locale)
 local NationalCup = require(Shared.NationalCup)
 local Net = require(Shared.Net)
 local Tactics = require(Shared.Tactics)
+local Weather = require(Shared.Weather)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
 local MatchService = require(script.Parent.MatchService)
+local SquadService = require(script.Parent.SquadService)
 local ReputationService = require(script.Parent.ReputationService)
 
 local CupService = {}
@@ -113,6 +115,11 @@ function CupService.TryPlay(player: Player, tactic)
 	if #data.squad == 0 then
 		return nil, Locale.TP(player, "error.emptySquad")
 	end
+	-- Tout l'effectif blessé ou suspendu : on n'élimine pas le club sur tapis
+	-- vert, il rejoue le tour quand un joueur est rétabli (comme en championnat).
+	if #SquadService.Starters(data) == 0 and not SquadService.ClearSuspensionsIfStuck(data) then
+		return nil, Locale.TP(player, "injury.noneAvailable", { minutes = SquadService.NextReturnMinutes(data) })
+	end
 	if not Tactics.IsValid(tactic) then
 		tactic = Tactics.Sanitize(data.tactic)
 	end
@@ -125,7 +132,10 @@ function CupService.TryPlay(player: Player, tactic)
 	if not home or not away then
 		return nil, Locale.TP(player, "error.invalidOpponent")
 	end
-	local score = MatchService.Simulate(home, away)
+	-- Match joué sur le terrain du club : même météo que le championnat (carte
+	-- « Météo au stade » de l'onglet Matchs), même petit bonus au style avantagé.
+	local weather = Weather.Describe(os.time())
+	local score = MatchService.Simulate(home, away, weather.kind)
 	local penalties = score.homeGoals == score.awayGoals
 	local won = if penalties then rng:NextNumber() < 0.5 else score.homeGoals > score.awayGoals
 	local giantKill = won and NationalCup.IsGiantKill(data.club.division, opponent.division)
@@ -176,6 +186,10 @@ function CupService.TryPlay(player: Player, tactic)
 		warn("[Cup] replay non construit : " .. tostring(replay))
 		replay = nil
 	end
+	if replay then
+		replay.weather = weather.kind
+		replay.night = weather.night
+	end
 	return {
 		mode = "cup",
 		stage = stage,
@@ -191,6 +205,7 @@ function CupService.TryPlay(player: Player, tactic)
 		champion = champion,
 		coins = coins,
 		tactics = score.tactics,
+		weather = weather,
 		reputation = reputation,
 		replay = replay,
 	}
