@@ -1104,81 +1104,85 @@ function renderers.Matches(profile)
 	end
 
 	-- Coupe nationale : tour en cours, adversaire et son style, puis les tours joués.
-	local cup = type(profile.cup) == "table" and profile.cup or nil
-	if cup then
-		local children = {
-			label(T("cup.title"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
-			label(T("cup.info"), { TextColor3 = COLORS.muted, TextSize = 14 }),
-		}
-		local endsIn = math.max(0, cup.endsIn or 0)
-		table.insert(children, label(T("cup.endsIn", {
-			days = math.floor(endsIn / 86400),
-			hours = math.floor((endsIn % 86400) / 3600),
-		}), { TextColor3 = COLORS.muted, TextSize = 14 }))
-		for _, entry in cup.history or {} do
-			local params = {
-				stage = T("cup.stage." .. tostring(entry.stage)),
-				mine = profile.club.name,
-				club = entry.name,
-				myGoals = entry.myGoals,
-				theirGoals = entry.theirGoals,
-				coins = formatCoins(entry.coins or 0),
+	-- Affichée après les adversaires du championnat : sur téléphone, le bouton
+	-- « Jouer » du match principal reste visible sans faire défiler.
+	local function cupCard()
+		local cup = type(profile.cup) == "table" and profile.cup or nil
+		if cup then
+			local children = {
+				label(T("cup.title"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold }),
+				label(T("cup.info"), { TextColor3 = COLORS.muted, TextSize = 14 }),
 			}
-			local text = T(if entry.won then "cup.historyWin" else "cup.historyLoss", params)
-			if entry.penalties then
-				text ..= T("cup.historyPenalties")
-			end
-			if entry.giantKill then
-				text ..= T("cup.historyGiant")
-			end
-			table.insert(children, label(text, {
-				TextSize = 14,
-				TextColor3 = if entry.won then COLORS.accent else COLORS.error,
-			}))
-		end
-		local nextIn = math.max(0, math.ceil(state.cupReadyAt - os.clock()))
-		if cup.status == "playing" and type(cup.opponent) == "table" then
-			local rival = cup.opponent
-			table.insert(children, label(T("cup.next", {
-				stage = T("cup.stage." .. tostring(cup.stage)),
-				club = rival.name,
-				division = divisionLabel(rival.division),
-				rating = rival.rating,
-			}), { Font = Enum.Font.GothamBold, TextSize = 16 }))
-			if rival.giantKill then
-				table.insert(children, label(T("cup.giantWarning"), { TextColor3 = COLORS.gold, TextSize = 14 }))
-			end
-			local styleLine, hintLine = tacticLines(rival.tactic)
-			table.insert(children, styleLine)
-			table.insert(children, hintLine)
-			table.insert(children, label(T("cup.nextReward", { coins = formatCoins(cup.nextReward or 0) }), {
-				TextColor3 = COLORS.gold,
-				TextSize = 14,
-			}))
-			if nextIn > 0 then
-				table.insert(children, label(T("cup.wait", { minutes = math.max(1, math.ceil(nextIn / 60)) }), {
-					Name = "CupWait",
-					TextColor3 = COLORS.muted,
-					TextSize = 16,
+			local endsIn = math.max(0, cup.endsIn or 0)
+			table.insert(children, label(T("cup.endsIn", {
+				days = math.floor(endsIn / 86400),
+				hours = math.floor((endsIn % 86400) / 3600),
+			}), { TextColor3 = COLORS.muted, TextSize = 14 }))
+			for _, entry in cup.history or {} do
+				local params = {
+					stage = T("cup.stage." .. tostring(entry.stage)),
+					mine = profile.club.name,
+					club = entry.name,
+					myGoals = entry.myGoals,
+					theirGoals = entry.theirGoals,
+					coins = formatCoins(entry.coins or 0),
+				}
+				local text = T(if entry.won then "cup.historyWin" else "cup.historyLoss", params)
+				if entry.penalties then
+					text ..= T("cup.historyPenalties")
+				end
+				if entry.giantKill then
+					text ..= T("cup.historyGiant")
+				end
+				table.insert(children, label(text, {
+					TextSize = 14,
+					TextColor3 = if entry.won then COLORS.accent else COLORS.error,
 				}))
-			else
-				table.insert(children, button(T("cup.play"), function()
-					Net.Get("RequestCupMatch"):FireServer(state.selectedTactic)
-				end, { BackgroundColor3 = COLORS.accent }))
 			end
-		elseif cup.status == "champion" then
-			table.insert(children, label(T("cup.champion"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold, TextSize = 16 }))
-		else
-			table.insert(children, label(T("cup.out"), { TextColor3 = COLORS.muted, TextSize = 16 }))
+			local nextIn = math.max(0, math.ceil(state.cupReadyAt - os.clock()))
+			if cup.status == "playing" and type(cup.opponent) == "table" then
+				local rival = cup.opponent
+				table.insert(children, label(T("cup.next", {
+					stage = T("cup.stage." .. tostring(cup.stage)),
+					club = rival.name,
+					division = divisionLabel(rival.division),
+					rating = rival.rating,
+				}), { Font = Enum.Font.GothamBold, TextSize = 16 }))
+				if rival.giantKill then
+					table.insert(children, label(T("cup.giantWarning"), { TextColor3 = COLORS.gold, TextSize = 14 }))
+				end
+				local styleLine, hintLine = tacticLines(rival.tactic)
+				table.insert(children, styleLine)
+				table.insert(children, hintLine)
+				table.insert(children, label(T("cup.nextReward", { coins = formatCoins(cup.nextReward or 0) }), {
+					TextColor3 = COLORS.gold,
+					TextSize = 14,
+				}))
+				if nextIn > 0 then
+					table.insert(children, label(T("cup.wait", { minutes = math.max(1, math.ceil(nextIn / 60)) }), {
+						Name = "CupWait",
+						TextColor3 = COLORS.muted,
+						TextSize = 16,
+					}))
+				else
+					table.insert(children, button(T("cup.play"), function()
+						Net.Get("RequestCupMatch"):FireServer(state.selectedTactic)
+					end, { BackgroundColor3 = COLORS.accent }))
+				end
+			elseif cup.status == "champion" then
+				table.insert(children, label(T("cup.champion"), { Font = Enum.Font.GothamBold, TextColor3 = COLORS.gold, TextSize = 16 }))
+			else
+				table.insert(children, label(T("cup.out"), { TextColor3 = COLORS.muted, TextSize = 16 }))
+			end
+			table.insert(children, label(T("cup.maxReward", { coins = formatCoins(cup.maxReward or 0) }), {
+				TextColor3 = COLORS.muted,
+				TextSize = 14,
+			}))
+			if (cup.cupsWon or 0) > 0 then
+				table.insert(children, label(T("cup.myCups", { count = cup.cupsWon }), { TextColor3 = COLORS.gold, TextSize = 14 }))
+			end
+			card(children).Parent = content
 		end
-		table.insert(children, label(T("cup.maxReward", { coins = formatCoins(cup.maxReward or 0) }), {
-			TextColor3 = COLORS.muted,
-			TextSize = 14,
-		}))
-		if (cup.cupsWon or 0) > 0 then
-			table.insert(children, label(T("cup.myCups", { count = cup.cupsWon }), { TextColor3 = COLORS.gold, TextSize = 14 }))
-		end
-		card(children).Parent = content
 	end
 
 	local function opponentCard(title: string, subtitle: string, opponentId: string, theirs)
@@ -1216,6 +1220,7 @@ function renderers.Matches(profile)
 			rival.tactic
 		)
 	end
+	cupCard()
 	if humans > 0 then
 		-- Mise des défis : une valeur parmi celles acceptées par le serveur.
 		local entries = {}
@@ -1941,13 +1946,36 @@ local function buildToast()
 	create("UISizeConstraint", { MaxSize = Vector2.new(520, math.huge) }).Parent = toast
 end
 
+local uiScaleObject -- UIScale de l'interface (setupScaling)
+
+-- Fenêtre de résultat : elle grandit avec son contenu, mais jamais plus haut
+-- que l'écran (téléphone) ; au-delà, on fait défiler (bouton Continuer en bas).
+local RESULT_MAX_WIDTH = 520
+local resultHeightLimit -- UISizeConstraint de la fenêtre de résultat
+
+local function fitResultPopup()
+	local camera = workspace.CurrentCamera
+	local scale = (uiScaleObject and uiScaleObject.Scale) or 1
+	local viewportY = if camera then camera.ViewportSize.Y else 720
+	-- 60 px pour la barre du haut de Roblox et une petite marge.
+	local maxHeight = math.max(200, (viewportY - 60) / scale)
+	resultHeightLimit.MaxSize = Vector2.new(RESULT_MAX_WIDTH, maxHeight)
+	return maxHeight
+end
+
 local function buildResultPopup()
-	resultPopup = create("Frame", {
+	resultHeightLimit = create("UISizeConstraint", { MaxSize = Vector2.new(RESULT_MAX_WIDTH, math.huge) })
+	resultPopup = create("ScrollingFrame", {
 		Name = "MatchResult",
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.5),
 		Size = UDim2.fromScale(0.85, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		ScrollingDirection = Enum.ScrollingDirection.Y,
+		ScrollBarThickness = 6,
+		BorderSizePixel = 0,
 		BackgroundColor3 = COLORS.background,
 		Visible = false,
 		ZIndex = 10,
@@ -1955,7 +1983,7 @@ local function buildResultPopup()
 	}, {
 		corner(14),
 		padding(16),
-		create("UISizeConstraint", { MaxSize = Vector2.new(520, math.huge) }),
+		resultHeightLimit,
 		create("UIListLayout", {
 			Padding = UDim.new(0, 6),
 			SortOrder = Enum.SortOrder.LayoutOrder,
@@ -2059,6 +2087,7 @@ end
 -- Échelle de l'interface selon la taille de l'écran (mobile, tablette, PC).
 local function setupScaling()
 	local uiScale = create("UIScale", { Parent = gui })
+	uiScaleObject = uiScale
 	local camera = workspace.CurrentCamera
 	local function update()
 		local viewport = camera.ViewportSize
@@ -2315,6 +2344,8 @@ function UIController.ShowMatchResult(result)
 			child:Destroy()
 		end
 	end
+	fitResultPopup()
+	resultPopup.CanvasPosition = Vector2.new(0, 0)
 	local outcomeText = T("result." .. tostring(result.outcome))
 	local order = 0
 	local function add(instance)
@@ -2352,13 +2383,24 @@ function UIController.ShowMatchResult(result)
 			TextXAlignment = Enum.TextXAlignment.Center,
 		}))
 	end
-	for _, event in result.events do
-		local team = if event.side == "home" then result.homeName else result.awayName
-		add(label(("%d' ⚽ %s (%s)"):format(event.minute, event.scorer, team), {
-			TextSize = 16,
-			TextColor3 = COLORS.muted,
-			TextXAlignment = Enum.TextXAlignment.Center,
-		}))
+	-- Buteurs : une ligne par équipe (« ⚽ Club : 12' Martin, 45' Diallo »)
+	-- pour que la fenêtre tienne sur un écran de téléphone, même avec 8 buts.
+	for _, side in { "home", "away" } do
+		local goals = {}
+		for _, event in result.events or {} do
+			if event.side == side then
+				table.insert(goals, ("%d' %s"):format(event.minute, tostring(event.scorer)))
+			end
+		end
+		if #goals > 0 then
+			local team = if side == "home" then result.homeName else result.awayName
+			add(label(("⚽ %s : %s"):format(team, table.concat(goals, ", ")), {
+				Name = "Scorers",
+				TextSize = 16,
+				TextColor3 = COLORS.muted,
+				TextXAlignment = Enum.TextXAlignment.Center,
+			}))
+		end
 	end
 	if result.mode == "cup" then
 		if result.penalties then
@@ -2465,14 +2507,13 @@ function UIController.ShowMatchResult(result)
 		table.insert(infirmaryLines, T("result.returned", { name = name }))
 	end
 	if #infirmaryLines > 0 then
-		add(label(T("result.infirmaryTitle"), {
-			Font = Enum.Font.GothamBold,
+		-- Un seul bloc (titre + lignes) : la fenêtre reste courte sur téléphone.
+		add(label(T("result.infirmaryTitle") .. " : " .. table.concat(infirmaryLines, " · "), {
+			Name = "Infirmary",
 			TextSize = 16,
+			TextColor3 = COLORS.muted,
 			TextXAlignment = Enum.TextXAlignment.Center,
 		}))
-		for _, line in infirmaryLines do
-			add(label(line, { TextSize = 16, TextColor3 = COLORS.muted, TextXAlignment = Enum.TextXAlignment.Center }))
-		end
 	end
 	if result.promoted then
 		local promotedText = T("result.promoted", { division = divisionLabel(result.division) })

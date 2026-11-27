@@ -30,6 +30,7 @@ local Tactics = require(Shared.Tactics)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
 local MatchService = require(script.Parent.MatchService)
+local SquadService = require(script.Parent.SquadService)
 
 local CupService = {}
 
@@ -111,6 +112,11 @@ function CupService.TryPlay(player: Player, tactic)
 	end
 	if #data.squad == 0 then
 		return nil, Locale.TP(player, "error.emptySquad")
+	end
+	-- Tout l'effectif blessé ou suspendu : on n'élimine pas le club sur tapis
+	-- vert, il rejoue le tour quand un joueur est rétabli (comme en championnat).
+	if #SquadService.Starters(data) == 0 and not SquadService.ClearSuspensionsIfStuck(data) then
+		return nil, Locale.TP(player, "injury.noneAvailable", { minutes = SquadService.NextReturnMinutes(data) })
 	end
 	if not Tactics.IsValid(tactic) then
 		tactic = Tactics.Sanitize(data.tactic)
