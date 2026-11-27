@@ -40,6 +40,10 @@ Trophies.MILESTONES = {
 	-- Saisons de 7 jours terminées à la 1re place (DailyService).
 	{ id = "seasons_1", stat = "seasonsWon", value = 1, tier = "gold" },
 	{ id = "seasons_5", stat = "seasonsWon", value = 5, tier = "gold" },
+	-- Coupe nationale (CupService) : coupes gagnées et exploits contre plus fort.
+	{ id = "cups_1", stat = "cupsWon", value = 1, tier = "gold" },
+	{ id = "cups_5", stat = "cupsWon", value = 5, tier = "gold" },
+	{ id = "giantKills_10", stat = "cupGiantKills", value = 10, tier = "silver" },
 }
 
 -- Liste des trophées gagnés par un club, dans l'ordre de la vitrine.
