@@ -62,6 +62,7 @@ Net.Events = {
 	"TournamentUpdated", -- (state) tournoi du serveur
 	"Notify", -- (message: string, kind: string)
 	"LeaderboardUpdated", -- (state) classement mondial (LeaderboardService)
+	"SupporterVisit", -- (slotIndex: number, kind: "shop"|"museum", coins: number) achat d'un supporter, à animer (NpcController)
 }
 
 -- Requêtes avec réponse (RemoteFunction)

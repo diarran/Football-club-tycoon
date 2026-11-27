@@ -29,7 +29,7 @@ local player = Players.LocalPlayer
 local MatchReplayController = {}
 
 -- Rappels branchés par Main.client.lua (sons de l'ambiance).
-MatchReplayController.OnStart = nil -- function(crowdLevel, spectator)
+MatchReplayController.OnStart = nil -- function(crowdLevel, spectator, slotIndex)
 MatchReplayController.OnGoal = nil -- function(side, spectator)
 MatchReplayController.OnEnd = nil -- function()
 
@@ -633,7 +633,7 @@ function MatchReplayController.Play(replay, options): boolean
 		p.folder.Parent = workspace
 		active = state
 		if MatchReplayController.OnStart then
-			pcall(MatchReplayController.OnStart, replay.crowdLevel, state.spectator)
+			pcall(MatchReplayController.OnStart, replay.crowdLevel, state.spectator, slotIndex)
 		end
 		step(0)
 	end)

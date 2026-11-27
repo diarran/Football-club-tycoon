@@ -807,4 +807,5 @@ return {
 	["campus.Depot.label"] = "Dépôt des véhicules",
 	["campus.Depot.description"] = "Garage et bus du club : tes joueurs voyagent mieux et se fatiguent moins à chaque match.",
 	["campus.Depot.sign"] = "DÉPÔT DES VÉHICULES",
+	["npc.supportersSummary"] = "Tes supporters ont dépensé {coins} FC Coins à la Boutique et au Musée !",
 }

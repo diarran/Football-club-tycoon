@@ -806,4 +806,5 @@ return {
 	["campus.Depot.label"] = "Garagem de veículos",
 	["campus.Depot.description"] = "Garagem e ônibus do clube: seus jogadores viajam melhor e se cansam menos a cada partida.",
 	["campus.Depot.sign"] = "GARAGEM DE VEÍCULOS",
+	["npc.supportersSummary"] = "Seus torcedores gastaram {coins} FC Coins na Loja e no Museu!",
 }
