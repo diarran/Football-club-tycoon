@@ -138,7 +138,7 @@ H.test("longue session à 6 avec toutes les nouveautés : aucune erreur, profils
 	H.eq(#H.errors, 0, "erreurs au départ : " .. tostring(H.errors[1]))
 end)
 
--- Coupe et infirmerie ------------------------------------------------------
+-- Coupe, infirmerie et météo ------------------------------------------------------
 
 local function cupReady(data)
 	data.cup.lastPlayedAt = 0
@@ -203,11 +203,11 @@ H.test("coupe : le blessé est remplacé ; pas de fatigue, blessure ni carton en
 	injured.injuredUntil = os.time() + 300
 	local suspended = S.SquadService.Starters(data)[2]
 	suspended.suspended = 1
-	local seen
+	local seen, seenWeather
 	local real = S.MatchService.Simulate
-	S.MatchService.Simulate = function(home, away)
-		seen = home.squad
-		return real(home, away)
+	S.MatchService.Simulate = function(home, away, weather)
+		seen, seenWeather = home.squad, weather
+		return real(home, away, weather)
 	end
 	local energy = {}
 	for _, f in data.squad do
@@ -225,6 +225,13 @@ H.test("coupe : le blessé est remplacé ; pas de fatigue, blessure ni carton en
 		H.ok(f.energy >= energy[f], "pas de fatigue en coupe : " .. f.name)
 	end
 	H.eq(data.tactic, "Pressing", "dernier style gardé pour l'onglet Matchs")
+	-- Météo du stade : la même qu'en championnat, jointe au résultat.
+	local expected = mock.run(MODULES.Weather).Describe(os.time())
+	H.eq(seenWeather, expected.kind, "météo du stade appliquée à la coupe")
+	local results = H.received(p, "MatchResult")
+	local result = results[#results][1]
+	H.eq(result.mode, "cup", "résultat de coupe")
+	H.ok(type(result.weather) == "table" and result.weather.kind == expected.kind, "météo dans le résultat")
 	H.leave(p)
 end)
 
