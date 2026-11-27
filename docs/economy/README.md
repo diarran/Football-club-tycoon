@@ -451,3 +451,26 @@ Le simulateur entraîne les titulaires en forme (énergie ≥ 90) en gardant 4 f
 
 Premier essai (30 XP, 60 + note²/8, entraînement même fatigué) : D5 à 46 min, car les
 joueurs arrivaient fatigués aux matchs et la séance coûtait trop cher pour son effet.
+
+## Coupe d'Europe des clubs (27/11/2026)
+
+Règles et montants : `src/shared/EuroCup.lua` (service : `EuroService`). Ouverte
+aux clubs de D3, D2 et D1. Une édition par saison (lundi 00:00 UTC) : groupe de
+8 clubs de vrais joueurs de tous les serveurs (photo de leur équipe, ils n'ont
+pas besoin d'être connectés), complété par des clubs fictifs si besoin.
+7 journées, puis demi-finale (1er contre 4e, 2e contre 3e) et finale. Un match
+au plus toutes les 30 minutes. Match neutre : ni énergie, ni points de division.
+
+| Prime de base | Victoire de groupe | Nul de groupe | Qualification | Demie gagnée | Finale gagnée | Maximum |
+| --- | --- | --- | --- | --- | --- | --- |
+| FC Coins | 150 | 50 | 300 | 800 | 1 600 | 3 750 |
+
+Prime × multiplicateur de la division (D3 ×1,8, D2 ×2,3, D1 ×3, soit 11 250 FC
+par semaine au maximum en D1), du même ordre que la Coupe nationale. Le rythme
+vers la D1 (~30 h) ne change pas : la compétition n'ouvre qu'en D3, et en D1 elle
+pèse ~2 % des gains d'un joueur actif. Le simulateur n'a donc pas été modifié.
+
+Budget réseau : chaque club publie sa photo au plus toutes les 15 minutes
+(MemoryStore), et un serveur lit le réservoir au plus une fois par minute ; si
+MemoryStore ne répond pas, le groupe est formé avec les clubs du serveur.
+

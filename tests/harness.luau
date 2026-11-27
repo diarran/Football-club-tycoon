@@ -494,6 +494,68 @@ game:GetService("DataStoreService").GetOrderedDataStore = function(_self, name)
 		end,
 	}
 end
+-- MemoryStore en mémoire (réservoir de la Coupe d'Europe) : SortedMap triée
+-- par clé, expiration enregistrée (vérifiée : 45 jours au plus, comme Roblox).
+H.memoryAvailable = true
+H.memoryStores = {} -- [nom] = { data = {}, expires = {}, failNext = 0, writes = 0, reads = 0 }
+local function getMemory(name: string)
+	local s = H.memoryStores[name]
+	if not s then
+		s = { data = {}, expires = {}, failNext = 0, writes = 0, reads = 0 }
+		H.memoryStores[name] = s
+	end
+	return s
+end
+H.getMemoryStore = getMemory
+game:GetService("MemoryStoreService").GetSortedMap = function(_self, name)
+	if not H.memoryAvailable then
+		error("MemoryStoreService indisponible (simulé)", 0)
+	end
+	local s = getMemory(name)
+	local function alive(key)
+		return s.data[key] ~= nil and (s.expires[key] or math.huge) > H.os.time()
+	end
+	return {
+		SetAsync = function(_, key, value, expiration)
+			maybeFail(s)
+			assert(type(key) == "string", "MemoryStore : clé texte attendue")
+			assert(type(expiration) == "number" and expiration > 0 and expiration <= 45 * 86400, "expiration 1 s à 45 jours")
+			checkSerializable(value, key, true)
+			s.data[key] = deepCopy(value)
+			s.expires[key] = H.os.time() + expiration
+			s.writes += 1
+			return true
+		end,
+		GetAsync = function(_, key)
+			maybeFail(s)
+			return if alive(key) then deepCopy(s.data[key]) else nil
+		end,
+		GetRangeAsync = function(_, direction, count)
+			maybeFail(s)
+			s.reads += 1
+			assert(count >= 1 and count <= 200, "count entre 1 et 200")
+			local keys = {}
+			for key in s.data do
+				if alive(key) then
+					table.insert(keys, key)
+				end
+			end
+			table.sort(keys)
+			if direction and direction.Name == "Descending" then
+				local reversed = {}
+				for i = #keys, 1, -1 do
+					table.insert(reversed, keys[i])
+				end
+				keys = reversed
+			end
+			local items = {}
+			for i = 1, math.min(count, #keys) do
+				table.insert(items, { key = keys[i], value = deepCopy(s.data[keys[i]]) })
+			end
+			return items
+		end,
+	}
+end
 game:GetService("DataStoreService").GetRequestBudgetForRequestType = function(_self, requestType)
 	local name = if type(requestType) == "table" then requestType.Name else tostring(requestType)
 	return H.requestBudget[name] or 1000
@@ -790,6 +852,8 @@ function H.boot(modules)
 		MatchReplay = mock.run(modules.MatchReplay),
 		NationalCup = mock.run(modules.NationalCup),
 		CupService = mock.run(modules.CupService),
+		EuroCup = mock.run(modules.EuroCup),
+		EuroService = mock.run(modules.EuroService),
 	}
 end
 
