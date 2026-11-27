@@ -48,7 +48,11 @@ Campus.Parcels = {
 -- Effets (additionnés entre bâtiments) :
 --   matchIncome : FC Coins en plus par match ; ticketBonus : part de billetterie en plus ;
 --   sponsorBonus : part des sponsors des bureaux en plus ; energyRecovery : récupération
---   d'énergie en plus (0.2 = +20 %) ; injuryReduction : blessures plus courtes.
+--   d'énergie en plus (0.2 = +20 %) ; injuryReduction : blessures plus courtes ;
+--   growthBonus : XP d'entraînement en plus (comme l'entraîneur du staff) ;
+--   teamBonus : points de note ajoutés à l'équipe en match ;
+--   upgradeDiscount : remise sur les améliorations du stade (0.1 = -10 %) ;
+--   matchEnergy : énergie dépensée par match en moins (0.2 = -20 %).
 Campus.Definitions = {
 	Esport = {
 		id = "Esport",
@@ -100,10 +104,60 @@ Campus.Definitions = {
 			{ cost = 45000, effects = { matchIncome = 400 } },
 		},
 	},
+	SportsComplex = {
+		id = "SportsComplex",
+		order = 6,
+		division = "D4",
+		levels = {
+			{ cost = 14000, effects = { growthBonus = 0.02 } },
+			{ cost = 30000, effects = { growthBonus = 0.04 } },
+			{ cost = 60000, effects = { growthBonus = 0.06 } },
+		},
+	},
+	IndoorPitch = {
+		id = "IndoorPitch",
+		order = 7,
+		division = "D3",
+		levels = {
+			{ cost = 18000, effects = { teamBonus = 0.25 } },
+			{ cost = 38000, effects = { teamBonus = 0.5 } },
+			{ cost = 75000, effects = { teamBonus = 0.75 } },
+		},
+	},
+	Security = {
+		id = "Security",
+		order = 8,
+		division = "D3",
+		levels = {
+			{ cost = 16000, effects = { ticketBonus = 0.04 } },
+			{ cost = 34000, effects = { ticketBonus = 0.07 } },
+			{ cost = 68000, effects = { ticketBonus = 0.1 } },
+		},
+	},
+	Workshop = {
+		id = "Workshop",
+		order = 9,
+		division = "D2",
+		levels = {
+			{ cost = 25000, effects = { upgradeDiscount = 0.05 } },
+			{ cost = 50000, effects = { upgradeDiscount = 0.1 } },
+			{ cost = 95000, effects = { upgradeDiscount = 0.15 } },
+		},
+	},
+	Depot = {
+		id = "Depot",
+		order = 10,
+		division = "D2",
+		levels = {
+			{ cost = 22000, effects = { matchEnergy = 0.15 } },
+			{ cost = 45000, effects = { matchEnergy = 0.3 } },
+			{ cost = 90000, effects = { matchEnergy = 0.45 } },
+		},
+	},
 }
 
 -- Plafonds de sécurité des effets additionnés.
-local CAPS = { ticketBonus = 0.5, sponsorBonus = 0.6, energyRecovery = 1, injuryReduction = 0.5, matchIncome = 2000 }
+local CAPS = { ticketBonus = 0.5, sponsorBonus = 0.6, energyRecovery = 1, injuryReduction = 0.5, matchIncome = 2000, growthBonus = 0.1, teamBonus = 1, upgradeDiscount = 0.3, matchEnergy = 0.6 }
 
 local function number(value, default: number): number
 	return if type(value) == "number" and value == value and value ~= math.huge and value ~= -math.huge then value else default
@@ -227,6 +281,11 @@ function Campus.Effect(campus, effect: string): number
 		end
 	end
 	return math.min(total, CAPS[effect] or math.huge)
+end
+
+-- Prix d'une amélioration du stade après la remise de l'atelier technique.
+function Campus.DiscountedCost(campus, cost: number): number
+	return math.max(1, math.floor(cost * (1 - Campus.Effect(campus, "upgradeDiscount")) + 0.5))
 end
 
 -- Nombre de parcelles débloquées.

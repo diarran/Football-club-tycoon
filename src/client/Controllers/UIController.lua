@@ -616,6 +616,9 @@ function renderers.Stadium(profile)
 		local level = profile.buildings[def.id] or 1
 		local maxLevel = Buildings.MaxLevel(def.id)
 		local cost = Buildings.GetUpgradeCost(def.id, level)
+		if cost then
+			cost = Campus.DiscountedCost(profile.campus, cost) -- atelier technique (même calcul que le serveur)
+		end
 		local action
 		if cost then
 			local affordable = profile.coins >= cost

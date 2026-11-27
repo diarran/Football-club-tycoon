@@ -167,6 +167,7 @@ function MatchService.ClubTeam(player: Player)
 		tactic = Tactics.Sanitize(data.tactic),
 		bonus = (Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0)
 			+ Staff.Effect(data.staff, "teamBonus")
+			+ Campus.Effect(data.campus, "teamBonus") -- terrain couvert
 			- SquadService.MissingPenalty(data), -- blessés / suspendus sans remplaçant
 	}
 end
@@ -323,6 +324,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		end
 		local trainingBonus = (Buildings.GetEffects("Training", opponentData.buildings.Training or 1).teamBonus or 0)
 			+ Staff.Effect(opponentData.staff, "teamBonus")
+			+ Campus.Effect(opponentData.campus, "teamBonus")
 			- SquadService.MissingPenalty(opponentData)
 		away = {
 			id = opponentId,
@@ -340,6 +342,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 		+ (Buildings.GetEffects("Pitch", data.buildings.Pitch or 1).homeBonus or 0)
 		+ (Buildings.GetEffects("Training", data.buildings.Training or 1).teamBonus or 0)
 		+ Staff.Effect(data.staff, "teamBonus") -- entraîneur du staff
+		+ Campus.Effect(data.campus, "teamBonus") -- terrain couvert
 		- SquadService.MissingPenalty(data) -- blessés / suspendus sans remplaçant
 	local home = {
 		id = "player:" .. player.UserId,

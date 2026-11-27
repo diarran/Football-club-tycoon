@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
+local Campus = require(Shared.Campus)
 local Config = require(Shared.Config)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
@@ -46,6 +47,7 @@ function BuildingService.TryUpgrade(player: Player, buildingId): (boolean, strin
 	if not cost then
 		return false, Locale.TP(player, "error.maxLevel")
 	end
+	cost = Campus.DiscountedCost(data.campus, cost) -- atelier technique
 	if not EconomyService.TrySpend(player, cost, "upgrade:" .. buildingId) then
 		return false, Locale.TP(player, "error.notEnoughCoins", { currency = Config.CURRENCY_NAME })
 	end

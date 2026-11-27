@@ -16,6 +16,7 @@ local Divisions = require(Shared:WaitForChild("Divisions"))
 local PartUtil = require(script.Parent:WaitForChild("PartUtil"))
 local Props = require(script.Parent:WaitForChild("Props"))
 local CampusBuildings = require(script.Parent:WaitForChild("CampusBuildings"))
+local CampusFacilities = require(script.Parent:WaitForChild("CampusFacilities"))
 
 type BuildContext = PartUtil.BuildContext
 
@@ -30,6 +31,11 @@ CampusZone.BUILDERS = {
 	President = CampusBuildings.President,
 	Recovery = CampusBuildings.Recovery,
 	Champions = CampusBuildings.Champions,
+	SportsComplex = CampusFacilities.SportsComplex,
+	IndoorPitch = CampusFacilities.IndoorPitch,
+	Security = CampusFacilities.Security,
+	Workshop = CampusFacilities.Workshop,
+	Depot = CampusFacilities.Depot,
 } :: { [string]: (Instance, CFrame, number, BuildContext, any?) -> Model }
 
 local function tierOf(divisionId: string): number

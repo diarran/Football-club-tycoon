@@ -169,9 +169,47 @@ H.test("bonus : revenus des matchs, sponsors, récupération et blessures", func
 	local expected = math.floor(result.rewards.tickets * Campus.Effect(data.campus, "ticketBonus") + 140)
 	H.eq(result.rewards.campus, expected, "revenu calculé par le serveur")
 	local sum = result.rewards.match + result.rewards.tickets + result.rewards.sponsor + result.rewards.shop
-		+ result.rewards.vip + result.rewards.contracts + result.rewards.event + result.rewards.campus
+		+ result.rewards.vip + result.rewards.contracts + result.rewards.event + result.rewards.campus + (result.rewards.press or 0)
 	H.eq(result.rewards.total, sum, "compris dans le total")
 	H.ok(result.rewards.total < 5000, "gain par match raisonnable")
+	H.leave(p)
+end)
+
+H.test("bonus du 2e lot : XP d'entraînement, force en match, billets, remise sur le stade, fatigue", function()
+	local p = H.join(7)
+	local data = S.PlayerDataService.GetData(p)
+	data.missions.list = {}
+	data.club.division = "D2"
+	data.coins = 10000000
+	for parcel = 1, 5 do
+		campusRequest(p, "unlock", parcel)
+	end
+	for parcel, id in { "SportsComplex", "IndoorPitch", "Security", "Workshop", "Depot" } do
+		H.eq(campusRequest(p, "build", id, parcel, 0), true, "construit : " .. id)
+	end
+	H.eq(Campus.Effect(data.campus, "growthBonus"), 0.02, "complexe sportif")
+	H.eq(Campus.Effect(data.campus, "teamBonus"), 0.25, "terrain couvert")
+	H.eq(Campus.Effect(data.campus, "ticketBonus"), 0.04, "centre de sécurité")
+	H.eq(Campus.Effect(data.campus, "upgradeDiscount"), 0.05, "atelier technique")
+	H.eq(Campus.Effect(data.campus, "matchEnergy"), 0.15, "dépôt des véhicules")
+	-- Remise de l'atelier : le serveur débite le prix réduit.
+	local level = data.buildings.Shop or 1
+	local base = S.Buildings.GetUpgradeCost("Shop", level)
+	local before = data.coins
+	H.fire(p, "RequestUpgrade", "Shop")
+	H.eq(data.buildings.Shop, level + 1, "amélioration faite")
+	H.eq(before - data.coins, Campus.DiscountedCost(data.campus, base), "prix réduit de 5 %")
+	H.ok(before - data.coins < base, "moins cher qu'avant")
+	-- Dépôt : chaque titulaire perd moins d'énergie par match.
+	for _, f in data.squad do
+		f.energy = 100
+	end
+	H.ok(play(p), "match joué")
+	local spent = 0
+	for _, f in S.SquadService.Starters(data) do
+		spent = math.max(spent, 100 - f.energy)
+	end
+	H.ok(spent <= S.Config.ENERGY_COST_PER_MATCH * 0.85 + 0.001, ("énergie dépensée réduite : %.2f"):format(spent))
 	H.leave(p)
 end)
 
