@@ -141,7 +141,8 @@ end)
 
 H.test("les matchs fatiguent les joueurs et l'énergie remonte avec le temps", function()
 	for _, f in data.squad do
-		f.energy = 100
+		-- les matchs précédents ont pu blesser ou suspendre un joueur (Injuries.lua)
+		f.energy, f.injuredUntil, f.suspended = 100, 0, 0
 	end
 	play("ai", "Balanced")
 	H.eq(data.squad[1].energy, 100 - S.Config.ENERGY_COST_PER_MATCH, "fatigue après match")

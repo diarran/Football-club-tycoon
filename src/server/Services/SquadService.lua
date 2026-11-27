@@ -18,6 +18,7 @@ local Buildings = require(Shared.Buildings)
 local Config = require(Shared.Config)
 local Daily = require(Shared.Daily)
 local Divisions = require(Shared.Divisions)
+local Injuries = require(Shared.Injuries)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
@@ -61,6 +62,9 @@ local function generateFootballer(
 		salary = rating * 2,
 		xp = 0,
 		trainedAt = 0,
+		injuredUntil = 0,
+		suspended = 0,
+		yellows = 0,
 	}
 	data.nextPlayerId += 1
 	return footballer
@@ -227,6 +231,9 @@ function SquadService.TrySignProspect(player: Player, prospectId): (boolean, str
 		youth = true, -- formé au club : progression accélérée
 		xp = 0,
 		trainedAt = 0,
+		injuredUntil = 0,
+		suspended = 0,
+		yellows = 0,
 	})
 	PlayerDataService.MarkChanged(player)
 	DailyService.Track(player, "recruit") -- mission du jour
@@ -332,9 +339,49 @@ end
 
 -- Entraînement et composition (shared/Training.lua) ---------------------------
 
--- Titulaires du club (tables de data.squad). Utilisé par les matchs.
+-- Titulaires du club (tables de data.squad) disponibles maintenant : les
+-- blessés et suspendus sont remplacés par les meilleurs remplaçants.
+-- Utilisé par les matchs.
 function SquadService.Starters(data)
-	return Training.Starters(data.squad, data.lineup)
+	return Training.Starters(data.squad, data.lineup, os.time())
+end
+
+-- Places de titulaires vides (blessés / suspendus sans remplaçant disponible).
+function SquadService.MissingStarters(data): number
+	return Training.MissingStarters(data.squad, os.time())
+end
+
+-- Plus aucun joueur disponible et personne n'est blessé (que des suspendus) :
+-- les suspensions sont levées pour ne jamais bloquer le club. Renvoie true si
+-- quelqu'un peut jouer ensuite.
+function SquadService.ClearSuspensionsIfStuck(data): boolean
+	local now = os.time()
+	for _, footballer in data.squad do
+		if Injuries.IsInjured(footballer, now) then
+			return false
+		end
+	end
+	for _, footballer in data.squad do
+		footballer.suspended = 0
+	end
+	return #SquadService.Starters(data) > 0
+end
+
+-- Minutes avant le retour du premier blessé.
+function SquadService.NextReturnMinutes(data): number
+	local now, best = os.time(), math.huge
+	for _, footballer in data.squad do
+		local left = Injuries.InjuryLeft(footballer, now)
+		if left > 0 and left < best then
+			best = left
+		end
+	end
+	return if best == math.huge then 1 else math.ceil(best / 60)
+end
+
+-- Malus de force d'équipe dû aux titulaires absents (à ajouter au bonus).
+function SquadService.MissingPenalty(data): number
+	return SquadService.MissingStarters(data) * Injuries.MISSING_PENALTY
 end
 
 local function findFootballer(data, footballerId)
@@ -357,6 +404,7 @@ function SquadService.RefreshTraining(data)
 		footballer.xp = if xp and xp == xp and xp >= 0 and xp < Training.XP_PER_POINT then math.floor(xp) else 0
 		local trainedAt = tonumber(footballer.trainedAt)
 		footballer.trainedAt = if trainedAt and trainedAt == trainedAt then trainedAt else 0
+		Injuries.Sanitize(footballer, os.time()) -- blessures et suspensions (anciens profils)
 	end
 	local season = Daily.SeasonId(os.time())
 	local state = data.training
@@ -384,6 +432,11 @@ function SquadService.TryTrain(player: Player, footballerId): (boolean, string)
 		return false, Locale.TP(player, "error.unknownFootballer")
 	end
 	SquadService.RefreshEnergy(data)
+	local injuryLeft = Injuries.InjuryLeft(footballer, os.time())
+	if injuryLeft > 0 then
+		return false,
+			Locale.TP(player, "injury.cannotTrain", { name = footballer.name, minutes = math.ceil(injuryLeft / 60) })
+	end
 	if footballer.rating >= footballer.potential then
 		return false, Locale.TP(player, "training.atPotential", { name = footballer.name })
 	end
@@ -424,7 +477,18 @@ function SquadService.TrySetStarter(player: Player, footballerId, starter): (boo
 	if #data.squad <= Training.STARTERS then
 		return false, Locale.TP(player, "lineup.everyonePlays", { count = Training.STARTERS })
 	end
-	local starters = Training.Starters(data.squad, data.lineup)
+	local now = os.time()
+	if starter and not Injuries.IsAvailable(footballer, now) then
+		if Injuries.IsInjured(footballer, now) then
+			return false,
+				Locale.TP(player, "injury.cannotPlay", {
+					name = footballer.name,
+					minutes = math.ceil(Injuries.InjuryLeft(footballer, now) / 60),
+				})
+		end
+		return false, Locale.TP(player, "suspension.cannotPlay", { name = footballer.name })
+	end
+	local starters = Training.Starters(data.squad, data.lineup, now)
 	local set = {}
 	for _, s in starters do
 		set[s.id] = true
@@ -451,12 +515,17 @@ function SquadService.TrySetStarter(player: Player, footballerId, starter): (boo
 			end
 		end
 		local out = samePosition or anyPosition or starters[#starters]
+		if not out then
+			data.lineup = { footballer.id }
+			PlayerDataService.MarkChanged(player)
+			return true, Locale.TP(player, "lineup.auto")
+		end
 		outId, inId = out.id, footballer.id
 	else
 		-- Entre le meilleur remplaçant au même poste, sinon le meilleur remplaçant.
 		local samePosition, anyPosition
 		for _, b in data.squad do
-			if not set[b.id] then
+			if not set[b.id] and Injuries.IsAvailable(b, now) then
 				if b.position == footballer.position and (not samePosition or b.rating > samePosition.rating) then
 					samePosition = b
 				end
@@ -466,6 +535,9 @@ function SquadService.TrySetStarter(player: Player, footballerId, starter): (boo
 			end
 		end
 		local incoming = samePosition or anyPosition
+		if not incoming then
+			return false, Locale.TP(player, "lineup.noSubstitute")
+		end
 		outId, inId = footballer.id, incoming.id
 	end
 	local lineup = {}
@@ -498,18 +570,40 @@ end
 
 -- Après un match : les titulaires se fatiguent et gagnent de l'XP (les jeunes
 -- formés au club ont en plus le bonus du centre de formation). Les remplaçants
--- se reposent.
-function SquadService.ApplyMatchEffects(data)
+-- se reposent. Puis blessures et cartons (Injuries.lua) : les suspendus qui
+-- n'ont pas joué purgent un match. Renvoie le rapport de l'infirmerie :
+-- { events = { ... }, returned = { noms des suspendus qui peuvent rejouer } }.
+function SquadService.ApplyMatchEffects(data, starters)
 	local trainingLevel = data.buildings.Training or 1
 	local teamBonus = Buildings.GetEffects("Training", trainingLevel).teamBonus or 0
 	local youthGrowth = Buildings.GetEffects("Academy", data.buildings.Academy or 1).youthGrowth or 0
 	-- Entraîneur du staff : un peu plus d'XP.
 	local baseChance = 0.2 + 0.1 * teamBonus + Staff.Effect(data.staff, "growthBonus")
-	for _, footballer in SquadService.Starters(data) do
+	local now = os.time()
+	starters = starters or SquadService.Starters(data)
+	local played = {}
+	for _, footballer in starters do
+		played[footballer] = true
+	end
+	local report = { events = {}, returned = {} }
+	-- Suspensions purgées : le joueur n'a pas joué ce match.
+	for _, footballer in data.squad do
+		if not played[footballer] and Injuries.IsSuspended(footballer) and Injuries.ServeSuspension(footballer) then
+			table.insert(report.returned, footballer.name)
+		end
+	end
+	local reduction = Staff.Effect(data.staff, "injuryReduction") -- médecin du staff
+	for _, footballer in starters do
+		local energyBefore = footballer.energy
 		footballer.energy = math.max(0, footballer.energy - Config.ENERGY_COST_PER_MATCH)
 		local chance = if footballer.youth then baseChance + youthGrowth else baseChance
 		Training.AddXp(footballer, Training.MatchXp(footballer, chance))
+		local event = Injuries.Roll(rng, footballer, energyBefore, reduction, now)
+		if event then
+			table.insert(report.events, event)
+		end
 	end
+	return report
 end
 
 function SquadService.OnPlayerReady(_player: Player, profile)

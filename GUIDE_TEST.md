@@ -89,6 +89,13 @@ Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne roug
    solde baisse, sa ligne **XP** augmente et le bouton passe en **Repos**. Recrute
    jusqu'à 6 joueurs : **Faire jouer** sur un remplaçant le rend **Titulaire** à la
    place d'un autre (il y a toujours 5 titulaires).
+9 ter. **Blessures et cartons** : dans **Effectif**, la carte de composition explique
+   « Blessures et cartons ». Joue une dizaine de matchs d'affilée (les joueurs se
+   fatiguent) : de temps en temps, la fenêtre de résultat montre une partie
+   **Infirmerie** (🤕 blessé quelques minutes, 🟨 carton jaune, 🟥 carton rouge).
+   Dans **Effectif**, ce joueur est marqué **Indisponible** avec le temps de retour,
+   et un remplaçant joue à sa place. Après le match suivant, « ✅ … a purgé sa
+   suspension » s'affiche pour un joueur suspendu.
 
 **À 2 joueurs (Local Server, 2 Players)**
 

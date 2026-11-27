@@ -19,6 +19,8 @@
 	Les valeurs sont équilibrées avec tools/economy-sim.js.
 ]]
 
+local Injuries = require(script.Parent.Injuries)
+
 local Training = {}
 
 Training.STARTERS = 5 -- joueurs sur le terrain (comme les clubs fictifs)
@@ -101,12 +103,18 @@ end
 -- Renvoie la liste d'identifiants des titulaires : ceux choisis (encore dans
 -- l'effectif, sans doublon), complétés par les meilleurs, gardien d'abord si
 -- aucun n'est choisi. Fonction pure : ne modifie ni squad ni lineup.
-function Training.Normalize(squad, lineup)
+-- now (facultatif) : les joueurs blessés ou suspendus à cet instant sont
+-- écartés (Injuries.lua) ; sans now, la composition voulue est gardée telle quelle.
+function Training.Normalize(squad, lineup, now: number?)
 	local byId = {}
+	local available = 0
 	for _, footballer in squad do
-		byId[footballer.id] = footballer
+		if now == nil or Injuries.IsAvailable(footballer, now) then
+			byId[footballer.id] = footballer
+			available += 1
+		end
 	end
-	local size = math.min(Training.STARTERS, #squad)
+	local size = math.min(Training.STARTERS, available)
 	local ids, taken, hasGK = {}, {}, false
 	if type(lineup) == "table" then
 		for _, id in lineup do
@@ -123,7 +131,7 @@ function Training.Normalize(squad, lineup)
 	end
 	local bench = {}
 	for _, footballer in squad do
-		if not taken[footballer.id] then
+		if not taken[footballer.id] and byId[footballer.id] then
 			table.insert(bench, footballer)
 		end
 	end
@@ -147,22 +155,27 @@ function Training.Normalize(squad, lineup)
 end
 
 -- Titulaires (les tables des joueurs de squad, dans l'ordre de la composition).
-function Training.Starters(squad, lineup)
+function Training.Starters(squad, lineup, now: number?)
 	local byId = {}
 	for _, footballer in squad do
 		byId[footballer.id] = footballer
 	end
 	local starters = {}
-	for _, id in Training.Normalize(squad, lineup) do
+	for _, id in Training.Normalize(squad, lineup, now) do
 		table.insert(starters, byId[id])
 	end
 	return starters
 end
 
+-- Titulaires absents (blessés ou suspendus) : places vides dans l'équipe.
+function Training.MissingStarters(squad, now: number): number
+	return math.min(Training.STARTERS, #squad) - #Training.Normalize(squad, nil, now)
+end
+
 -- Ensemble { [id] = true } des titulaires.
-function Training.StarterSet(squad, lineup)
+function Training.StarterSet(squad, lineup, now: number?)
 	local set = {}
-	for _, id in Training.Normalize(squad, lineup) do
+	for _, id in Training.Normalize(squad, lineup, now) do
 		set[id] = true
 	end
 	return set
