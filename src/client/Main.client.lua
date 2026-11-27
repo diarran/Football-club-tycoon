@@ -17,6 +17,7 @@ local WorldTextController = require(Controllers.WorldTextController)
 local MatchReplayController = require(Controllers.MatchReplayController)
 local SoundController = require(Controllers.SoundController)
 local WeatherController = require(Controllers.WeatherController)
+local DetailController = require(Controllers.DetailController)
 
 -- Chaque contrôleur démarre séparément : si l'un échoue (caméra, tutoriel…),
 -- le menu et le HUD restent utilisables et l'erreur s'affiche dans la sortie.
@@ -32,6 +33,7 @@ start("CameraController", CameraController.Init)
 start("TutorialController", TutorialController.Init, UIController.GetScreenGui())
 start("WorldTextController", WorldTextController.Init)
 start("WeatherController", WeatherController.Init)
+start("DetailController", DetailController.Init)
 start("SoundController", function()
 	SoundController.Init()
 	-- Son de clic sur tous les boutons (menus, replay, tutoriel…).
@@ -73,6 +75,8 @@ UIController.OnSettingChanged = function(settingId, value)
 		SoundController.SetMusicEnabled(value)
 	elseif settingId == "weatherEffects" then
 		WeatherController.SetEffectsEnabled(value)
+	elseif settingId == "details" then
+		DetailController.SetEnabled(value)
 	end
 end
 

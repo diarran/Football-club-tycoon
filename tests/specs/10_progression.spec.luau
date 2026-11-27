@@ -82,7 +82,7 @@ H.test("chaque installation au niveau 5 a son modèle 3D au niveau 5", function(
 		H.ok(model, "modèle " .. id)
 		H.eq(model:GetAttribute("Level"), 5, "niveau 3D de " .. id)
 	end
-	H.ok(WorldBuilder.countParts(plot) <= 750, "budget de Parts au niveau maximum (8 installations)")
+	H.ok(WorldBuilder.countParts(plot) <= 1400, "budget de Parts au niveau maximum (8 installations + décor)")
 end)
 
 H.test("la Boutique rapporte à chaque match, montant calculé par le serveur", function()

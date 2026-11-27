@@ -540,6 +540,8 @@ return {
 	["matches.weatherNext"] = "Ensuite (dans {minutes} min) : {weather}",
 	["result.weatherFavors"] = "avantage {tactic} +{bonus}",
 	["settings.weatherEffects"] = "Effets météo (pluie, neige, brouillard)",
+	["settings.details"] = "Détails du décor (fenêtres, arbres, voitures…)",
+	["settings.detailsHint"] = "À couper si le jeu rame sur téléphone. Les bâtiments restent, seuls les petits détails disparaissent.",
 	["settings.weatherEffectsHint"] = "À couper si le jeu rame sur téléphone. Le jour/nuit et la météo des matchs restent.",
 	-- Coupe nationale (CupService, shared/NationalCup.lua)
 	["cup.title"] = "🏆 Coupe nationale",
