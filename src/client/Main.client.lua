@@ -16,6 +16,7 @@ local TutorialController = require(Controllers.TutorialController)
 local WorldTextController = require(Controllers.WorldTextController)
 local MatchReplayController = require(Controllers.MatchReplayController)
 local SoundController = require(Controllers.SoundController)
+local WeatherController = require(Controllers.WeatherController)
 
 -- Chaque contrôleur démarre séparément : si l'un échoue (caméra, tutoriel…),
 -- le menu et le HUD restent utilisables et l'erreur s'affiche dans la sortie.
@@ -30,6 +31,7 @@ UIController.Init() -- indispensable : sans lui, rien ne s'affiche
 start("CameraController", CameraController.Init)
 start("TutorialController", TutorialController.Init, UIController.GetScreenGui())
 start("WorldTextController", WorldTextController.Init)
+start("WeatherController", WeatherController.Init)
 start("SoundController", function()
 	SoundController.Init()
 	-- Son de clic sur tous les boutons (menus, replay, tutoriel…).
@@ -69,6 +71,8 @@ UIController.OnSettingChanged = function(settingId, value)
 		SoundController.SetVolume(value)
 	elseif settingId == "music" then
 		SoundController.SetMusicEnabled(value)
+	elseif settingId == "weatherEffects" then
+		WeatherController.SetEffectsEnabled(value)
 	end
 end
 
@@ -80,12 +84,14 @@ end
 -- Ambiance du replay 3D : public, clameur et son de but.
 MatchReplayController.OnStart = function(crowdLevel, spectator)
 	SoundController.StartMatch(crowdLevel, spectator)
+	pcall(WeatherController.SetMatchMode, true) -- projecteurs du match
 end
 MatchReplayController.OnGoal = function()
 	SoundController.Goal()
 end
 MatchReplayController.OnEnd = function()
 	SoundController.EndMatch()
+	pcall(WeatherController.SetMatchMode, false)
 end
 
 -- Messages du serveur ------------------------------------------------------

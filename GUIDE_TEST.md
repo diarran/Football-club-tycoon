@@ -1,4 +1,4 @@
-# Tester le jeu (environ 27 minutes)
+# Tester le jeu (environ 29 minutes)
 
 ## 1. Récupérer le fichier du jeu
 
@@ -31,7 +31,7 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier (16 points, environ 27 minutes)
+## 5. Ce qu'il faut vérifier (17 points, environ 29 minutes)
 
 Note ✅ ou ❌ pour chaque point. Si c'est ❌, fais une capture d'écran.
 Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne rouge**.
@@ -83,6 +83,15 @@ Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne roug
    **Français**. **Volume du son** sur **Muet** coupe les sons. La carte **Code admin**
    est là (tu es le créateur) : ton code active l'argent illimité (**∞ FC**), le même
    code le désactive et rend ton solde.
+8 bis. **Météo et jour/nuit** : en haut de **Matchs**, la carte **« Météo au stade : … »**
+   dit le temps du moment (☀️ Beau temps, ☁️ Nuageux, 🌧️ Pluie, 💨 Vent ; ❄️ Neige
+   seulement de décembre à février), le style avantagé (ex. « Pluie : toute équipe qui
+   joue Défensive gagne +1 ») et la météo suivante. Le ciel suit : pluie qui tombe,
+   léger brouillard. Une journée dure **20 minutes** : à la nuit, les **projecteurs**
+   du stade et les lampadaires s'allument. Un match de nuit ou sous la pluie commence
+   par « … · 🌧️ Pluie · 🌙 Nuit » et le résultat l'affiche. Dans **Paramètres**,
+   **Effets météo** sur **Désactivé** fait disparaître la pluie et le brouillard
+   (le jour/nuit reste).
 9. **Téléphone** : onglet **Test** > **Device**, choisis un téléphone : les onglets
    passent sur **2 rangées de 4**, tous lisibles, et le contenu reste dessous.
 9 bis. **Entraînement** : dans **Effectif**, clique **Entraîner** sous un joueur : le

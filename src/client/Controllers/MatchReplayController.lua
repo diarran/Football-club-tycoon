@@ -21,6 +21,7 @@ local RunService = game:GetService("RunService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Locale = require(Shared:WaitForChild("Locale"))
 local MatchReplay = require(Shared:WaitForChild("MatchReplay"))
+local Weather = require(Shared:WaitForChild("Weather"))
 local WorldConfig = require(Shared:WaitForChild("WorldConfig"))
 
 local player = Players.LocalPlayer
@@ -603,6 +604,11 @@ function MatchReplayController.Play(replay, options): boolean
 						away = T("tactic." .. replay.awayTactic),
 					})
 				end
+				-- Météo du match (pluie, neige, vent) et match de nuit.
+				local weatherText = MatchReplayController.WeatherText(replay)
+				if weatherText then
+					kickoff = kickoff .. " · " .. weatherText
+				end
 				state.hud.banner.Text = kickoff
 				state.bannerText = kickoff
 				state.bannerUntil = 2.5
@@ -667,6 +673,24 @@ function MatchReplayController.GoalEffects(state, side: string)
 end
 
 -- Termine le replay tout de suite (bouton « Passer », ou fin normale).
+-- « 🌧️ Pluie · Nuit » (nil s'il fait beau de jour, ou pour un ancien replay).
+function MatchReplayController.WeatherText(replay): string?
+	if type(replay) ~= "table" then
+		return nil
+	end
+	local parts = {}
+	if Weather.IsValid(replay.weather) and replay.weather ~= "Clear" then
+		table.insert(parts, Weather.EMOJI[replay.weather] .. " " .. T("weather." .. replay.weather))
+	end
+	if replay.night == true then
+		table.insert(parts, "🌙 " .. T("weather.night"))
+	end
+	if #parts == 0 then
+		return nil
+	end
+	return table.concat(parts, " · ")
+end
+
 function MatchReplayController.Skip()
 	finish(true)
 end
