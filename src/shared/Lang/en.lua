@@ -807,4 +807,5 @@ return {
 	["campus.Depot.label"] = "Vehicle Depot",
 	["campus.Depot.description"] = "Garage and club bus: your players travel better and get less tired each match.",
 	["campus.Depot.sign"] = "VEHICLE DEPOT",
+	["npc.supportersSummary"] = "Your fans have spent {coins} FC Coins at the Store and the Museum!",
 }

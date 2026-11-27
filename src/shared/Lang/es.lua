@@ -674,4 +674,5 @@ return {
 	["euro.result.penalties"] = "Empate: decidido en la tanda de penaltis",
 	["trophy.euroWon"] = "Copas de Europa: {value}",
 	["trophy.euroFinals"] = "Finales de la Copa de Europa: {value}",
+	["npc.supportersSummary"] = "¡Tus seguidores han gastado {coins} FC Coins en la Tienda y en el Museo!",
 }
