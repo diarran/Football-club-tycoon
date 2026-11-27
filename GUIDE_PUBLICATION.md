@@ -149,7 +149,8 @@ gratuite de Roblox, car on ne peut pas vérifier depuis GitHub quels sons sont p
   centre d'entraînement, recrute des joueurs et gagne des FC Coins. Joue des matchs
   simulés, monte de la division 7 jusqu'à la division 1, défie les autres clubs du serveur
   et remporte le tournoi. Jusqu'à 6 clubs par serveur. Ta progression est sauvegardée
-  automatiquement. Jouable sur ordinateur, téléphone et tablette, en français et en anglais.
+  automatiquement. Jouable sur ordinateur, téléphone et tablette, en français, anglais,
+  espagnol et portugais.
 - **Mots-clés / tags** : Gestion, Simulation, Football, Tycoon, Multijoueur
 
 ### English (traduit avec DeepL)
@@ -160,11 +161,42 @@ gratuite de Roblox, car on ne peut pas vérifier depuis GitHub quels sons sont p
   center; recruit players; and earn FC Coins. Play simulated matches, climb from
   Division 7 to Division 1, challenge other clubs on the server, and win the tournament.
   Up to 6 clubs per server. Your progress is saved automatically. Playable on computers,
-  phones, and tablets, in French and English.
+  phones, and tablets in French, English, Spanish, and Portuguese.
 - **Tags**: Management, Simulation, Soccer, Tycoon, Multiplayer
 
-Pour ajouter l'anglais : **create.roblox.com** > ton jeu > **Localization**
-(Traduction) > **Add language** > **English**, puis colle le titre et la description.
+### Español (traduit avec DeepL)
+
+- **Título**: Football Club Tycoon
+- **Descripción**:
+  ⚽ ¡Crea el club de fútbol de tus sueños! Mejora tu estadio, tus gradas y tu centro de
+  entrenamiento, ficha jugadores y gana FC Coins. Juega partidos simulados, asciende desde
+  la 7.ª división hasta la 1.ª, desafía a los demás clubes del servidor y gana el torneo.
+  Hasta 6 clubes por servidor. Tu progreso se guarda automáticamente. Se puede jugar en
+  ordenador, móvil y tableta, en francés, inglés, español y portugués.
+- **Etiquetas**: Gestión, Simulación, Fútbol, Tycoon, Multijugador
+
+### Português do Brasil (traduit avec DeepL)
+
+- **Título**: Football Club Tycoon
+- **Descrição**:
+  ⚽ Construa o clube de futebol dos seus sonhos! Melhore seu estádio, suas arquibancadas e
+  seu centro de treinamento, contrate jogadores e ganhe FC Coins. Jogue partidas simuladas,
+  suba da 7ª divisão até a 1ª divisão, desafie os outros clubes do servidor e conquiste o
+  torneio. Até 6 clubes por servidor. Seu progresso é salvo automaticamente. Jogável no
+  computador, celular e tablet, em francês, inglês, espanhol e português.
+- **Tags**: Gestão, Simulação, Futebol, Tycoon, Multijogador
+
+Pour ajouter les autres langues : **create.roblox.com** > ton jeu > **Localization**
+(Traduction) > **Add language**, puis, pour chaque langue, colle le titre et la
+description de la partie qui correspond :
+
+1. **English** : partie « English ».
+2. **Spanish (Español)** : partie « Español ».
+3. **Portuguese (Português)** : partie « Português do Brasil ».
+
+Dans le jeu, rien à faire : les menus s'affichent tout seuls dans la langue du compte
+Roblox du joueur (français, anglais, espagnol ou portugais, sinon anglais), et chacun
+peut changer de langue dans **Paramètres**.
 
 ---
 

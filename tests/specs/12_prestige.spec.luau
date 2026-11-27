@@ -107,7 +107,7 @@ H.test("terrain 3D : statue, décorations, éclairage et tenue visibles par tous
 	end
 	H.ok(spots > 0, "projecteurs présents")
 	H.eq(model.TrophyRoom.KitMannequin.Shirt.Color, Cosmetics.Get("kit_galaxy").shirt, "tenue sur le mannequin")
-	H.ok(WorldBuilder.countParts(model) <= 900, "budget de Parts avec toute la personnalisation")
+	H.ok(WorldBuilder.countParts(model) <= 1550, "budget de Parts avec toute la personnalisation")
 end)
 
 H.test("aucun avantage sportif : la note de l'équipe ne change pas", function()

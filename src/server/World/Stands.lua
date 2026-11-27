@@ -95,6 +95,19 @@ local function concreteStand(parent: Instance, frame: CFrame, name: string, spec
 		end
 	end
 
+	-- Façade arrière habillée : panneau anthracite, ailettes verticales et bandeau du club.
+	if spec.rows >= 6 then
+		local depth = spec.rows * ROW_D
+		local topY = spec.rows * ROW_H
+		PartUtil.block(stand, frame, "Cladding", Vector3.new(spec.length, topY, 0.3), Vector3.new(0, 0, depth + 0.15), C.Charcoal, Enum.Material.Metal)
+		PartUtil.block(stand, frame, "CladdingBand", Vector3.new(spec.length + 0.2, 1, 0.4), Vector3.new(0, topY - 1.6, depth + 0.3), ctx.primary, Enum.Material.Metal)
+		local fins = math.floor(spec.length / 6)
+		for i = 0, fins do
+			local x = -spec.length / 2 + 0.5 + i * (spec.length - 1) / fins
+			PartUtil.detail(PartUtil.block(stand, frame, "Fin", Vector3.new(0.5, topY - 2.2, 0.5), Vector3.new(x, 0, depth + 0.55), C.Graphite, Enum.Material.Metal))
+		end
+	end
+
 	if spec.vip then
 		-- Rangée de loges vitrées posée sur les derniers rangs, bandeau aux couleurs du club.
 		local depth = spec.rows * ROW_D

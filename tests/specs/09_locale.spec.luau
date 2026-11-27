@@ -1,4 +1,4 @@
--- Langues : français et anglais complets, langue choisie d'après le compte Roblox,
+-- Langues : français, anglais, espagnol et portugais complets, langue choisie d'après le compte Roblox,
 -- textes anglais qui tiennent sur un écran de téléphone.
 local S = H.boot(MODULES)
 local Locale = mock.run(MODULES.Locale)
@@ -56,7 +56,11 @@ H.test("langue d'après le compte Roblox, anglais par défaut", function()
 	H.eq(Locale.FromLocaleId("fr-CA"), "fr", "fr-CA")
 	H.eq(Locale.FromLocaleId("en-us"), "en", "en-us")
 	H.eq(Locale.FromLocaleId("de-de"), "en", "langue non gérée")
-	H.eq(Locale.FromLocaleId("pt-br"), "en", "langue non gérée")
+	H.eq(Locale.FromLocaleId("es-es"), "es", "es-es")
+	H.eq(Locale.FromLocaleId("es-MX"), "es", "es-MX (Amérique latine)")
+	H.eq(Locale.FromLocaleId("pt-br"), "pt", "pt-br")
+	H.eq(Locale.FromLocaleId("pt_PT"), "pt", "pt-PT")
+	H.eq(Locale.FromLocaleId("it-it"), "en", "langue non gérée")
 	H.eq(Locale.FromLocaleId(nil), "en", "langue inconnue")
 	H.eq(Locale.T("en", "result.promoted", { division = "Division 6" }), "Promoted! Welcome to Division 6.", "variables")
 end)

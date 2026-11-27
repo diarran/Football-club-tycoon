@@ -94,6 +94,7 @@ local state = {
 		volume = Audio.DEFAULT_VOLUME,
 		music = true,
 		weatherEffects = true,
+		details = true,
 	},
 }
 
@@ -2137,6 +2138,8 @@ function renderers.Settings(profile)
 	renderSoundSettings(toggle)
 	toggle("weatherEffects", T("settings.weatherEffects"))
 	label(T("settings.weatherEffectsHint"), { TextColor3 = COLORS.muted, TextSize = 14 }).Parent = content
+	toggle("details", T("settings.details"))
+	label(T("settings.detailsHint"), { TextColor3 = COLORS.muted, TextSize = 14 }).Parent = content
 
 	-- Langue : un bouton par langue gérée, celle en cours en surbrillance.
 	local current = Locale.ForPlayer(player)
@@ -2147,12 +2150,15 @@ function renderers.Settings(profile)
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		}),
 	})
+	-- Largeur relative : les 4 langues tiennent sur une ligne, même sur téléphone.
+	local share = 1 / #Locale.SUPPORTED
 	for index, lang in Locale.SUPPORTED do
 		button(Locale.NativeNames[lang], function()
 			UIController.SetLanguage(lang)
 		end, {
 			Name = "Language_" .. lang,
 			LayoutOrder = index,
+			Size = UDim2.new(share, -8, 0, 44),
 			BackgroundColor3 = if lang == current then COLORS.accent else COLORS.disabled,
 			Parent = row,
 		})

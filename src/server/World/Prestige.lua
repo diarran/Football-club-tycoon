@@ -96,10 +96,11 @@ function Prestige.buildTrophyRoom(parent: Instance, origin: CFrame, trophies: { 
 	PartUtil.anchor(model, origin, layout.footprint, size.Y + 1)
 	local room = origin * CFrame.new(0, 0, 1.5)
 	PartUtil.shell(model, room, size, {
-		wallColor = C.Plaster,
-		wallMaterial = Enum.Material.SmoothPlastic,
+		wallColor = Color3.fromRGB(232, 230, 224),
+		wallMaterial = Enum.Material.Marble,
 		roofColor = C.Roof,
 		glassFront = true,
+		trim = C.Gold,
 		accent = ctx.primary,
 		roofOverhang = 0.5,
 		doorWidth = 5,

@@ -119,12 +119,13 @@ function Shop.build(parent: Instance, origin: CFrame, level: number, ctx: BuildC
 		}
 	else
 		style = {
-			wallColor = if level >= 4 then C.Concrete else C.Plaster,
-			wallMaterial = Enum.Material.SmoothPlastic,
+			wallColor = if level >= 4 then C.Charcoal else C.Plaster,
+			wallMaterial = if level >= 4 then Enum.Material.Metal else Enum.Material.SmoothPlastic,
 			roofColor = C.Roof,
 			windows = true,
 			glassFront = true,
-			accent = ctx.primary,
+			accent = if level >= 4 then C.Gold else ctx.primary,
+			canopy = level >= 4,
 			roofOverhang = if level >= 5 then 1.5 else 1,
 			doorWidth = if level >= 4 then 8 else 6,
 			floors = if level >= 4 then 2 else nil,

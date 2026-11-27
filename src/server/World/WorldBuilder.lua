@@ -57,6 +57,7 @@ local Academy = require(World:WaitForChild("Academy"))
 local VipLounge = require(World:WaitForChild("VipLounge"))
 local Entrance = require(World:WaitForChild("Entrance"))
 local Prestige = require(World:WaitForChild("Prestige"))
+local Landscape = require(World:WaitForChild("Landscape"))
 local Cosmetics = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Cosmetics"))
 local ClubIdentity = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ClubIdentity"))
 
@@ -199,7 +200,7 @@ local function buildGround(plot: Model, slotIndex: number)
 			sizeV,
 			Vector3.new((x1 + x2) / 2, top, (z1 + z2) / 2),
 			C.Path,
-			Enum.Material.Concrete,
+			Enum.Material.Pavement,
 			{ castShadow = false }
 		)
 	end
@@ -216,6 +217,7 @@ local function buildGround(plot: Model, slotIndex: number)
 	path(-107, -88, -107, -85, 4) -- porte du centre de formation
 	path(30, -88, 30, -83, 4) -- porte de l'espace VIP
 	path(-23, -88, -23, -79, 4) -- porte de la salle des trophées
+	path(111, -85, 111, -53, 5) -- accès au parking
 
 	local spawn = PartUtil.box(
 		plot,
@@ -318,6 +320,7 @@ function WorldBuilder.buildPlot(slotIndex: number, levelsOrOptions: { [string]: 
 	plot:SetAttribute("ClubSecondary", ctx.secondary)
 
 	buildGround(plot, slotIndex)
+	Landscape.build(plot, WorldConfig.getPlotCFrame(slotIndex) * CFrame.new(0, WorldConfig.PLOT_GROUND_TOP, 0), ctx)
 	Entrance.build(plot, facilityOrigin(slotIndex, "Entrance"), ctx)
 	for _, id in WorldConfig.FACILITY_IDS do
 		buildFacility(plot, slotIndex, id, finalLevels[id], ctx)

@@ -169,3 +169,32 @@ rien ne se chevauche, même au niveau 3. Après un changement de ce type, demand
 - `node tools/world-3d.js build/world-parts.json` — exporte toutes les Parts
   générées (taille, position, rotation, couleur, matériau) en JSON, pour
   l'aperçu 3D dans le navigateur (même variable `LUAU_BIN`).
+
+## Rendu semi-réaliste (direction artistique « noir et or »)
+
+- **Lumière** (`default.project.json`) : éclairage `Future` (ombres et reflets
+  réalistes, Roblox l'allège tout seul sur les téléphones peu puissants),
+  atmosphère, léger flou lumineux (Bloom), correction des couleurs et rayons du soleil.
+- **Finitions de tous les bâtiments** (`PartUtil.shell`) : socle en granit,
+  fenêtres avec cadre sombre, meneaux et appui en pierre, angles anthracite,
+  acrotère sur le toit, climatiseurs, marquise et appliques lumineuses à l'entrée.
+- **Matériaux** : plus de plastique lisse sur les murs (enduit, marbre, métal,
+  brique), façades anthracite et or pour la boutique, le centre de formation,
+  l'espace VIP et l'arrière des tribunes (bardage à ailettes).
+- **Aménagement** (`Landscape.lua`, `Props.lua`, `WorldConfig.LANDSCAPE`) : haies
+  autour du terrain, arbres variés, lampadaires LED, drapeaux du club, bancs,
+  parking avec voitures.
+- **Téléphones** : les petites pièces sont marquées « détail » (`PartUtil.detail`).
+  Le client (`DetailController`) les masque sur les terrains éloignés, et partout
+  si le joueur coupe Paramètres > « Détails du décor ».
+
+### Images d'aperçu
+
+```
+LUAU_BIN=luau node tools/world-3d.js build/world-parts.json
+npm pack three && tar xzf three-*.tgz   # three.js, une seule fois
+THREE_DIR=$PWD/package node tools/world-render.js build/world-parts.json vues.json build/rendus
+```
+
+`vues.json` liste les caméras (`pos`, `target`, `fov`). Ce rendu imite les
+matériaux de Roblox : il montre formes, couleurs et ambiance, pas l'image exacte de Studio.

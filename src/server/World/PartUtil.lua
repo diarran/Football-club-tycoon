@@ -273,7 +273,53 @@ export type ShellStyle = {
 	accent: Color3?, -- bandeau de couleur en haut des murs
 	roofOverhang: number?,
 	floors: number?, -- nombre d'étages (planchers intermédiaires ; un bandeau vitré par étage dès 3)
+	trim: Color3?, -- couleur des angles, de l'acrotère et des cadres (anthracite par défaut)
+	canopy: boolean?, -- marquise au-dessus de la porte, avec deux appliques lumineuses
+	roofUnits: boolean?, -- climatiseurs sur le toit (true par défaut si le bâtiment est assez large)
 }
+
+-- Finitions « semi-réalistes » communes à tous les bâtiments (direction artistique noir / or).
+PartUtil.TRIM = Color3.fromRGB(38, 40, 45) -- anthracite : cadres, angles, acrotères
+PartUtil.GLASS = Color3.fromRGB(110, 150, 172) -- verre teinté légèrement bleuté
+PartUtil.SILL = Color3.fromRGB(196, 194, 188) -- appuis de fenêtre en pierre claire
+PartUtil.WARM_LIGHT = Color3.fromRGB(255, 214, 160) -- appliques et lampadaires
+
+-- Marque une Part comme « détail » : le client peut la masquer sur les terrains
+-- éloignés ou si le joueur coupe l'option Détails (téléphones peu puissants).
+-- Un détail ne projette pas d'ombre (coût de rendu en moins).
+function PartUtil.detail(part: BasePart): BasePart
+	part:SetAttribute("Detail", true)
+	part.CastShadow = false
+	return part
+end
+
+-- Fenêtre encadrée posée sur une façade : cadre sombre, verre teinté, meneaux et appui.
+-- `center` = centre de la fenêtre sur la face extérieure du mur, `normal` = direction
+-- vers l'extérieur (±X ou ±Z local). Renvoie le verre.
+function PartUtil.window(parent: Instance, origin: CFrame, width: number, height: number, center: Vector3, normal: Vector3): BasePart
+	local along = Vector3.new(math.abs(normal.Z), 0, math.abs(normal.X))
+	local across = Vector3.new(math.abs(normal.X), 0, math.abs(normal.Z))
+	local up = Vector3.new(0, 1, 0)
+	local function size(a: number, h: number, depth: number): Vector3
+		return along * a + up * h + across * depth
+	end
+	PartUtil.box(parent, origin, "WindowFrame", size(width + 0.5, height + 0.5, 0.1), center + normal * 0.05, PartUtil.TRIM, Enum.Material.Metal, { canCollide = false })
+	local glass = PartUtil.box(parent, origin, "Window", size(width, height, 0.1), center + normal * 0.12, PartUtil.GLASS, Enum.Material.Glass, {
+		canCollide = false,
+		transparency = 0.25,
+		reflectance = 0.12,
+		castShadow = false,
+	})
+	local panes = math.clamp(math.floor(width / 4 + 0.5), 1, 6)
+	for i = 1, panes - 1 do
+		local offset = -width / 2 + width * i / panes
+		PartUtil.detail(PartUtil.box(parent, origin, "Mullion", size(0.18, height, 0.12), center + along * offset + normal * 0.2, PartUtil.TRIM, Enum.Material.Metal, { canCollide = false }))
+	end
+	PartUtil.detail(
+		PartUtil.box(parent, origin, "Sill", size(width + 0.8, 0.22, 0.4), center - up * (height / 2 + 0.36) + normal * 0.2, PartUtil.SILL, Enum.Material.Limestone, { canCollide = false })
+	)
+	return glass
+end
 
 -- Bâtiment creux simple (sol, 4 murs, ouverture de porte, toit plat).
 -- Repère : centre du bâtiment au sol, porte sur la face avant (-Z).
@@ -285,10 +331,14 @@ function PartUtil.shell(parent: Instance, origin: CFrame, size: Vector3, style: 
 	local floorH = 0.4
 	local dw = style.doorWidth or 5
 	local dh = math.min(style.doorHeight or 7.5, h - 1)
-	local wallColor, wallMat = style.wallColor, style.wallMaterial
-	local glass = Color3.fromRGB(150, 200, 230)
+	local wallColor = style.wallColor
+	-- Le plastique lisse fait « jouet » : les murs passent en enduit (Plaster).
+	local wallMat = if style.wallMaterial == Enum.Material.SmoothPlastic then Enum.Material.Plaster else style.wallMaterial
+	local trim = style.trim or PartUtil.TRIM
+	local glass = PartUtil.GLASS
 
-	PartUtil.block(parent, origin, "Floor", Vector3.new(w, floorH, d), Vector3.zero, Color3.fromRGB(150, 150, 146), Enum.Material.Concrete)
+	-- Socle en granit sombre, un peu plus large que le bâtiment.
+	PartUtil.block(parent, origin, "Floor", Vector3.new(w + 0.8, floorH, d + 0.8), Vector3.zero, Color3.fromRGB(92, 92, 96), Enum.Material.Granite)
 	PartUtil.block(parent, origin, "WallBack", Vector3.new(w, h, t), Vector3.new(0, floorH, d / 2 - t / 2), wallColor, wallMat)
 	for _, side in { -1, 1 } do
 		PartUtil.block(
@@ -306,7 +356,7 @@ function PartUtil.shell(parent: Instance, origin: CFrame, size: Vector3, style: 
 	local pierWidth = (w - dw) / 2
 	local frontColor = if style.glassFront then glass else wallColor
 	local frontMat = if style.glassFront then Enum.Material.Glass else wallMat
-	local frontOpts: BoxOptions? = if style.glassFront then { transparency = 0.35 } else nil
+	local frontOpts: BoxOptions? = if style.glassFront then { transparency = 0.35, reflectance = 0.1 } else nil
 	for _, side in { -1, 1 } do
 		PartUtil.block(
 			parent,
@@ -330,47 +380,42 @@ function PartUtil.shell(parent: Instance, origin: CFrame, size: Vector3, style: 
 	)
 
 	-- Bandeaux vitrés : un seul jusqu'à 2 étages, un par étage à partir de 3.
+	-- Chaque fenêtre a un cadre sombre, des meneaux et un appui (PartUtil.window).
 	local floors = style.floors or 1
 	local bands = if floors >= 3 then floors else 1
 	for band = 1, if style.windows then bands else 0 do
 		local storey = h / bands
 		local winH = storey * 0.32
-		local winY = floorH + (band - 1) * storey + storey * 0.42
+		local winY = floorH + (band - 1) * storey + storey * 0.42 + winH / 2
 		for _, side in { -1, 1 } do
-			PartUtil.block(
-				parent,
-				origin,
-				"Window",
-				Vector3.new(0.1, winH, d * 0.6),
-				Vector3.new(side * (w / 2 + 0.05), winY, 0),
-				glass,
-				Enum.Material.Glass,
-				{ transparency = 0.2 }
-			)
+			PartUtil.window(parent, origin, d * 0.6, winH, Vector3.new(side * w / 2, winY, 0), Vector3.new(side, 0, 0))
 		end
-		PartUtil.block(
-			parent,
-			origin,
-			"Window",
-			Vector3.new(w * 0.7, winH, 0.1),
-			Vector3.new(0, winY, d / 2 + 0.05),
-			glass,
-			Enum.Material.Glass,
-			{ transparency = 0.2 }
-		)
+		PartUtil.window(parent, origin, w * 0.7, winH, Vector3.new(0, winY, d / 2), Vector3.new(0, 0, 1))
 		if not style.glassFront then
 			for _, side in { -1, 1 } do
-				PartUtil.block(
-					parent,
-					origin,
-					"Window",
-					Vector3.new(pierWidth * 0.6, winH, 0.1),
-					Vector3.new(side * (dw / 2 + pierWidth / 2), winY, -d / 2 - 0.05),
-					glass,
-					Enum.Material.Glass,
-					{ transparency = 0.2 }
-				)
+				PartUtil.window(parent, origin, pierWidth * 0.6, winH, Vector3.new(side * (dw / 2 + pierWidth / 2), winY, -d / 2), Vector3.new(0, 0, -1))
 			end
+		end
+	end
+
+	-- Façade vitrée : meneaux verticaux tous les 4 studs et une traverse au niveau de la porte.
+	if style.glassFront then
+		for _, side in { -1, 1 } do
+			local bars = math.max(1, math.floor(pierWidth / 4))
+			for i = 1, bars do
+				local x = side * (dw / 2 + pierWidth * i / (bars + 1))
+				PartUtil.detail(PartUtil.block(parent, origin, "Mullion", Vector3.new(0.2, h, 0.15), Vector3.new(x, floorH, -d / 2 - 0.08), trim, Enum.Material.Metal, { canCollide = false }))
+			end
+			PartUtil.detail(
+				PartUtil.block(parent, origin, "Transom", Vector3.new(pierWidth, 0.2, 0.15), Vector3.new(side * (dw / 2 + pierWidth / 2), floorH + dh, -d / 2 - 0.08), trim, Enum.Material.Metal, { canCollide = false })
+			)
+		end
+	end
+
+	-- Angles du bâtiment soulignés (pilastres anthracite légèrement en saillie).
+	for _, sx in { -1, 1 } do
+		for _, sz in { -1, 1 } do
+			PartUtil.block(parent, origin, "Corner", Vector3.new(t + 0.4, h, t + 0.4), Vector3.new(sx * (w / 2 - t / 2), floorH, sz * (d / 2 - t / 2)), trim, Enum.Material.Metal)
 		end
 	end
 
@@ -394,20 +439,49 @@ function PartUtil.shell(parent: Instance, origin: CFrame, size: Vector3, style: 
 			Vector3.new(w + 0.3, 0.8, d + 0.3),
 			Vector3.new(0, floorH + h - 0.8, 0),
 			style.accent,
-			Enum.Material.SmoothPlastic
+			Enum.Material.Metal
 		)
 	end
 
 	local overhang = style.roofOverhang or 0.5
+	local roofY = floorH + h
 	PartUtil.block(
 		parent,
 		origin,
 		"Roof",
 		Vector3.new(w + 2 * overhang, 0.6, d + 2 * overhang),
-		Vector3.new(0, floorH + h, 0),
+		Vector3.new(0, roofY, 0),
 		style.roofColor,
 		Enum.Material.Concrete
 	)
+	-- Acrotère (petit muret autour du toit) en métal anthracite.
+	local rw, rd = w + 2 * overhang, d + 2 * overhang
+	for _, side in { -1, 1 } do
+		PartUtil.detail(PartUtil.block(parent, origin, "Parapet", Vector3.new(rw, 0.9, 0.4), Vector3.new(0, roofY + 0.6, side * (rd / 2 - 0.2)), trim, Enum.Material.Metal))
+		PartUtil.detail(PartUtil.block(parent, origin, "Parapet", Vector3.new(0.4, 0.9, rd - 0.8), Vector3.new(side * (rw / 2 - 0.2), roofY + 0.6, 0), trim, Enum.Material.Metal))
+	end
+	-- Climatiseurs sur le toit (bâtiments assez larges).
+	if style.roofUnits ~= false and w >= 16 and d >= 10 then
+		for i, x in { -w / 4, w / 4 - 2 } do
+			PartUtil.detail(
+				PartUtil.block(parent, origin, "RoofUnit", Vector3.new(3, 1.6, 2.4), Vector3.new(x, roofY + 0.6, d / 4 - i), Color3.fromRGB(170, 172, 176), Enum.Material.DiamondPlate)
+			)
+		end
+	end
+
+	-- Marquise au-dessus de la porte et appliques lumineuses de chaque côté.
+	if style.canopy then
+		local cy = floorH + dh + 0.3
+		PartUtil.block(parent, origin, "Canopy", Vector3.new(dw + 3, 0.35, 2.4), Vector3.new(0, cy, -d / 2 - 1.2), trim, Enum.Material.Metal, { canCollide = false })
+		PartUtil.detail(
+			PartUtil.block(parent, origin, "CanopyTrim", Vector3.new(dw + 3, 0.18, 0.12), Vector3.new(0, cy + 0.08, -d / 2 - 2.46), style.accent or Color3.fromRGB(212, 175, 55), Enum.Material.Metal, { canCollide = false })
+		)
+		for _, side in { -1, 1 } do
+			PartUtil.detail(
+				PartUtil.block(parent, origin, "WallLight", Vector3.new(0.35, 1.1, 0.2), Vector3.new(side * (dw / 2 + 0.9), floorH + dh * 0.55, -d / 2 - 0.1), PartUtil.WARM_LIGHT, Enum.Material.Neon, { canCollide = false })
+			)
+		end
+	end
 
 	-- Porte ouverte (battant plaqué contre l'intérieur) : on peut entrer librement.
 	PartUtil.block(

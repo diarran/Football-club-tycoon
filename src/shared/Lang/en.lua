@@ -540,6 +540,8 @@ return {
 	["matches.weatherNext"] = "Next (in {minutes} min): {weather}",
 	["result.weatherFavors"] = "{tactic} edge +{bonus}",
 	["settings.weatherEffects"] = "Weather effects (rain, snow, fog)",
+	["settings.details"] = "Scenery details (windows, trees, cars…)",
+	["settings.detailsHint"] = "Turn off if the game lags on your phone. Buildings stay, only small details disappear.",
 	["settings.weatherEffectsHint"] = "Turn off if the game lags on your phone. Day/night and match weather stay.",
 	-- National Cup (CupService, shared/NationalCup.lua)
 	["cup.title"] = "🏆 National Cup",

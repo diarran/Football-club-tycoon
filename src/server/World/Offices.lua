@@ -62,6 +62,7 @@ function Offices.build(parent: Instance, origin: CFrame, level: number, ctx: Bui
 			roofOverhang = 1.5,
 			floors = if level >= 5 then 4 elseif level == 4 then 3 else 2,
 			doorWidth = 6,
+			canopy = true,
 		}
 	end
 	local doorPos = PartUtil.shell(model, origin, size, style)
