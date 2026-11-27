@@ -56,6 +56,9 @@ end
 -- Toutes les VISIT_INTERVAL secondes, pour chaque club présent sur le serveur :
 -- un supporter achète à la Boutique, et un autre visite le Musée s'il est construit.
 Npc.VISIT_INTERVAL = 45
+-- Le président doit être à son club : à moins de CLUB_RADIUS studs du centre
+-- (terrain + zone de création derrière lui).
+Npc.CLUB_RADIUS = 230
 -- Résumé envoyé au joueur toutes les SUMMARY_EVERY visites.
 Npc.SUMMARY_EVERY = 8
 

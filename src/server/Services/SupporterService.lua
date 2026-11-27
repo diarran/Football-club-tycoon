@@ -2,7 +2,8 @@
 	SupporterService
 	Les supporters (PNJ) qui achètent à la Boutique et visitent le Musée du club
 	rapportent des FC Coins. Le SERVEUR seul décide de l'argent :
-	  - toutes les Npc.VISIT_INTERVAL secondes, pour chaque club présent,
+	  - toutes les Npc.VISIT_INTERVAL secondes, pour chaque club dont le
+	    président est sur place (SupporterService.IsAtClub),
 	    un achat à la Boutique (selon son niveau) et une visite du Musée
 	    (mode Création, s'il est construit) ;
 	  - chaque visite est annoncée à tous les clients (« SupporterVisit ») pour
@@ -15,6 +16,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Npc = require(Shared.Npc)
+local WorldConfig = require(Shared.WorldConfig)
 local Campus = require(Shared.Campus)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
@@ -43,11 +45,25 @@ function SupporterService.VisitsFor(data): { { kind: string, coins: number } }
 	return visits
 end
 
+-- Les supporters viennent quand le président est à son club (personnage sur
+-- son terrain ou sa zone de création, ou tout près) : pas d'argent pour un
+-- joueur parti ailleurs dans le quartier.
+function SupporterService.IsAtClub(player: Player, slot: number): boolean
+	local character = player.Character
+	local root = character and (character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart)
+	if not root or not root:IsA("BasePart") then
+		return false
+	end
+	local center = WorldConfig.getPlotCFrame(slot) * Vector3.new(0, 0, WorldConfig.CAMPUS_DEPTH / 2)
+	local offset = root.Position - center
+	return Vector3.new(offset.X, 0, offset.Z).Magnitude <= Npc.CLUB_RADIUS
+end
+
 -- Un tour de visites pour un joueur. Renvoie les FC Coins gagnés.
 function SupporterService.Tick(player: Player): number
 	local data = PlayerDataService.GetData(player)
 	local slot = ClubService.GetSlot(player)
-	if not data or not slot or not player.Parent then
+	if not data or not slot or not player.Parent or not SupporterService.IsAtClub(player, slot) then
 		return 0
 	end
 	local earned = 0

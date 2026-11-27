@@ -19,6 +19,19 @@ local data = S.PlayerDataService.GetData(p)
 data.missions.list = {}
 local slot = S.ClubService.GetSlot(p)
 
+-- Personnage du joueur (les supporters viennent quand le président est au club).
+local character = Instance.new("Model")
+character.Name = "Character"
+local rootPart = Instance.new("Part")
+rootPart.Name = "HumanoidRootPart"
+rootPart.Parent = character
+local function standAt(position: Vector3)
+	rootPart.CFrame = CFrame.new(position)
+	rootPart.Position = position
+end
+standAt(WorldConfig.getPlotCFrame(slot) * Vector3.new(0, 3, -86))
+p.Character = character
+
 H.test("réglages : budget plus bas sur téléphone et sans détails, gains croissants", function()
 	H.eq(Npc.Budget(false, true), Npc.BUDGET_DESKTOP, "ordinateur")
 	H.eq(Npc.Budget(true, true), Npc.BUDGET_MOBILE, "téléphone")
@@ -65,6 +78,19 @@ H.test("trajets : chaque parcelle et chaque orientation mènent à la porte, san
 	for i = 1, #Npc.STROLL_TARGETS do
 		inside(Npc.StrollRoute(i), "balade " .. i)
 	end
+end)
+
+H.test("serveur : rien si le président n'est pas à son club", function()
+	local before = data.coins
+	p.Character = nil
+	H.eq(SupporterService.Tick(p), 0, "sans personnage")
+	p.Character = character
+	standAt(Vector3.new(5000, 3, 5000))
+	H.eq(SupporterService.Tick(p), 0, "parti loin du club")
+	H.eq(data.coins, before, "solde inchangé")
+	standAt(WorldConfig.getPlotCFrame(slot) * Vector3.new(100, 3, 250))
+	H.ok(SupporterService.IsAtClub(p, slot), "au fond de la zone de création : au club")
+	standAt(WorldConfig.getPlotCFrame(slot) * Vector3.new(0, 3, -86))
 end)
 
 H.test("serveur : chaque achat de supporter rapporte des FC Coins et est annoncé à tous", function()
