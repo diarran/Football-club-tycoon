@@ -18,6 +18,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
+local Campus = require(Shared.Campus)
 local Config = require(Shared.Config)
 local Cosmetics = require(Shared.Cosmetics)
 local Divisions = require(Shared.Divisions)
@@ -371,6 +372,8 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	-- Espace VIP : bonus sur la billetterie + revenu fixe des loges.
 	local vipEffects = Buildings.GetEffects("VIP", data.buildings.VIP or 1)
 	local vip = math.floor(tickets * (vipEffects.ticketBonus or 0)) + (vipEffects.vipIncome or 0)
+	-- Mode Création : musée, centre e-sport, place des champions… (Campus.lua).
+	local campus = math.floor(tickets * Campus.Effect(data.campus, "ticketBonus") + Campus.Effect(data.campus, "matchIncome"))
 	local currentDivision = Divisions.Get(data.club.division)
 	local matchReward = math.floor(
 		Config.Rewards[outcome] * currentDivision.rewardMultiplier * (away.rewardFactor or 1) + 0.5
@@ -384,7 +387,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	}, score.homeGoals, opponentData ~= nil)
 	-- Buzz de la dernière conférence de presse (fans ou sponsors) : petit bonus.
 	local pressBonus = ReputationService.MatchBonus(data, { tickets = tickets, sponsor = sponsor, contracts = contracts })
-	local totalReward = matchReward + tickets + sponsor + shop + vip + contracts + eventBonus + pressBonus
+	local totalReward = matchReward + tickets + sponsor + shop + vip + contracts + eventBonus + pressBonus + campus
 	-- Boost de revenus acheté en Robux : coupé par défaut (Monetization.BOOST_ENABLED).
 	totalReward = math.floor(totalReward * Monetization.BoostMultiplier(data, os.time()))
 	EconomyService.Add(player, totalReward, "match:" .. outcome)
@@ -468,6 +471,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 			sponsor = sponsor,
 			shop = shop,
 			vip = vip,
+			campus = campus,
 			contracts = contracts,
 			event = eventBonus,
 			press = pressBonus,

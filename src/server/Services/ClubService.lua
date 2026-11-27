@@ -138,6 +138,8 @@ local function styleOf(data)
 		decor = decor, -- WorldBuilder ne garde que les décorations
 		trophies = Trophies.Earned(data.club.division, data.club.stats, data.trophies.titles),
 		titles = data.trophies.titles,
+		campus = data.campus, -- mode Création : parcelles et bâtiments placés
+		division = data.club.division,
 	}
 end
 

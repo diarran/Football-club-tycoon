@@ -26,6 +26,7 @@ Onboarding.TAB_RULES = {
 	Management = { tutorial = true },
 	Ranking = { matches = 3 },
 	Prestige = { matches = 5 },
+	Creation = { matches = 6 }, -- mode Création (parcelles dès la division 6)
 }
 
 -- Onglet mis en avant pendant chaque étape du tutoriel (TutorialSteps).

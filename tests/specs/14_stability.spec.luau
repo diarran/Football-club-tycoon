@@ -138,7 +138,7 @@ H.test("rafale de demandes : limitée par joueur", function()
 	H.leave(p)
 end)
 
-H.test("menu : les 8 onglets toujours visibles (1 rangée sur PC, 2 sur téléphone)", function()
+H.test("menu : les 9 onglets toujours visibles (1 rangée sur PC, 2 sur téléphone)", function()
 	local p = H.join(47)
 	local gui = H.startClient(MODULES, p)
 	local UI = mock.run(MODULES.Client_UIController)
@@ -161,12 +161,12 @@ H.test("menu : les 8 onglets toujours visibles (1 rangée sur PC, 2 sur téléph
 			H.ok(child.TextScaled, "texte qui rétrécit pour " .. child.Text)
 		end
 	end
-	H.eq(count, 8, "onglets")
+	H.eq(count, 9, "onglets")
 	H.ok(totalScale <= 1.0001, "les onglets ne dépassent pas la barre")
 	H.ok(H.findText(gui, "Prestige", "TextButton"), "onglet Prestige visible")
 	H.ok(H.findText(gui, "Paramètres", "TextButton"), "onglet Paramètres visible")
 
-	-- Téléphone : 2 rangées de 4, textes lisibles, contenu sous la barre.
+	-- Téléphone : 2 rangées (5 + 4), textes lisibles, contenu sous la barre.
 	local camera = workspace.CurrentCamera
 	camera.ViewportSize = Vector2.new(667, 375)
 	camera:GetPropertyChangedSignal("ViewportSize"):Fire()
@@ -177,12 +177,12 @@ H.test("menu : les 8 onglets toujours visibles (1 rangée sur PC, 2 sur téléph
 	local content = bar.Parent:FindFirstChild("Content")
 	H.ok(content.Position.Y.Offset >= bar.Position.Y.Offset + bar.Size[4], "contenu sous les onglets")
 	-- Panneau de 760 px (avant mise à l'échelle) : largeur réelle d'un onglet.
-	local tabWidth = ((760 - 74) / 4 - 4 - 12) * scale
+	local tabWidth = ((760 - 74) / 5 - 4 - 12) * scale
 	local longest = 0
 	for _, child in bar:GetChildren() do
 		if child.ClassName == "TextButton" then
 			longest = math.max(longest, utf8.len(child.Text) or #child.Text)
-			H.eq(child.Size[1], 0.25, "4 onglets par rangée : " .. child.Text)
+			H.eq(child.Size[1], 0.2, "5 onglets par rangée : " .. child.Text)
 		end
 	end
 	H.ok(tabWidth / (longest * 0.6) >= 10, ("texte des onglets lisible : %.1f px"):format(tabWidth / (longest * 0.6)))

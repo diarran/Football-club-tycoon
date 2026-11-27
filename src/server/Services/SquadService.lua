@@ -15,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
+local Campus = require(Shared.Campus)
 local Config = require(Shared.Config)
 local Daily = require(Shared.Daily)
 local Divisions = require(Shared.Divisions)
@@ -117,6 +118,7 @@ function SquadService.RefreshEnergy(data)
 	local trainingLevel = data.buildings.Training or 1
 	local multiplier = (Buildings.GetEffects("Training", trainingLevel).energyRecovery or 1)
 		* Staff.Effect(data.staff, "energyRecovery") -- médecin du staff
+		* (1 + Campus.Effect(data.campus, "energyRecovery")) -- centre de récupération
 	local gain = minutes * Config.ENERGY_RECOVERY_PER_MINUTE * multiplier
 	for _, footballer in data.squad do
 		footballer.energy = math.min(PlayerConfig.MAX_ENERGY, footballer.energy + gain)
@@ -593,6 +595,7 @@ function SquadService.ApplyMatchEffects(data, starters)
 		end
 	end
 	local reduction = Staff.Effect(data.staff, "injuryReduction") -- médecin du staff
+		+ Campus.Effect(data.campus, "injuryReduction") -- centre de récupération
 	for _, footballer in starters do
 		local energyBefore = footballer.energy
 		footballer.energy = math.max(0, footballer.energy - Config.ENERGY_COST_PER_MATCH)

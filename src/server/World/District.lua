@@ -57,16 +57,18 @@ local function bench(parent: Instance, origin: CFrame, x: number, z: number, rot
 	PartUtil.block(m, o, "Back", Vector3.new(6, 1.6, 0.3), Vector3.new(0, 1.6, 0.65), C.Wood, Enum.Material.WoodPlanks)
 end
 
--- Bordure rectangulaire (4 Parts) autour d'un emplacement.
+-- Bordure rectangulaire (4 Parts) autour d'un emplacement et de sa zone de création.
 local function slotBorder(parent: Instance, slotCFrame: CFrame)
 	local sx, sz = WorldConfig.PLOT_SIZE.X / 2, WorldConfig.PLOT_SIZE.Y / 2
+	local back = sz + WorldConfig.CAMPUS_DEPTH -- fond de la zone de création (mode Création)
+	local midZ = (back - sz) / 2
 	local w = 1.2
 	local h = 0.5
 	local color, mat = C.Curb, Enum.Material.Concrete
 	PartUtil.block(parent, slotCFrame, "Border", Vector3.new(2 * sx + 2 * w, h, w), Vector3.new(0, 0, -sz - w / 2), color, mat)
-	PartUtil.block(parent, slotCFrame, "Border", Vector3.new(2 * sx + 2 * w, h, w), Vector3.new(0, 0, sz + w / 2), color, mat)
-	PartUtil.block(parent, slotCFrame, "Border", Vector3.new(w, h, 2 * sz), Vector3.new(-sx - w / 2, 0, 0), color, mat)
-	PartUtil.block(parent, slotCFrame, "Border", Vector3.new(w, h, 2 * sz), Vector3.new(sx + w / 2, 0, 0), color, mat)
+	PartUtil.block(parent, slotCFrame, "Border", Vector3.new(2 * sx + 2 * w, h, w), Vector3.new(0, 0, back + w / 2), color, mat)
+	PartUtil.block(parent, slotCFrame, "Border", Vector3.new(w, h, back + sz), Vector3.new(-sx - w / 2, 0, midZ), color, mat)
+	PartUtil.block(parent, slotCFrame, "Border", Vector3.new(w, h, back + sz), Vector3.new(sx + w / 2, 0, midZ), color, mat)
 end
 
 -- Panneau numéroté planté devant l'emplacement, à droite de l'allée d'accès.
