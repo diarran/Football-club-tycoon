@@ -71,6 +71,14 @@ Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne roug
    résultat dit **« Qualifié ! +… FC Coins »** (ou « Éliminé… »). La carte affiche
    alors le tour joué (✅ ou ❌) et **« Prochain tour possible dans 20 min »** ;
    l'énergie des joueurs et les points de division n'ont pas bougé.
+4 quater. **Réputation et presse** : dans **Accueil**, la carte **Réputation du club**
+   montre « … / 100 · Club local » avec une barre dorée. Gagne un match par 3 buts
+   d'écart ou plus (ou monte de division) : le résultat affiche **« Réputation : +… »**
+   et **« Les journalistes veulent te parler ! »**. Clique **Continuer** : la fenêtre
+   **🎤 Conférence de presse** pose une question avec **3 réponses** (humble,
+   ambitieuse, provocante) et **Ne pas répondre**. Choisis une réponse : un message
+   vert confirme l'effet, et la carte de l'accueil affiche le bonus (ex. « 🔥 Les fans
+   sont chauds… »). Rien n'est jamais perdu en argent.
 5. **Gestion** : **Embaucher** le Médecin (2 500 FC) fait baisser le solde ; **Signer
    le contrat** d'un sponsor le fait passer dans « Les contrats de sponsoring ».
 6. **Prestige** : la salle des trophées et les objets de personnalisation s'affichent

@@ -106,15 +106,18 @@ H.test("sponsor : signature, prime à chaque match, place limitée, arrêt", fun
 	H.fire(p, "RequestSignSponsor", "1")
 	H.eq(#data.sponsors.contracts, 1, "offre inconnue refusée")
 
+	-- La réputation du club ajoute un petit bonus aux contrats (Reputation.lua).
+	local reputationBonus = S.Reputation.SponsorMultiplier(data.reputation.score)
 	local result = play(p)
 	H.ok(result, "match joué")
-	H.eq(result.rewards.contracts, offer.perMatch, "prime fixe du contrat")
+	H.eq(result.rewards.contracts, math.floor(offer.perMatch * reputationBonus + 0.5), "prime fixe du contrat")
 	H.eq(data.sponsors.contracts[1].matchesLeft, offer.matches - 1, "un match de moins")
 
 	-- Directeur commercial : +20 % au niveau max, sur les bureaux et les contrats.
 	data.staff.Commercial = Staff.MaxLevel("Commercial")
+	reputationBonus = S.Reputation.SponsorMultiplier(data.reputation.score)
 	result = play(p)
-	H.eq(result.rewards.contracts, math.floor(offer.perMatch * 1.2 + 0.5), "contrat +20 %")
+	H.eq(result.rewards.contracts, math.floor(offer.perMatch * 1.2 * reputationBonus + 0.5), "contrat +20 %")
 
 	H.fire(p, "RequestCancelSponsor", offer.id)
 	H.eq(#data.sponsors.contracts, 0, "contrat arrêté")

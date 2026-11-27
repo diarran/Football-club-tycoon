@@ -33,6 +33,7 @@ local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
 local Onboarding = require(Shared.Onboarding)
 local PlayerConfig = require(Shared.PlayerConfig)
+local Reputation = require(Shared.Reputation)
 local Staff = require(Shared.Staff)
 local Tactics = require(Shared.Tactics)
 local Weather = require(Shared.Weather)
@@ -97,6 +98,8 @@ local state = {
 }
 
 local gui, hud, crestBadge, panel, content, tabButtons, toast, resultPopup, welcomePopup
+local pressPopup -- conférence de presse (réputation du club)
+local shownPress = nil -- dernière question de la presse affichée
 local tabBar, tabGrid -- barre d'onglets et sa grille (1 ou 2 rangées selon l'écran)
 local TAB_HEIGHT = 44
 local TAB_GAP = 4
@@ -386,6 +389,57 @@ local function communityCard(profile)
 	card(children).Parent = content
 end
 
+-- Réputation du club (Reputation.lua) et rappel d'une conférence de presse.
+local function reputationCard(profile)
+	local reputation = type(profile.reputation) == "table" and profile.reputation or nil
+	if not reputation then
+		return
+	end
+	local ratio = math.clamp((reputation.score or 0) / 100, 0, 1)
+	local bar = create("Frame", {
+		BackgroundColor3 = COLORS.panel,
+		Size = UDim2.new(1, 0, 0, 10),
+	}, {
+		corner(5),
+		create("Frame", {
+			Name = "Fill",
+			BackgroundColor3 = COLORS.gold,
+			Size = UDim2.fromScale(ratio, 1),
+		}, { corner(5) }),
+	})
+	local children = {
+		label(T("reputation.title"), { Font = Enum.Font.GothamBold }),
+		label(T("reputation.score", {
+			score = reputation.score or 0,
+			level = T("reputation.level." .. tostring(reputation.level or "unknown")),
+		}), { Name = "ReputationScore", TextColor3 = COLORS.gold, Font = Enum.Font.GothamBold }),
+		bar,
+		label(T("reputation.limits", { floor = reputation.floor or 0, cap = reputation.cap or 100 }), {
+			TextColor3 = COLORS.muted,
+			TextSize = 15,
+		}),
+		label(T("reputation.sponsorBonus", { percent = reputation.sponsorPercent or 0 }), {
+			TextColor3 = COLORS.muted,
+			TextSize = 15,
+		}),
+	}
+	local buzz = type(reputation.buzz) == "table" and reputation.buzz or nil
+	if buzz and (buzz.kind == "fans" or buzz.kind == "sponsors" or buzz.kind == "morale") then
+		table.insert(children, label(T("reputation.buzz." .. buzz.kind, {
+			matches = buzz.matches,
+			percent = math.floor((if buzz.kind == "fans" then Reputation.FANS_BUZZ else Reputation.SPONSOR_BUZZ) * 100 + 0.5),
+		}), { Name = "ReputationBuzz", TextSize = 15 }))
+	end
+	if type(reputation.pending) == "table" then
+		table.insert(children, button(T("press.open"), function()
+			UIController.ShowPress(reputation.pending)
+		end, { Name = "PressOpen", Size = UDim2.new(1, 0, 0, 44), BackgroundColor3 = COLORS.gold, TextColor3 = COLORS.background }))
+	end
+	local frame = card(children)
+	frame.Name = "ReputationCard"
+	frame.Parent = content
+end
+
 -- Succès (AchievementService) : rappel sur l'accueil quand des primes attendent.
 local function achievementReminder(profile)
 	local achievements = profile.achievements
@@ -523,6 +577,7 @@ function renderers.Home(profile)
 	}).Parent =
 		content
 
+	reputationCard(profile)
 	achievementReminder(profile)
 	eventCard(profile.event)
 	dailyCards(profile.daily)
@@ -2432,8 +2487,106 @@ function UIController.ShowWelcome(welcome)
 	end
 	add(button(T("welcome.continue"), function()
 		welcomePopup.Visible = false
+		UIController.MaybeShowPress()
 	end, { Name = "WelcomeContinue" }))
 	welcomePopup.Visible = true
+end
+
+-- Conférence de presse : une question, 3 réponses, « Passer » (Reputation.lua).
+local function buildPressPopup()
+	pressPopup = create("Frame", {
+		Name = "PressConference",
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.5),
+		Size = UDim2.fromScale(0.85, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundColor3 = COLORS.background,
+		Visible = false,
+		ZIndex = 14,
+		Parent = gui,
+	}, {
+		corner(14),
+		padding(16),
+		create("UISizeConstraint", { MaxSize = Vector2.new(520, math.huge) }),
+		create("UIListLayout", {
+			Padding = UDim.new(0, 6),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			HorizontalAlignment = Enum.HorizontalAlignment.Center,
+		}),
+	})
+end
+
+local PRESS_EFFECT = { humble = "morale", ambitious = "sponsors", provocative = "fans" }
+
+function UIController.ShowPress(pending)
+	if not pressPopup or type(pending) ~= "table" or not Reputation.IsTopic(pending.topic) then
+		return
+	end
+	shownPress = pending.id
+	for _, child in pressPopup:GetChildren() do
+		if child:IsA("GuiObject") then
+			child:Destroy()
+		end
+	end
+	local order = 0
+	local function add(instance)
+		order += 1
+		instance.LayoutOrder = order
+		instance.ZIndex = 15
+		instance.Parent = pressPopup
+		for _, descendant in instance:GetDescendants() do
+			if descendant:IsA("GuiObject") then
+				descendant.ZIndex = 15
+			end
+		end
+		return instance
+	end
+	add(label("🎤 " .. T("press.title"), {
+		Font = Enum.Font.GothamBold,
+		TextSize = 24,
+		TextColor3 = COLORS.gold,
+		TextXAlignment = Enum.TextXAlignment.Center,
+	}))
+	add(label(T("press.q." .. pending.topic), { Name = "PressQuestion", TextXAlignment = Enum.TextXAlignment.Center }))
+	add(label(T("press.subtitle"), { TextColor3 = COLORS.muted, TextSize = 15, TextXAlignment = Enum.TextXAlignment.Center }))
+	for _, answer in Reputation.Answers do
+		local function choose()
+			pressPopup.Visible = false
+			Net.Get("RequestPressAnswer"):FireServer(answer)
+		end
+		add(button("« " .. T("press.a." .. pending.topic .. "." .. answer) .. " »", choose, {
+			Name = "PressAnswer_" .. answer,
+			Size = UDim2.new(1, 0, 0, 52),
+			BackgroundColor3 = COLORS.card,
+			Font = Enum.Font.Gotham,
+			TextSize = 17,
+		}))
+		add(label(T("press.effect." .. answer, {
+			matches = Reputation.BUZZ_MATCHES,
+			energy = Reputation.MORALE_ENERGY,
+			percent = math.floor(
+				(if PRESS_EFFECT[answer] == "fans" then Reputation.FANS_BUZZ else Reputation.SPONSOR_BUZZ) * 100 + 0.5
+			),
+		}), { TextColor3 = COLORS.muted, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Center }))
+	end
+	add(button(T("press.skip"), function()
+		pressPopup.Visible = false
+		Net.Get("RequestPressAnswer"):FireServer("skip")
+	end, { Name = "PressSkip", BackgroundColor3 = COLORS.disabled }))
+	pressPopup.Visible = true
+end
+
+-- Affiche la question de la presse en attente, si aucune autre fenêtre n'est ouverte.
+function UIController.MaybeShowPress()
+	local profile = state.profile
+	local pending = profile and type(profile.reputation) == "table" and profile.reputation.pending
+	if type(pending) ~= "table" or pending.id == shownPress then
+		return
+	end
+	if (resultPopup and resultPopup.Visible) or (welcomePopup and welcomePopup.Visible) then
+		return
+	end
+	UIController.ShowPress(pending)
 end
 
 -- Rangées d'onglets : avec l'interface réduite (téléphone), une seule rangée
@@ -2487,6 +2640,7 @@ function UIController.Init()
 	buildToast()
 	buildResultPopup()
 	buildWelcomePopup()
+	buildPressPopup()
 	setupScaling()
 end
 
@@ -2679,6 +2833,12 @@ function UIController.SetProfile(profile)
 		shownWelcome = welcome.id
 		UIController.ShowWelcome(welcome)
 	end
+	-- Tournoi gagné (pas de fenêtre de résultat) : la presse arrive tout de suite.
+	-- Après un match, elle arrive à la fermeture du résultat.
+	local reputation = type(profile.reputation) == "table" and profile.reputation or nil
+	if reputation and type(reputation.pending) == "table" and reputation.pending.topic == "tournament" then
+		UIController.MaybeShowPress()
+	end
 end
 
 function UIController.SetChallenges(challenges)
@@ -2754,6 +2914,26 @@ function UIController.ShowMatchResult(result)
 		return instance
 	end
 	local centered = { TextXAlignment = Enum.TextXAlignment.Center }
+	-- Réputation gagnée ou perdue pendant ce match (championnat, coupe).
+	local function addReputationLine(matchResult)
+		local reputation = type(matchResult.reputation) == "table" and matchResult.reputation or nil
+		if not reputation or type(reputation.score) ~= "number" then
+			return
+		end
+		local delta = reputation.delta or 0
+		add(label(T("result.reputation", {
+			delta = (if delta > 0 then "+" else "") .. tostring(delta),
+			score = reputation.score,
+		}), {
+			Name = "ReputationLine",
+			TextSize = 16,
+			TextColor3 = if delta > 0 then COLORS.gold else COLORS.muted,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}))
+		if reputation.press then
+			add(label("🎤 " .. T("press.coming"), { TextSize = 16, TextXAlignment = Enum.TextXAlignment.Center }))
+		end
+	end
 
 	add(label(outcomeText, {
 		Font = Enum.Font.GothamBold,
@@ -2865,8 +3045,10 @@ function UIController.ShowMatchResult(result)
 			TextColor3 = if result.outcome == "Win" then COLORS.gold else COLORS.muted,
 			TextXAlignment = Enum.TextXAlignment.Center,
 		}))
+		addReputationLine(result)
 		add(button(T("result.continue"), function()
 			resultPopup.Visible = false
+			UIController.MaybeShowPress()
 		end))
 		resultPopup.Visible = true
 		return
@@ -2934,6 +3116,13 @@ function UIController.ShowMatchResult(result)
 	for _, brand in result.sponsorsEnded or {} do
 		add(label(T("result.sponsorEnded", { brand = brand }), centered))
 	end
+	if (rewards.press or 0) > 0 then
+		add(label(T("result.pressBonus", { coins = formatCoins(rewards.press) }), {
+			TextColor3 = COLORS.gold,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}))
+	end
+	addReputationLine(result)
 	-- Infirmerie : blessures, cartons, suspensions purgées.
 	local infirmary = type(result.infirmary) == "table" and result.infirmary or {}
 	local infirmaryLines = {}
@@ -2978,6 +3167,7 @@ function UIController.ShowMatchResult(result)
 		if UIController.OnMatchResultClosed then
 			UIController.OnMatchResultClosed()
 		end
+		UIController.MaybeShowPress()
 	end))
 
 	resultPopup.Visible = true
