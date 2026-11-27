@@ -68,10 +68,9 @@ Roblox vérifie les images : elles peuvent mettre quelques minutes à apparaîtr
 
 ## Étape 5. Jouer sur ton téléphone Android
 
-1. Sur ton ordinateur, va sur **https://create.roblox.com** > **Creations** > ton jeu.
-   Clique sur les trois petits points > **Copy URL** (Copier l'adresse).
-   L'adresse ressemble à `https://www.roblox.com/games/123456789/...`.
-2. Envoie-toi cette adresse sur ton téléphone (par message ou par e-mail).
+1. Le lien de ton jeu est : **https://www.roblox.com/games/75942746782438**
+   (numéro du jeu : `75942746782438`).
+2. Envoie-toi ce lien sur ton téléphone (par message ou par e-mail).
 3. Sur le téléphone, installe l'appli **Roblox** depuis le **Play Store** et connecte-toi
    **avec le même compte** que dans Studio.
 4. Ouvre le lien reçu sur le téléphone : la page du jeu s'ouvre dans l'appli Roblox.
@@ -181,8 +180,10 @@ Pour ajouter l'anglais : **create.roblox.com** > ton jeu > **Localization**
   téléphone en même temps, le second attend que l'autre libère ta
   sauvegarde, ou te demande de réessayer (protection contre les pertes de progression).
 - **Logo et écussons en image** (facultatif) : le jeu les dessine déjà tout seul. Pour
-  utiliser les vraies images, il faudra les importer sur Roblox puis donner leurs numéros
-  à Claude.
+  afficher les vraies images, suis [GUIDE_IMAGES.md](GUIDE_IMAGES.md) (10 minutes :
+  importer 7 images dans Studio et envoyer leurs numéros à Claude).
+- **Lien du jeu à partager** : affiché dans l'onglet Classement (carte Amis), les joueurs
+  peuvent le copier : https://www.roblox.com/games/75942746782438
 
 - **Inviter des amis** (onglet Classement, bouton « Inviter des amis ») : marche dès que
   le jeu est publié. Quand un ami arrive grâce à l'invitation, il reçoit 500 FC Coins et

@@ -411,6 +411,7 @@ return {
 	["friends.friendlyLeft"] = "Friendly matches with bonuses today: {count} / {max} (+{coins} each)",
 	["friends.invite"] = "Invite Friends",
 	["friends.invitePrompt"] = "Come build your soccer club with me!",
+	["friends.gameLink"] = "Game link to share (tap it to copy):",
 	["friends.cannotInvite"] = "We're unable to send an invitation at this time.",
 	["friends.tag"] = "Friend",
 	["friends.friendlyButton"] = "Friendly Match",

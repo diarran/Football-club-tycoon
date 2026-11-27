@@ -411,6 +411,7 @@ return {
 	["friends.friendlyLeft"] = "Matchs amicaux avec bonus aujourd'hui : {count} / {max} (+{coins} chacun)",
 	["friends.invite"] = "Inviter des amis",
 	["friends.invitePrompt"] = "Viens construire ton club de foot avec moi !",
+	["friends.gameLink"] = "Lien du jeu à partager (appuie dessus pour le copier) :",
 	["friends.cannotInvite"] = "Impossible d'envoyer une invitation pour le moment.",
 	["friends.tag"] = "Ami",
 	["friends.friendlyButton"] = "Match amical",
