@@ -100,6 +100,8 @@ local function defaultData()
 		-- pour la prime d'invitation ({ ["UserId"] = true }), matchs amicaux du jour.
 		friends = { welcomeClaimed = false, referred = {}, rewardsGiven = 0, friendlyDay = -1, friendlyCount = 0 },
 		tutorial = { step = 1, completed = false },
+		-- Objectifs de départ après le tutoriel (OnboardingService, shared/Onboarding.lua).
+		onboarding = { goal = 1, done = false },
 		-- Objectifs quotidiens et saisons (DailyService, shared/Daily.lua).
 		-- Le jour de la création, le solde de départ tient lieu de cadeau du jour 1.
 		daily = { lastClaimDay = Daily.Day(os.time()), streak = 1 }, -- jour UTC de la dernière récompense
@@ -158,7 +160,17 @@ local function migrate(data)
 		version += 1
 		data.schemaVersion = version
 	end
+	local hadOnboarding = type(data.onboarding) == "table"
 	reconcile(data, defaultData())
+	-- Profil d'avant les objectifs de départ : un club déjà installé (monté
+	-- de division ou 15 matchs joués) ne les reçoit pas, pour ne pas lui
+	-- verser des récompenses de débutant d'un coup.
+	if not hadOnboarding then
+		local club = data.club
+		if club.division ~= Divisions.STARTING_DIVISION or (club.stats.played or 0) >= 15 then
+			data.onboarding.done = true
+		end
+	end
 	-- Nouvelles installations ajoutées après la création du profil.
 	for id in Buildings.Definitions do
 		local level = data.buildings[id]

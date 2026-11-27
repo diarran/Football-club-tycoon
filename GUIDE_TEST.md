@@ -31,7 +31,7 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier (15 points, environ 22 minutes)
+## 5. Ce qu'il faut vérifier (15 points, environ 25 minutes)
 
 Note ✅ ou ❌ pour chaque point. Si c'est ❌, fais une capture d'écran.
 Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne rouge**.
@@ -41,8 +41,15 @@ Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne roug
 1. **Base** (déjà validée le 26/11) : ton personnage apparaît sur ton terrain, le haut
    de l'écran montre l'écusson, le club, **D7** et **2 500 FC** ; le bouton **Club**
    ouvre le menu.
-2. **Onglets** : les **8 onglets** sont visibles (Accueil, Stade, Effectif, Gestion,
-   Matchs, Classement, Prestige, Paramètres) ; chacun s'ouvre sans erreur.
+2. **Début de partie** : les **8 onglets** sont visibles, mais **Gestion**,
+   **Classement** et **Prestige** ont un cadenas 🔒 (un clic explique quand ils
+   s'ouvrent). Le bouton **Club** et l'onglet à utiliser sont en **doré**. Suis le
+   bandeau vert du tutoriel jusqu'au bout : un message annonce « Nouvel onglet
+   débloqué : Gestion », puis le bandeau montre **Objectif de départ 1/6**. Fais une
+   2e amélioration dans **Stade** : le bandeau devient doré, **Récupérer +250 FC**
+   ajoute 250 FC et passe à l'objectif 2/6.
+   Pour la suite du test, active ton **code admin** (point 8) : tous les onglets
+   s'ouvrent d'un coup ; chacun s'ouvre sans erreur.
 3. **Accueil** : cartes **Cadeau du jour**, **Missions du jour**, **Saison de la
    semaine** et **Soutiens le jeu**. La carte **Événement de la semaine** montre le
    thème, tes points et 3 étapes ; sous le solde (en haut à gauche), une ligne verte

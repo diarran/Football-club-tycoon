@@ -444,6 +444,21 @@ return {
 	["leaderboard.rowClub"] = "{rank}. {club} ({name})",
 	["leaderboard.myRank"] = "Your rank: {rank} · {value}",
 	["leaderboard.outOfTop"] = "Not in the top {top} yet · Your score: {value}",
+
+	-- Objectifs de départ et onglets débloqués (Onboarding)
+	["onboarding.progress"] = "Starter goal {step}/{total} · {text} ({progress}/{target}) · +{coins} FC",
+	["onboarding.goal.Upgrade"] = "Perform {n} upgrades in the \"{tab}\" tab.",
+	["onboarding.goal.Win"] = "Win {n} matches in the \"{tab}\" tab.",
+	["onboarding.goal.Train"] = "Train a player in the \"{tab}\" tab.",
+	["onboarding.goal.Staff"] = "Hire a staff member in the \"{tab}\" tab.",
+	["onboarding.goal.Sponsor"] = "Sign a sponsor in the \"{tab}\" tab.",
+	["onboarding.goal.Promote"] = "Move up to D6 by winning matches (\"{tab}\" tab).",
+	["onboarding.claim"] = "Collect +{coins} FC",
+	["onboarding.claimed"] = "Goal complete: +{coins} FC! Here is the next one.",
+	["onboarding.allDone"] = "Well done, all starter goals are complete: +{coins} FC! Your club is up and running.",
+	["onboarding.unlocked"] = "New tab unlocked: \"{tab}\"!",
+	["onboarding.lock.tutorial"] = "The \"{tab}\" tab opens at the end of the tutorial.",
+	["onboarding.lock.matches"] = "The \"{tab}\" tab opens after {n} matches played.",
 	-- Événements de la semaine (EventService, shared/Events.lua)
 	["event.theme.tickets"] = "Ticketing Week",
 	["event.theme.derby"] = "Derby Week",

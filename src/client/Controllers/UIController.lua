@@ -29,9 +29,11 @@ local Friends = require(Shared.Friends)
 local Locale = require(Shared.Locale)
 local Monetization = require(Shared.Monetization)
 local Net = require(Shared.Net)
+local Onboarding = require(Shared.Onboarding)
 local PlayerConfig = require(Shared.PlayerConfig)
 local Staff = require(Shared.Staff)
 local Training = require(Shared.Training)
+local TutorialSteps = require(Shared.TutorialSteps)
 local WorldConfig = require(Shared.WorldConfig)
 
 local player = Players.LocalPlayer
@@ -88,6 +90,7 @@ local TAB_GAP = 4
 local shownWelcome = nil -- dernier résumé « Pendant ton absence… » affiché
 local shownEventWeek = nil -- dernier événement de la semaine annoncé
 local currentTab = "Home"
+local unlockedTabs = nil -- onglets ouverts au dernier profil reçu (annonce des déblocages)
 
 -- Outils de construction ------------------------------------------------
 
@@ -1661,6 +1664,16 @@ local function buildPanel()
 	tabButtons = {}
 	for index, tabId in TABS do
 		tabButtons[tabId] = button(T("tab." .. tabId), function()
+			-- Onglet pas encore débloqué (débutant) : on explique quand il s'ouvre.
+			local unlocked, rule = Onboarding.TabUnlocked(tabId, state.profile)
+			if not unlocked then
+				local needed = Onboarding.TAB_RULES[tabId]
+				UIController.Notify(T("onboarding.lock." .. rule, {
+					tab = T("tab." .. tabId),
+					n = needed and needed.matches or 0,
+				}), "info")
+				return
+			end
 			UIController.OpenTab(tabId)
 		end, {
 			LayoutOrder = index,
@@ -1879,11 +1892,60 @@ function UIController.SetMenuOpen(open: boolean)
 	end
 end
 
+-- Étape du tutoriel en cours (id), ou nil.
+local function tutorialStepId(profile): string?
+	local tutorial = profile and profile.tutorial
+	if not tutorial or tutorial.completed then
+		return nil
+	end
+	local step = TutorialSteps[tutorial.step]
+	return step and step.id
+end
+
+-- Onglets : texte, cadenas (pas encore débloqué) et onglet mis en avant
+-- (doré) pour guider le débutant vers la prochaine action.
+local function refreshTabs()
+	local profile = state.profile
+	local stepId = tutorialStepId(profile)
+	local focus = Onboarding.FocusTab(profile, stepId)
+	for tabId, tabButton in tabButtons do
+		local unlocked = Onboarding.TabUnlocked(tabId, profile)
+		tabButton.Text = (if unlocked then "" else "🔒 ") .. T("tab." .. tabId)
+		tabButton.TextColor3 = if unlocked then COLORS.text else COLORS.muted
+		tabButton.BackgroundColor3 = if tabId == currentTab
+			then COLORS.accent
+			elseif not unlocked then COLORS.disabled
+			elseif tabId == focus then COLORS.gold
+			else COLORS.card
+		tabButton:SetAttribute("Locked", not unlocked)
+		tabButton:SetAttribute("Focus", tabId == focus)
+	end
+	local menuButton = gui:FindFirstChild("MenuButton")
+	if menuButton then
+		local glow = stepId == "OpenMenu" and not panel.Visible
+		menuButton.BackgroundColor3 = if glow then COLORS.gold else COLORS.accent
+		menuButton:SetAttribute("Focus", glow)
+	end
+end
+
+-- Annonce les onglets qui viennent de se débloquer (pas au premier profil).
+local function announceUnlocks(profile)
+	local now = {}
+	for _, tabId in TABS do
+		now[tabId] = Onboarding.TabUnlocked(tabId, profile)
+	end
+	if unlockedTabs then
+		for _, tabId in TABS do
+			if now[tabId] and not unlockedTabs[tabId] then
+				UIController.Notify(T("onboarding.unlocked", { tab = T("tab." .. tabId) }), "success")
+			end
+		end
+	end
+	unlockedTabs = now
+end
+
 function UIController.OpenTab(tabId: string)
 	currentTab = tabId
-	for id, tabButton in tabButtons do
-		tabButton.BackgroundColor3 = if id == tabId then COLORS.accent else COLORS.card
-	end
 	UIController.Refresh()
 	if UIController.OnTabOpened then
 		UIController.OnTabOpened(tabId)
@@ -1908,9 +1970,7 @@ function UIController.Refresh()
 	local profile = state.profile
 	-- Textes fixes (boutons du HUD et onglets), dans la langue en cours.
 	gui.MenuButton.Text = T("hud.menuButton")
-	for tabId, tabButton in tabButtons do
-		tabButton.Text = T("tab." .. tabId)
-	end
+	refreshTabs()
 	if profile then
 		hud.ClubName.Text = profile.club.name or T("hud.myClub")
 		hud.Division.Text = divisionLabel(profile.club.division)
@@ -1967,6 +2027,7 @@ function UIController.SetProfile(profile)
 	end
 	state.profile = profile
 	state.cooldownEndsAt = os.clock() + (profile.matchCooldown or 0)
+	announceUnlocks(profile)
 	UIController.Refresh()
 	local welcome = type(profile.daily) == "table" and profile.daily.welcome
 	if type(welcome) == "table" and welcome.id ~= shownWelcome then
