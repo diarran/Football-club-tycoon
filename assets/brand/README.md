@@ -41,3 +41,6 @@ Chaque écusson = 3 `ImageLabel` superposés, teintés avec `ImageColor3` :
 Formes : `classic`, `round`, `flat`, `heater`, `octagon`, `pointed`.
 Emblèmes : `star`, `crown`, `bolt`, `wave`, `tower`, `wing`. Soit 36 combinaisons.
 Il faudra importer ces PNG dans Roblox (Asset Manager) pour obtenir leurs `rbxassetid`.
+
+Logo et écussons des 6 clubs : marche à suivre pour Nj dans [GUIDE_IMAGES.md](../../GUIDE_IMAGES.md) ;
+les numéros se collent dans `src/shared/Brand.lua` (numéro seul, `rbxassetid://…` ou lien acceptés).

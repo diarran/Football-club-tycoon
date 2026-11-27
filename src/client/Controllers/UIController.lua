@@ -385,25 +385,31 @@ function renderers.Home(profile)
 	end
 	local stats = club.stats
 
-	-- Logo du jeu en tête de l'accueil (image importée si disponible, sinon titre).
+	-- Logo du jeu en tête de l'accueil : titre écrit, remplacé par l'image importée
+	-- (Brand) dès qu'elle est chargée.
+	local title = label(Brand.GAME_TITLE, {
+		Name = "Logo",
+		Font = Enum.Font.GothamBlack,
+		TextColor3 = COLORS.gold,
+		TextSize = 26,
+		TextXAlignment = Enum.TextXAlignment.Center,
+	})
+	title.Parent = content
 	local logo = Brand.LogoImage()
 	if logo then
-		create("ImageLabel", {
-			Name = "Logo",
+		local logoImage = create("ImageLabel", {
+			Name = "LogoImage",
 			BackgroundTransparency = 1,
 			Image = logo,
 			ScaleType = Enum.ScaleType.Fit,
 			Size = UDim2.new(1, 0, 0, 72),
+			Visible = false,
 			Parent = content,
 		})
-	else
-		label(Brand.GAME_TITLE, {
-			Name = "Logo",
-			Font = Enum.Font.GothamBlack,
-			TextColor3 = COLORS.gold,
-			TextSize = 26,
-			TextXAlignment = Enum.TextXAlignment.Center,
-		}).Parent = content
+		Brand.ShowWhenLoaded(logoImage, function(loaded)
+			logoImage.Visible = loaded
+			title.Visible = not loaded
+		end)
 	end
 
 	card({
@@ -1225,6 +1231,20 @@ local function friendsCard(profile)
 			coins = Friends.FRIENDLY_BONUS,
 		}), { TextSize = 16 }),
 		button(T("friends.invite"), promptInvite, { Name = "InviteButton", Size = UDim2.new(1, 0, 0, 44) }),
+		-- Lien du jeu publié, sélectionnable pour le copier (message, réseaux…).
+		label(T("friends.gameLink"), { TextColor3 = COLORS.muted, TextSize = 16 }),
+		create("TextBox", {
+			Name = "GameLink",
+			BackgroundColor3 = COLORS.background,
+			ClearTextOnFocus = false,
+			TextEditable = false,
+			Font = Enum.Font.GothamBold,
+			Text = Brand.GAME_URL,
+			TextColor3 = COLORS.gold,
+			TextSize = 15,
+			TextWrapped = true,
+			Size = UDim2.new(1, 0, 0, 36),
+		}, { corner(8) }),
 	}).Parent =
 		content
 end
@@ -1631,9 +1651,22 @@ local function refreshCrestBadge(profile)
 	crestBadge.Tag.Text = Brand.Tag(profile.club.name)
 	local image = Brand.CrestImage(slot)
 	crestBadge.Image.Image = image or ""
-	crestBadge.Image.Visible = image ~= nil
-	crestBadge.Tag.Visible = image == nil
-	crestBadge.BackgroundTransparency = if image then 1 else 0
+	-- Écusson dessiné tant que l'image n'est pas chargée (ou pas encore validée).
+	local loaded = image ~= nil and crestBadge:GetAttribute("CrestLoaded") == image
+	crestBadge.Image.Visible = loaded
+	crestBadge.Tag.Visible = not loaded
+	crestBadge.BackgroundTransparency = if loaded then 1 else 0
+	if image and not loaded and crestBadge:GetAttribute("CrestWatching") ~= image then
+		crestBadge:SetAttribute("CrestWatching", image)
+		Brand.ShowWhenLoaded(crestBadge.Image, function(isLoaded)
+			if isLoaded and crestBadge.Image.Image == image then
+				crestBadge:SetAttribute("CrestLoaded", image)
+				crestBadge.Image.Visible = true
+				crestBadge.Tag.Visible = false
+				crestBadge.BackgroundTransparency = 1
+			end
+		end)
+	end
 end
 
 local function buildHud()
