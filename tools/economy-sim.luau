@@ -126,6 +126,11 @@ local function playRun(profil)
 		loginGains = 0, -- cadeau du jour + revenus hors ligne + fin de saison (à l'arrivée)
 		missionGains = 0, -- primes des missions du jour
 		matchGains = 0, -- gains des matchs (hors missions et primes de montée)
+		eventBonus = 0, -- part des gains de match venant du thème de la semaine
+		eventTiers = 0, -- paliers de l'événement de la semaine récupérés (FC Coins)
+		eventCosmetics = 0, -- objets d'événement gagnés
+		topWeeks = {}, -- semaines où la dernière étape de l'événement est atteinte
+		weeks = {}, -- semaines jouées
 	}
 	local function stamp()
 		return { minutes = run.playSeconds / 60, matches = run.matches, session = run.sessions }
@@ -271,13 +276,32 @@ local function playRun(profil)
 				table.insert(run.sponsorPerMatch, result.rewards.contracts)
 				-- Bonus d'objectif des sponsors : versement unique, compté à part.
 				run.missionGains += result.missionReward or 0
+				run.eventBonus += result.rewards.event or 0
+				run.weeks[S.Events.Week(os.time())] = true
 				local income = data.coins - coins - (result.promotionReward or 0) - bonus - (result.missionReward or 0)
 				run.matchGains += income
 				table.insert(run.incomes, income)
 				-- Contrôle des sources anormales : hors bonus voulu de la division
 				-- (prime de match ×1 à ×3), le gain doit rester sous 5 000.
 				-- Les contrats de sponsoring sont contrôlés à part (plafond ci-dessous).
-				table.insert(run.baseIncomes, income - (result.rewards.match - Config.Rewards[result.outcome]) - result.rewards.contracts)
+				-- Le bonus de l'événement de la semaine est voulu lui aussi (contrôlé à part).
+				table.insert(run.baseIncomes, income - (result.rewards.match - Config.Rewards[result.outcome]) - result.rewards.contracts - (result.rewards.event or 0))
+				-- Événement de la semaine : le joueur récupère ses paliers dès qu'ils sont atteints.
+				local beforeClaim, ownedBefore = data.coins, 0
+				for id in data.cosmetics.owned do
+					ownedBefore += if S.Cosmetics.Get(id) and S.Cosmetics.Get(id).event then 1 else 0
+				end
+				if S.EventService.TryClaim(player) then
+					run.eventTiers += data.coins - beforeClaim
+					local ownedAfter = 0
+					for id in data.cosmetics.owned do
+						ownedAfter += if S.Cosmetics.Get(id) and S.Cosmetics.Get(id).event then 1 else 0
+					end
+					run.eventCosmetics += ownedAfter - ownedBefore
+					if data.events.claimed >= #S.Events.TIERS then
+						run.topWeeks[data.events.week] = true
+					end
+				end
 				if result.promoted then
 					run.reach[result.division] = stamp()
 				end
@@ -505,7 +529,8 @@ for _, profil in PROFILS do
 	for _, division in Divisions.List do
 		maxMultiplier = math.max(maxMultiplier, division.rewardMultiplier)
 	end
-	local tournamentCap = Config.Tournament.Rewards.Winner * maxMultiplier
+	-- Coupe du week-end : récompenses majorées le samedi et le dimanche.
+	local tournamentCap = Config.Tournament.Rewards.Winner * maxMultiplier * S.Events.WEEKEND_CUP_MULTIPLIER
 	print(("Tournoi du serveur : %d récompenses · médiane %s · max %s (plafond %s) · %s FC Coins par heure de jeu (médiane)"):format(
 		#gains,
 		fmt(median(gains)),
@@ -539,10 +564,34 @@ for _, profil in PROFILS do
 		table.insert(problems, profil.label .. " : les contrats de sponsoring dépassent leur plafond (source anormale)")
 	end
 
+	-- Événements de la semaine (EventService) : bonus du thème et paliers.
+	local bonusShare, tierShare, cosmeticsPerWeek = {}, {}, {}
+	for _, run in runs do
+		local total = math.max(1, run.matchGains + run.loginGains + run.missionGains + run.eventTiers)
+		table.insert(bonusShare, run.eventBonus / math.max(1, run.matchGains))
+		table.insert(tierShare, run.eventTiers / total)
+		local weeks, top = 0, 0
+		for _ in run.weeks do
+			weeks += 1
+		end
+		for _ in run.topWeeks do
+			top += 1
+		end
+		table.insert(cosmeticsPerWeek, top / math.max(1, weeks))
+	end
+	print(("Événements de la semaine : bonus du thème %s %% des gains de match · paliers %s %% des gains · dernière étape atteinte %s semaine(s) jouée(s) sur 10"):format(
+		fmt(median(bonusShare) * 100),
+		fmt(median(tierShare) * 100),
+		fmt(median(cosmeticsPerWeek) * 10)
+	))
+	if median(bonusShare) > 0.15 or median(tierShare) > 0.15 then
+		table.insert(problems, profil.label .. " : l'événement de la semaine pèse plus de 15 % des gains (trop généreux)")
+	end
+
 	-- Objectifs quotidiens (DailyService) : part des revenus venant du retour quotidien.
 	local loginShare, missionShare, loginPerSession = {}, {}, {}
 	for _, run in runs do
-		local total = math.max(1, run.matchGains + run.loginGains + run.missionGains)
+		local total = math.max(1, run.matchGains + run.loginGains + run.missionGains + run.eventTiers)
 		table.insert(loginShare, run.loginGains / total)
 		table.insert(missionShare, run.missionGains / total)
 		table.insert(loginPerSession, run.loginGains / math.max(1, run.sessions - 1))

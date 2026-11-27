@@ -771,6 +771,8 @@ function H.boot(modules)
 		Sponsors = mock.run(modules.Sponsors),
 		DailyService = mock.run(modules.DailyService),
 		Daily = mock.run(modules.Daily),
+		EventService = mock.run(modules.EventService),
+		Events = mock.run(modules.Events),
 		TutorialService = mock.run(modules.TutorialService),
 		CosmeticService = mock.run(modules.CosmeticService),
 		Cosmetics = mock.run(modules.Cosmetics),

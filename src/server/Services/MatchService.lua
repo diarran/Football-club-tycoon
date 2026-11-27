@@ -36,6 +36,7 @@ local SquadService = require(script.Parent.SquadService)
 local TutorialService = require(script.Parent.TutorialService)
 local StaffService = require(script.Parent.StaffService)
 local DailyService = require(script.Parent.DailyService)
+local EventService = require(script.Parent.EventService)
 
 local MatchService = {}
 
@@ -342,7 +343,14 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	local matchReward = math.floor(
 		Config.Rewards[outcome] * currentDivision.rewardMultiplier * (away.rewardFactor or 1) + 0.5
 	)
-	local totalReward = matchReward + tickets + sponsor + shop + vip + contracts
+	-- Événement de la semaine : petit bonus selon le thème (Events.lua).
+	local eventBonus = EventService.MatchBonus(player, data, {
+		match = matchReward,
+		tickets = tickets,
+		sponsor = sponsor,
+		shop = shop,
+	}, score.homeGoals, opponentData ~= nil)
+	local totalReward = matchReward + tickets + sponsor + shop + vip + contracts + eventBonus
 	-- Boost de revenus acheté en Robux : coupé par défaut (Monetization.BOOST_ENABLED).
 	totalReward = math.floor(totalReward * Monetization.BoostMultiplier(data, os.time()))
 	EconomyService.Add(player, totalReward, "match:" .. outcome)
@@ -386,6 +394,7 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 	local missionReward = DailyService.Track(player, "play")
 		+ (if outcome == "Win" then DailyService.Track(player, "win") else 0)
 		+ DailyService.Track(player, "goals", score.homeGoals)
+	local eventPoints = EventService.OnMatchPlayed(player, outcome, score.homeGoals, opponentData ~= nil)
 	PlayerDataService.MarkChanged(player)
 	TutorialService.Complete(player, "FirstMatch")
 	ClubService.BroadcastClubs()
@@ -411,12 +420,14 @@ function MatchService.TryStartMatch(player: Player, opponentId, tactic)
 			shop = shop,
 			vip = vip,
 			contracts = contracts,
+			event = eventBonus,
 			total = totalReward,
 		},
 		sponsorBonuses = sponsorReport.bonuses,
 		sponsorsEnded = sponsorReport.ended,
 		promotionReward = promotionReward,
 		missionReward = missionReward,
+		eventPoints = eventPoints,
 		divisionPoints = data.club.divisionPoints,
 		division = data.club.division,
 		promoted = promoted,

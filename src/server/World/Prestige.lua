@@ -173,7 +173,7 @@ function Prestige.buildStatue(parent: Instance, origin: CFrame, item: any, ctx: 
 		PartUtil.block(model, origin, "Legs", Vector3.new(1.6, 2.6, 0.9), Vector3.new(0, top, 0), color, material)
 		PartUtil.block(model, origin, "Body", Vector3.new(2.2, 2.6, 1.1), Vector3.new(0, top + 2.6, 0), color, material)
 		PartUtil.ball(model, origin, "Head", 1.3, Vector3.new(0, top + 5.9, 0), color, material)
-		if item.id == "statue_striker" then
+		if item.id == "statue_striker" or item.id == "statue_event_goal" then
 			PartUtil.ball(model, origin, "Ball", 1.1, Vector3.new(0.9, top + 0.55, -1), color, material)
 		elseif item.id == "statue_legend" then
 			PartUtil.box(model, origin, "Arm", Vector3.new(0.6, 2.6, 0.6), Vector3.new(1.5, top + 5.8, 0), color, material, { rotZ = -15 })
