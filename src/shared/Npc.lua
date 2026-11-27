@@ -147,6 +147,8 @@ function Npc.CampusRoute(parcelIndex: number, rot: number?, offset: number?): { 
 	if math.abs(frontZ - boulevardZ) > 4 then
 		table.insert(route, p(sideX, boulevardZ))
 		table.insert(route, p(sideX, frontZ))
+	else
+		frontZ = boulevardZ -- 1re rangée : on reste sur le boulevard
 	end
 	local dx, dz = door.X - parcel.x, door.Z - parcel.z
 	if dz < -10 then

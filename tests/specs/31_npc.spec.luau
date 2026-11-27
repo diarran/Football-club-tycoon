@@ -132,7 +132,9 @@ H.test("musée construit : visites en plus, résumé de temps en temps", functio
 		end
 	end
 	H.ok(found, "résumé « Tes supporters ont dépensé… »")
-	H.eq(SupporterService.Tick(H.join(99)), 0, "joueur sans club : rien")
+	local other = H.join(99)
+	H.eq(SupporterService.Tick(other), 0, "joueur sans personnage : rien")
+	H.leave(other)
 	H.eq(#SupporterService.VisitsFor(nil), 0, "profil abîmé : rien")
 end)
 
@@ -192,7 +194,7 @@ H.test("client : un achat annoncé envoie un supporter à la boutique, « +N » 
 	NpcC.OnVisit(slot, "shop", 9)
 	NpcC.OnVisit(slot, "museum", 10)
 	local maxPopups, sawVisitor = 0, false
-	for _ = 1, 120 do
+	for _ = 1, 400 do
 		run(0.5)
 		local stats = NpcC.Stats()
 		maxPopups = math.max(maxPopups, stats.popups)

@@ -270,3 +270,19 @@ H.test("onglet Création : grille des parcelles, débloquer et construire depuis
 	H.ok(H.findText(gui, "Tourner"), "bouton tourner")
 	H.ok(H.findText(gui, "Déplacer"), "bouton déplacer")
 end)
+
+H.test("modèles Blender : numéro lu depuis Models.lua, version en blocs tant qu'il est vide", function()
+	local Models = mock.run(MODULES.Models)
+	local Loader = mock.run(MODULES.ModelLoader)
+	local saved = Models.ASSET_IDS.ClubBus
+	H.eq(Models.Id("ClubBus"), nil, "vide par défaut")
+	Models.ASSET_IDS.ClubBus = "rbxassetid://123456789"
+	H.eq(Models.Id("ClubBus"), 123456789, "rbxassetid://")
+	Models.ASSET_IDS.ClubBus = "https://create.roblox.com/store/asset/987654321/bus"
+	H.eq(Models.Id("ClubBus"), 987654321, "lien du Creator Hub")
+	Models.ASSET_IDS.ClubBus = "n'importe quoi"
+	H.eq(Models.Id("ClubBus"), nil, "texte illisible ignoré")
+	Models.ASSET_IDS.ClubBus = saved
+	H.eq(Loader.IsReady("ClubBus"), false, "rien de chargé")
+	H.eq(Loader.Place("ClubBus", workspace, CFrame.new(), Vector3.new(5, 6, 17)), nil, "pas de modèle : l'appelant garde ses Parts")
+end)
