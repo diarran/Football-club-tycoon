@@ -382,6 +382,17 @@ function ClubService.Init()
 		local ok, result = pcall(require, builderModule)
 		if ok then
 			WorldBuilder = result
+			-- Modèles Blender publiés (Shared/Models.lua) : chargés en arrière-plan ;
+			-- les terrains sont reconstruits quand un modèle arrive.
+			local loaderModule = world:FindFirstChild("ModelLoader")
+			local loaded, loader = pcall(require, loaderModule)
+			if loaderModule and loaded then
+				loader.Preload(function()
+					for player in slotByPlayer do
+						pcall(ClubService.RefreshPlot, player)
+					end
+				end)
+			end
 		else
 			warn("[Club] Impossible de charger WorldBuilder : " .. tostring(result))
 		end

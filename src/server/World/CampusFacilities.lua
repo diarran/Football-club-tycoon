@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local WorldConfig = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("WorldConfig"))
 local PartUtil = require(script.Parent:WaitForChild("PartUtil"))
 local Props = require(script.Parent:WaitForChild("Props"))
+local ModelLoader = require(script.Parent:WaitForChild("ModelLoader"))
 
 type BuildContext = PartUtil.BuildContext
 
@@ -81,9 +82,14 @@ local function camera(parent: Instance, origin: CFrame, pos: Vector3, rotY: numb
 end
 
 -- Bus du club aux couleurs du club (posé sur le sol, avant vers -Z).
+-- Si le modèle Blender est publié (Shared/Models.lua), on pose le vrai modèle détaillé.
 local function bus(parent: Instance, origin: CFrame, x: number, z: number, rotY: number, ctx: BuildContext)
-	local m = PartUtil.model(parent, "ClubBus")
 	local o = origin * CFrame.new(x, 0.2, z) * CFrame.Angles(0, math.rad(rotY), 0)
+	local mesh = ModelLoader.Place("ClubBus", parent, o, v(5, 6.4, 17))
+	if mesh then
+		return mesh
+	end
+	local m = PartUtil.model(parent, "ClubBus")
 	PartUtil.block(m, o, "Body", v(5, 5.4, 17), v(0, 0.9, 0), ctx.primary, Enum.Material.Metal)
 	PartUtil.detail(PartUtil.block(m, o, "Stripe", v(5.05, 0.6, 17.05), v(0, 2.2, 0), ctx.secondary, Enum.Material.Metal, { canCollide = false }))
 	for _, side in { -1, 1 } do
