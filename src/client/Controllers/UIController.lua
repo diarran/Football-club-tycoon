@@ -436,6 +436,8 @@ local function reputationCard(profile)
 	local frame = card(children)
 	frame.Name = "ReputationCard"
 	frame.Parent = content
+end
+
 -- Succès (AchievementService) : rappel sur l'accueil quand des primes attendent.
 local function achievementReminder(profile)
 	local achievements = profile.achievements
