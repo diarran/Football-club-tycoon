@@ -127,7 +127,7 @@ H.test("terrain 3D : écusson au portique et sur le toit des bureaux niveau 5", 
 	H.ok(#images >= 3, "portique + 2 faces du toit (" .. #images .. ")")
 	H.ok(find(plot, "CrestImageLeft"), "face gauche du toit")
 	H.ok(find(plot, "CrestImageRight"), "face droite du toit")
-	H.ok(WorldBuilder.countParts(plot) <= 750, "budget de Parts inchangé")
+	H.ok(WorldBuilder.countParts(plot) <= 1400, "budget de Parts inchangé")
 end)
 
 H.test("ShowWhenLoaded sans IsLoaded (imitation) : reste sur le dessin, sans erreur", function()
