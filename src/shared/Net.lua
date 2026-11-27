@@ -30,6 +30,7 @@ Net.Requests = {
 	"RequestMatch", -- (opponentId: string, tactic: string)
 	"RequestRename", -- (newName: string)
 	"RequestTutorialStep", -- (stepId: string) étapes purement informatives (menu ouvert…)
+	"RequestOnboardingClaim", -- () récompense de l'objectif de départ en cours (OnboardingService)
 	"RequestLanguage", -- (lang: string) langue choisie dans les Paramètres ("fr" ou "en")
 	"RequestBuyCosmetic", -- (itemId: string) acheter un objet de personnalisation (Cosmetics)
 	"RequestEquipCosmetic", -- (category: string, itemId: string) porter un objet, ou "default"

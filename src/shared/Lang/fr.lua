@@ -444,4 +444,19 @@ return {
 	["leaderboard.rowClub"] = "{rank}. {club} ({name})",
 	["leaderboard.myRank"] = "Ta place : {rank} · {value}",
 	["leaderboard.outOfTop"] = "Pas encore dans le top {top} · ton score : {value}",
+
+	-- Objectifs de départ et onglets débloqués (Onboarding)
+	["onboarding.progress"] = "Objectif de départ {step}/{total} · {text} ({progress}/{target}) · +{coins} FC",
+	["onboarding.goal.Upgrade"] = "Fais {n} améliorations dans l'onglet « {tab} ».",
+	["onboarding.goal.Win"] = "Gagne {n} matchs dans l'onglet « {tab} ».",
+	["onboarding.goal.Train"] = "Entraîne un joueur dans l'onglet « {tab} ».",
+	["onboarding.goal.Staff"] = "Embauche un membre du staff dans l'onglet « {tab} ».",
+	["onboarding.goal.Sponsor"] = "Signe un sponsor dans l'onglet « {tab} ».",
+	["onboarding.goal.Promote"] = "Monte en D6 en gagnant des matchs (onglet « {tab} »).",
+	["onboarding.claim"] = "Récupérer +{coins} FC",
+	["onboarding.claimed"] = "Objectif réussi : +{coins} FC ! Voici le suivant.",
+	["onboarding.allDone"] = "Bravo, tous les objectifs de départ sont réussis : +{coins} FC ! Ton club est lancé.",
+	["onboarding.unlocked"] = "Nouvel onglet débloqué : « {tab} » !",
+	["onboarding.lock.tutorial"] = "L'onglet « {tab} » s'ouvre à la fin du tutoriel.",
+	["onboarding.lock.matches"] = "L'onglet « {tab} » s'ouvre après {n} matchs joués.",
 }

@@ -130,6 +130,7 @@ local function playRun(profil)
 		matchGains = 0, -- gains des matchs (hors missions et primes de montée)
 		trainingSessions = 0, -- séances d'entraînement (Training.lua)
 		trainingSpent = 0,
+		onboardingGains = 0, -- récompenses des objectifs de départ (une seule fois)
 	}
 	local function stamp()
 		return { minutes = run.playSeconds / 60, matches = run.matches, session = run.sessions }
@@ -275,6 +276,18 @@ local function playRun(profil)
 					break
 				end
 				run.sponsorSigned += 1
+			end
+			-- Objectifs de départ (Onboarding) : récupérés dès qu'ils sont réussis.
+			-- Le tutoriel se termine avec le premier match (étapes du client simulées).
+			if data.club.stats.played >= 1 then
+				data.tutorial.completed = true
+			end
+			while true do
+				local claimed, reward = S.OnboardingService.Claim(player)
+				if claimed ~= "granted" then
+					break
+				end
+				run.onboardingGains += reward
 			end
 			local coins = data.coins
 			local divisionBefore = data.club.division

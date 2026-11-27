@@ -21,6 +21,7 @@ local PlayerDataService = require(Services.PlayerDataService)
 local EconomyService = require(Services.EconomyService)
 local ClubService = require(Services.ClubService)
 local TutorialService = require(Services.TutorialService)
+local OnboardingService = require(Services.OnboardingService)
 local BuildingService = require(Services.BuildingService)
 local SquadService = require(Services.SquadService)
 local MatchService = require(Services.MatchService)
@@ -41,6 +42,7 @@ local ORDERED_SERVICES = {
 	{ name = "EconomyService", module = EconomyService },
 	{ name = "ClubService", module = ClubService },
 	{ name = "TutorialService", module = TutorialService },
+	{ name = "OnboardingService", module = OnboardingService },
 	{ name = "BuildingService", module = BuildingService },
 	{ name = "SquadService", module = SquadService },
 	{ name = "StaffService", module = StaffService },
