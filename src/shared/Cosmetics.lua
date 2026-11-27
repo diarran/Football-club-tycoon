@@ -86,6 +86,16 @@ Cosmetics.EXCLUSIVE = {
 	{ id = "kit_vip_carbon", category = "kit", robux = true, requires = {}, pattern = "stripes", shirt = rgb(30, 30, 34), detail = rgb(0, 200, 255) },
 }
 
+-- Objets des événements de la semaine (Events.lua, EventService) : gagnés en
+-- atteignant le dernier palier de l'événement, jamais vendus (ni FC Coins ni
+-- Robux). Hors de Cosmetics.List, donc hors du catalogue et du simulateur.
+Cosmetics.EVENT = {
+	{ id = "colors_event_tickets", category = "colors", event = "tickets", requires = {}, primary = rgb(245, 195, 40), secondary = rgb(30, 30, 36) },
+	{ id = "kit_event_derby", category = "kit", event = "derby", requires = {}, pattern = "halves", shirt = rgb(200, 30, 40), detail = rgb(25, 60, 170) },
+	{ id = "statue_event_goal", category = "statue", event = "goals", requires = {}, color = rgb(255, 140, 20), material = "Metal" },
+	{ id = "lighting_event_fans", category = "lighting", event = "fans", requires = {}, color = rgb(90, 255, 150) },
+}
+
 local byId = {}
 for index, item in Cosmetics.List do
 	item.order = index
@@ -93,6 +103,10 @@ for index, item in Cosmetics.List do
 end
 for index, item in Cosmetics.EXCLUSIVE do
 	item.order = #Cosmetics.List + index
+	byId[item.id] = item
+end
+for index, item in Cosmetics.EVENT do
+	item.order = #Cosmetics.List + #Cosmetics.EXCLUSIVE + index
 	byId[item.id] = item
 end
 

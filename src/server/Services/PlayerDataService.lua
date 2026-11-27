@@ -21,6 +21,7 @@ local RunService = game:GetService("RunService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared.Config)
 local Daily = require(Shared.Daily)
+local Events = require(Shared.Events)
 local Buildings = require(Shared.Buildings)
 local Divisions = require(Shared.Divisions)
 local Locale = require(Shared.Locale)
@@ -106,6 +107,9 @@ local function defaultData()
 		daily = { lastClaimDay = Daily.Day(os.time()), streak = 1 }, -- jour UTC de la dernière récompense
 		missions = { day = -1, list = {} }, -- missions du jour (renouvelées à minuit UTC)
 		season = { id = Daily.SeasonId(os.time()), points = 0, division = Divisions.STARTING_DIVISION },
+		-- Événement de la semaine (EventService, shared/Events.lua) : semaine,
+		-- points d'événement, paliers déjà versés.
+		events = { week = Events.Week(os.time()), points = 0, claimed = 0 },
 		lastSeenAt = os.time(), -- dernière sauvegarde : base des revenus hors ligne
 		lastMatchAt = 0,
 		lastEnergyUpdate = os.time(),

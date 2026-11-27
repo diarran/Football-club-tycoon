@@ -124,7 +124,7 @@ H.test("l'espace VIP ajoute un bonus de billetterie et un revenu fixe", function
 		local fx = S.Buildings.GetEffects("VIP", level)
 		local r = result.rewards
 		H.eq(r.vip, math.floor(r.tickets * fx.ticketBonus) + fx.vipIncome, "revenu VIP niveau " .. level)
-		H.eq(r.total, r.match + r.tickets + r.sponsor + r.shop + r.vip, "total")
+		H.eq(r.total, r.match + r.tickets + r.sponsor + r.shop + r.vip + r.event, "total")
 	end
 end)
 

@@ -27,12 +27,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage.Shared
 local Config = require(Shared.Config)
 local Divisions = require(Shared.Divisions)
+local Events = require(Shared.Events)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
 local MatchService = require(script.Parent.MatchService)
+local EventService = require(script.Parent.EventService)
 
 local TournamentService = {}
 
@@ -72,6 +74,8 @@ local function publicState()
 		entrants = entrants,
 		rounds = state.rounds,
 		lastWinner = state.lastWinner,
+		weekendCup = Events.IsWeekend(os.time()),
+		cupMultiplier = Events.TournamentMultiplier(os.time()),
 	}
 end
 
@@ -93,8 +97,13 @@ local function reward(entrant, place: string): number
 		return 0
 	end
 	local division = Divisions.Get(data.club.division)
-	local amount = math.floor(T.Rewards[place] * (division and division.rewardMultiplier or 1) + 0.5)
+	-- Coupe du week-end (samedi et dimanche UTC) : récompenses majorées
+	-- et points d'événement selon le tour atteint (Events.lua).
+	local amount = math.floor(
+		T.Rewards[place] * (division and division.rewardMultiplier or 1) * Events.TournamentMultiplier(os.time()) + 0.5
+	)
 	EconomyService.Add(player, amount, "tournament:" .. place)
+	EventService.AddCupPoints(player, place)
 	return amount
 end
 

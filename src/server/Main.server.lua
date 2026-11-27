@@ -33,6 +33,7 @@ local AdminService = require(Services.AdminService)
 local CommunityService = require(Services.CommunityService)
 local StaffService = require(Services.StaffService)
 local DailyService = require(Services.DailyService)
+local EventService = require(Services.EventService)
 local FriendService = require(Services.FriendService)
 local LeaderboardService = require(Services.LeaderboardService)
 
@@ -54,6 +55,7 @@ local ORDERED_SERVICES = {
 	{ name = "AdminService", module = AdminService },
 	{ name = "CommunityService", module = CommunityService },
 	{ name = "DailyService", module = DailyService },
+	{ name = "EventService", module = EventService },
 	{ name = "FriendService", module = FriendService },
 	{ name = "LeaderboardService", module = LeaderboardService },
 }
@@ -107,6 +109,7 @@ local function onPlayerAdded(player: Player)
 	step("TournamentService.OnPlayerReady", TournamentService.OnPlayerReady, player)
 	-- Récompense du jour, missions, revenus hors ligne, fin de saison.
 	step("DailyService.OnPlayerReady", DailyService.OnPlayerReady, player)
+	step("EventService.OnPlayerReady", EventService.OnPlayerReady, player)
 	-- Amis présents, bonus d'invitation (parrainage Roblox).
 	step("FriendService.OnPlayerReady", FriendService.OnPlayerReady, player)
 	-- Classement mondial : état actuel envoyé au joueur.

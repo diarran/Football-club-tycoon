@@ -38,8 +38,9 @@ end
 
 function CosmeticService.TryBuy(player: Player, itemId): (boolean, string)
 	local item = Cosmetics.Get(itemId)
-	if not item or item.robux then
-		-- Les objets exclusifs ne s'achètent qu'en Robux (MonetizationService).
+	if not item or item.robux or item.event then
+		-- Les objets exclusifs ne s'achètent qu'en Robux (MonetizationService) ;
+		-- ceux des événements se gagnent en jouant (EventService).
 		return false, Locale.TP(player, "error.unknownCosmetic")
 	end
 	local data = PlayerDataService.GetData(player)
@@ -83,6 +84,23 @@ function CosmeticService.GrantExclusive(player: Player, itemId: string): boolean
 		data.cosmetics.equipped[item.category] = item.id
 	end
 	PlayerDataService.MarkChanged(player)
+	return true
+end
+
+-- Objet d'un événement de la semaine : ajouté et porté, sans débit.
+-- Appelé seulement par EventService au dernier palier. Aucun yield.
+function CosmeticService.GrantEvent(player: Player, itemId: string): boolean
+	local item = Cosmetics.Get(itemId)
+	local data = PlayerDataService.GetData(player)
+	if not item or not item.event or not data then
+		return false
+	end
+	data.cosmetics.owned[item.id] = true
+	if Cosmetics.SINGLE[item.category] then
+		data.cosmetics.equipped[item.category] = item.id
+	end
+	PlayerDataService.MarkChanged(player)
+	task.spawn(ClubService.RefreshPlot, player)
 	return true
 end
 

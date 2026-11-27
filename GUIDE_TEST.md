@@ -51,7 +51,10 @@ Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne roug
    Pour la suite du test, active ton **code admin** (point 8) : tous les onglets
    s'ouvrent d'un coup ; chacun s'ouvre sans erreur.
 3. **Accueil** : cartes **Cadeau du jour**, **Missions du jour**, **Saison de la
-   semaine** et **Soutiens le jeu**.
+   semaine** et **Soutiens le jeu**. La carte **Événement de la semaine** montre le
+   thème, tes points et 3 étapes ; sous le solde (en haut à gauche), une ligne verte
+   affiche l'événement et **« fin dans … »**. Après un match, le résultat indique
+   **« +… points d'événement »**.
 4. **Match en 3D** : lance un match dans **Matchs** ; il se joue sur ton terrain, les
    buts font jaillir des **confettis** avec un son. À la fin, la fenêtre de résultat
    s'affiche et la mission « Joue … matchs » avance.
