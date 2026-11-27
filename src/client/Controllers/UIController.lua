@@ -101,6 +101,7 @@ local TAB_GAP = 4
 local shownWelcome = nil -- dernier résumé « Pendant ton absence… » affiché
 local shownEventWeek = nil -- dernier événement de la semaine annoncé
 local currentTab = "Home"
+local seenAchievements = nil -- succès débloqués au dernier profil reçu (annonce des nouveaux)
 local unlockedTabs = nil -- onglets ouverts au dernier profil reçu (annonce des déblocages)
 
 -- Outils de construction ------------------------------------------------
@@ -383,6 +384,84 @@ local function communityCard(profile)
 	card(children).Parent = content
 end
 
+-- Succès (AchievementService) : rappel sur l'accueil quand des primes attendent.
+local function achievementReminder(profile)
+	local achievements = profile.achievements
+	if type(achievements) ~= "table" or (achievements.ready or 0) <= 0 then
+		return
+	end
+	local coins = 0
+	for _, entry in achievements.list or {} do
+		if entry.unlocked and not entry.claimed then
+			coins += entry.reward
+		end
+	end
+	local reminder = card({
+		label(T("achievement.homeReady", { count = achievements.ready, coins = formatCoins(coins) }), {
+			Font = Enum.Font.GothamBold,
+			TextColor3 = COLORS.gold,
+		}),
+		button(T("achievement.homeOpen"), function()
+			UIController.OpenTab("Prestige")
+		end, { Name = "AchievementsOpen", Size = UDim2.new(0, 260, 0, 44), BackgroundColor3 = COLORS.gold }),
+	})
+	reminder.Name = "AchievementReminder"
+	reminder.Parent = content
+end
+
+-- Liste des succès (onglet Prestige), avec le bouton pour tout récupérer.
+local function achievementCards(profile)
+	local achievements = profile.achievements
+	if type(achievements) ~= "table" or type(achievements.list) ~= "table" then
+		return
+	end
+	local coins = 0
+	for _, entry in achievements.list do
+		if entry.unlocked and not entry.claimed then
+			coins += entry.reward
+		end
+	end
+	local header = {
+		label(T("achievement.title", { unlocked = achievements.unlocked or 0, total = achievements.total or #achievements.list }), {
+			Font = Enum.Font.GothamBold,
+			TextColor3 = COLORS.gold,
+		}),
+		label(T("achievement.intro"), { TextSize = 16 }),
+	}
+	if coins > 0 then
+		table.insert(header, button(T("achievement.claimAll", { coins = formatCoins(coins) }), function()
+			Net.Get("RequestAchievementClaim"):FireServer()
+		end, { Name = "AchievementClaim", Size = UDim2.new(0, 280, 0, 44), BackgroundColor3 = COLORS.gold }))
+	end
+	local headerCard = card(header)
+	headerCard.Name = "Achievements"
+	headerCard.Parent = content
+	for _, entry in achievements.list do
+		local reward = formatCoins(entry.reward)
+		local status, color
+		if entry.claimed then
+			status, color = T("achievement.statusClaimed"), COLORS.muted
+		elseif entry.unlocked then
+			status, color = T("achievement.statusReady", { coins = reward }), COLORS.gold
+		else
+			status, color = T("achievement.statusLocked", { progress = entry.progress, target = entry.target, coins = reward }), COLORS.text
+		end
+		if entry.badge then
+			status ..= " · " .. T("achievement.badge")
+		end
+		local line = card({
+			label(T("achievement." .. entry.id), {
+				Font = Enum.Font.GothamBold,
+				TextColor3 = if entry.unlocked then COLORS.gold else COLORS.text,
+			}),
+			label(T("achievement." .. entry.id .. ".desc"), { TextColor3 = COLORS.muted, TextSize = 16 }),
+			label(status, { Name = "Status", TextColor3 = color, TextSize = 16 }),
+		})
+		line.Name = "Achievement_" .. entry.id
+		line.Parent = content
+	end
+end
+
 function renderers.Home(profile)
 	local club = profile.club
 	local division = Divisions.Get(club.division)
@@ -442,6 +521,7 @@ function renderers.Home(profile)
 	}).Parent =
 		content
 
+	achievementReminder(profile)
 	eventCard(profile.event)
 	dailyCards(profile.daily)
 
@@ -1576,6 +1656,7 @@ function renderers.Prestige(profile)
 		end
 	end
 	card(trophyLines).Parent = content
+	achievementCards(profile)
 
 	local ownedCount = 0
 	for id in cosmetics.owned do
@@ -2195,6 +2276,30 @@ local function refreshTabs()
 	end
 end
 
+-- Annonce les succès qui viennent de se débloquer (pas au premier profil :
+-- un ancien club voit ses primes en attente sur l'accueil).
+local function announceAchievements(profile)
+	local achievements = profile.achievements
+	if type(achievements) ~= "table" or type(achievements.list) ~= "table" then
+		return
+	end
+	local now, fresh = {}, {}
+	for _, entry in achievements.list do
+		if entry.unlocked then
+			now[entry.id] = true
+			if seenAchievements and not seenAchievements[entry.id] then
+				table.insert(fresh, entry.id)
+			end
+		end
+	end
+	if #fresh == 1 then
+		UIController.Notify(T("achievement.unlocked", { name = T("achievement." .. fresh[1]) }), "success")
+	elseif #fresh > 1 then
+		UIController.Notify(T("achievement.unlockedMany", { count = #fresh }), "success")
+	end
+	seenAchievements = now
+end
+
 -- Annonce les onglets qui viennent de se débloquer (pas au premier profil).
 local function announceUnlocks(profile)
 	local now = {}
@@ -2296,6 +2401,7 @@ function UIController.SetProfile(profile)
 	state.cooldownEndsAt = os.clock() + (profile.matchCooldown or 0)
 	state.cupReadyAt = os.clock() + (if type(profile.cup) == "table" then profile.cup.nextIn or 0 else 0)
 	announceUnlocks(profile)
+	announceAchievements(profile)
 	UIController.Refresh()
 	local welcome = type(profile.daily) == "table" and profile.daily.welcome
 	if type(welcome) == "table" and welcome.id ~= shownWelcome then
