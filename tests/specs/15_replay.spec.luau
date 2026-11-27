@@ -189,3 +189,20 @@ H.test("client : le mode accéléré divise la durée par 3, le score suit", fun
 	H.ok(H.findText(gui, "Continuer"), "résultat affiché")
 	H.click(gui, "Continuer")
 end)
+
+H.test("chronologie : plusieurs actions en fin de match finissent avant le coup de sifflet", function()
+	for seed = 1, 3000 do
+		local n = seed % 8
+		local events = {}
+		for i = 1, n do
+			table.insert(events, { minute = 82 + (seed * i) % 9, side = if i % 2 == 0 then "home" else "away", scorer = "X" })
+		end
+		local tl = R.Build(events, seed * 7919, { home = "Offensive", away = "Pressing" })
+		local previousEnd = -1
+		for _, action in tl.actions do
+			assert(action.t >= previousEnd - 1e-6, "actions sans chevauchement, graine " .. seed)
+			previousEnd = action.t + R.ActionSeconds(tl)
+			assert(previousEnd <= tl.duration + 1e-9, "action avant le coup de sifflet final, graine " .. seed)
+		end
+	end
+end)

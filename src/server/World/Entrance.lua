@@ -102,7 +102,7 @@ function Entrance.build(parent: Instance, origin: CFrame, ctx: BuildContext): Mo
 	tag.Name = "ClubTagText"
 
 	-- Écusson importé sur Roblox (voir shared/Brand.lua) : affiché devant le blason.
-	local crestImage = Brand.CrestImage(ctx.slotIndex)
+	local crestImage = Brand.CrestImage(ctx.crest or ctx.slotIndex)
 	if crestImage then
 		local imagePanel = PartUtil.box(
 			crest,
