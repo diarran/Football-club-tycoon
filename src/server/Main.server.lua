@@ -37,6 +37,7 @@ local EventService = require(Services.EventService)
 local FriendService = require(Services.FriendService)
 local LeaderboardService = require(Services.LeaderboardService)
 local CupService = require(Services.CupService)
+local EuroService = require(Services.EuroService)
 local AchievementService = require(Services.AchievementService)
 
 -- Ordre d'initialisation : les données d'abord, puis ce qui en dépend.
@@ -61,6 +62,7 @@ local ORDERED_SERVICES = {
 	{ name = "FriendService", module = FriendService },
 	{ name = "LeaderboardService", module = LeaderboardService },
 	{ name = "CupService", module = CupService },
+	{ name = "EuroService", module = EuroService },
 	-- Après les autres : les succès lisent les titres mis à jour par CosmeticService.
 	{ name = "AchievementService", module = AchievementService },
 }
@@ -119,6 +121,8 @@ local function onPlayerAdded(player: Player)
 	step("FriendService.OnPlayerReady", FriendService.OnPlayerReady, player)
 	-- Classement mondial : état actuel envoyé au joueur.
 	step("LeaderboardService.OnPlayerReady", LeaderboardService.OnPlayerReady, player)
+	-- Coupe d'Europe : photo du club publiée pour les autres serveurs (D3+).
+	step("EuroService.OnPlayerReady", EuroService.OnPlayerReady, player)
 	if profile.temporary then
 		Net.FireClient(
 			"Notify",
@@ -135,6 +139,7 @@ local function onPlayerRemoving(player: Player)
 	step("TournamentService.OnPlayerLeaving", TournamentService.OnPlayerLeaving, player)
 	step("FriendService.OnPlayerLeaving", FriendService.OnPlayerLeaving, player)
 	step("LeaderboardService.OnPlayerLeaving", LeaderboardService.OnPlayerLeaving, player)
+	step("EuroService.OnPlayerLeaving", EuroService.OnPlayerLeaving, player)
 	step("ClubService.OnPlayerLeaving", ClubService.OnPlayerLeaving, player)
 	step("AdminService.OnPlayerLeaving", AdminService.OnPlayerLeaving, player)
 	step("PlayerDataService.Release", PlayerDataService.Release, player)
