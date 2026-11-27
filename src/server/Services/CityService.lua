@@ -33,8 +33,7 @@ local Config = require(Shared.Config)
 local Locale = require(Shared.Locale)
 local Net = require(Shared.Net)
 local PlayerConfig = require(Shared.PlayerConfig)
-local WorldConfig = require(Shared.WorldConfig)
-local Cosmetics = require(Shared.Cosmetics)
+local ClubIdentity = require(Shared.ClubIdentity)
 
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local EconomyService = require(script.Parent.EconomyService)
@@ -72,20 +71,18 @@ local function notEnough(player: Player)
 	return false, T(player, "error.notEnoughCoins", { currency = Config.CURRENCY_NAME })
 end
 
--- Couleur de peinture : « club » = couleur principale du club (palette achetée comprise).
+-- Couleur principale du club (identité choisie, palette achetée ou couleurs de l'emplacement).
+local function clubColor(player: Player, data): Color3
+	return ClubIdentity.Resolve(data, ClubService.GetSlot(player) or 1).primary
+end
+
+-- Couleur de peinture : « club » = couleur principale du club.
 local function paintColor(player: Player, data): Color3
 	local paint = City.GetPaint(data.city.paint)
 	if paint and paint.color then
 		return paint.color
 	end
-	local equipped = data.cosmetics and data.cosmetics.equipped and data.cosmetics.equipped.colors
-	local item = Cosmetics.Get(equipped)
-	if item and item.category == "colors" and item.primary then
-		return item.primary
-	end
-	local slot = ClubService.GetSlot(player) or 1
-	local colors = WorldConfig.CLUB_COLORS[slot] or WorldConfig.CLUB_COLORS[1]
-	return colors.primary
+	return clubColor(player, data)
 end
 
 --------------------------------------------------------------------------------
@@ -538,7 +535,7 @@ function CityService.Snapshot(player: Player, data)
 	local division = data.club and data.club.division
 	local hotelWait = if city.hotelAt > 0 then math.max(0, City.HOTEL_COOLDOWN - (now - city.hotelAt)) else 0
 	local investWait = if city.bank.invest > 0 then math.max(0, City.INVEST_SECONDS - (now - city.bank.investAt)) else 0
-	local club = paintColor(player, { city = { paint = "club" }, cosmetics = data.cosmetics })
+	local club = clubColor(player, data)
 	return {
 		clubColor = { club.R, club.G, club.B }, -- pastille « couleur du club » du concessionnaire
 		cars = table.clone(city.cars),
