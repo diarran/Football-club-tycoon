@@ -88,6 +88,10 @@ local function defaultData()
 		-- Personnalisation achetée (CosmeticService) : owned = { [id] = true },
 		-- equipped = { [catégorie] = id } pour les catégories à objet unique.
 		cosmetics = { owned = {}, equipped = {} },
+		-- Identité du club (shared/ClubIdentity.lua, CosmeticService) : couleurs
+		-- ("" = celles de l'emplacement), motif du maillot, écusson (0 = celui
+		-- de l'emplacement), motifs achetés en FC Coins.
+		identity = { primary = "", secondary = "", pattern = "plain", crest = 0, patterns = {} },
 		-- Salle des trophées : titres de champion de D1, trophées déjà annoncés.
 		trophies = { titles = 0, seen = 0 },
 		-- Achats Robux (MonetizationService) : receipts = { [PurchaseId] = os.time() }

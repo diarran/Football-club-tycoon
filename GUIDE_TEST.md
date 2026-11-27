@@ -97,11 +97,22 @@ Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne roug
    et un remplaçant joue à sa place. Après le match suivant, « ✅ … a purgé sa
    suspension » s'affiche pour un joueur suspendu.
 
+9 quater. **Couleurs et maillot du club** : après 5 matchs, ouvre **Prestige** ; tout en
+   haut, la carte **Identité du club**. Clique une pastille de **Couleur principale**
+   (par exemple violet) : un ✓ apparaît, l'aperçu du maillot change, et ton terrain
+   (sièges des tribunes, drapeaux, portique) se repeint. Choisis un **Motif du
+   maillot** (Moitié-moitié est gratuit) puis un **Écusson** (1 à 6) : l'écusson du
+   HUD change. Lance un match : les joueurs de ton équipe portent le motif et un
+   short à ta couleur secondaire. Le bouton **Tout remettre d'origine** remet tout
+   comme avant.
+
 **À 2 joueurs (Local Server, 2 Players)**
 
 10. **Deux clubs** : chaque joueur a son terrain et voit l'autre dans **Classement**.
 11. **Défi** : dans **Matchs**, le joueur 1 clique **Défier** ; le joueur 2 accepte :
     les deux voient le résultat.
+11 bis. **Couleurs vues par l'autre** : le joueur 1 change ses couleurs dans **Prestige** ;
+    le joueur 2 voit le terrain du joueur 1 se repeindre.
 12. **Visiteur** : le joueur 2 va sur le terrain du joueur 1, qui lance un match : le
     joueur 2 voit le match se jouer, sans que sa caméra bouge.
 13. **Tournoi** : environ **3 minutes** après le Start, inscris les deux joueurs dans

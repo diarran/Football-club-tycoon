@@ -132,7 +132,7 @@ function Offices.build(parent: Instance, origin: CFrame, level: number, ctx: Bui
 			{ shape = Enum.PartType.Cylinder, rotY = 90 }
 		)
 		-- Écusson importé (shared/Brand.lua) sur les deux faces du disque.
-		local crestImage = Brand.CrestImage(ctx.slotIndex)
+		local crestImage = Brand.CrestImage(ctx.crest or ctx.slotIndex)
 		if crestImage then
 			for _, face in { Enum.NormalId.Left, Enum.NormalId.Right } do
 				local surface = Instance.new("SurfaceGui")

@@ -121,6 +121,26 @@ local function concreteStand(parent: Instance, frame: CFrame, name: string, spec
 		)
 	end
 
+	-- Drapeaux du club en haut de la tribune (couleurs principale et secondaire).
+	do
+		local depth = spec.rows * ROW_D
+		local topY = spec.rows * ROW_H
+		for i, sx in { -1, 1 } do
+			local x = sx * (spec.length / 2 - 3)
+			PartUtil.block(stand, frame, "FlagPole", Vector3.new(0.3, 6, 0.3), Vector3.new(x, topY, depth - 0.4), C.Metal, Enum.Material.Metal)
+			PartUtil.box(
+				stand,
+				frame,
+				"ClubFlag",
+				Vector3.new(2.6, 1.6, 0.1),
+				Vector3.new(x + sx * 1.4, topY + 5.1, depth - 0.4),
+				if i == 1 then ctx.primary else ctx.secondary,
+				Enum.Material.Fabric,
+				{ canCollide = false, castShadow = false }
+			)
+		end
+	end
+
 	if spec.roof then
 		local depth = spec.rows * ROW_D
 		local topY = spec.rows * ROW_H

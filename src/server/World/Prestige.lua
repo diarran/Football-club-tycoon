@@ -66,6 +66,15 @@ local function kitMannequin(parent: Instance, origin: CFrame, x: number, z: numb
 		strip("Sash", Vector3.new(0.45, 2.6, 0.06), Vector3.new(0, 3.9, front), 40)
 	elseif kit.pattern == "halves" then
 		strip("Half", Vector3.new(1, 2.2, 0.92), Vector3.new(0.5, 3.9, 0))
+	elseif kit.pattern == "band" then
+		strip("Band", Vector3.new(2.02, 0.6, 0.92), Vector3.new(0, 3.9, 0))
+	elseif kit.pattern == "pinstripes" then
+		for _, x in { -0.6, -0.2, 0.2, 0.6 } do
+			strip("Pinstripe", Vector3.new(0.12, 2.2, 0.06), Vector3.new(x, 3.9, front))
+		end
+	elseif kit.pattern == "chevron" then
+		strip("Chevron", Vector3.new(0.3, 1.3, 0.06), Vector3.new(-0.42, 4.3, front), 55)
+		strip("Chevron", Vector3.new(0.3, 1.3, 0.06), Vector3.new(0.42, 4.3, front), -55)
 	end
 	PartUtil.ball(m, origin, "Head", 1.1, base + Vector3.new(0, 5.5, 0), C.Plaster, Enum.Material.SmoothPlastic)
 	return m

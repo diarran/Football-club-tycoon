@@ -94,7 +94,11 @@ local function getPool()
 		local body = newPart(folder, "ReplayPlayer", Vector3.new(1.4, 2.6, 0.9))
 		local head = newPart(folder, "ReplayHead", Vector3.new(1.1, 1.1, 1.1), Enum.PartType.Ball)
 		head.Color = Color3.fromRGB(234, 190, 150)
-		pool.players[index] = { body = body, head = head }
+		-- Short et deux bandes de motif (couleur secondaire de la tenue).
+		local shorts = newPart(folder, "ReplayShorts", Vector3.new(1.44, 0.9, 0.94))
+		local d1 = newPart(folder, "ReplayPattern", Vector3.new(0.3, 1.7, 0.94))
+		local d2 = newPart(folder, "ReplayPattern", Vector3.new(0.3, 1.7, 0.94))
+		pool.players[index] = { body = body, head = head, shorts = shorts, d1 = d1, d2 = d2 }
 	end
 	pool.ball = newPart(folder, "ReplayBall", Vector3.new(0.9, 0.9, 0.9), Enum.PartType.Ball)
 	pool.ball.Color = Color3.new(1, 1, 1)
@@ -296,6 +300,33 @@ local function placeCrowd(state)
 end
 
 -- Hauteur du bloc selon la tactique (studs vers le but adverse, gardien exclu).
+-- Motifs du maillot dans le replay : pour chaque bande, { taille, x, y, rotation Z }.
+-- y = 0.45 : milieu du maillot (le bas du corps est couvert par le short).
+local PATTERN_STRIPS = {
+	plain = {},
+	stripes = { { Vector3.new(0.3, 1.7, 0.94), -0.35, 0.45, 0 }, { Vector3.new(0.3, 1.7, 0.94), 0.35, 0.45, 0 } },
+	pinstripes = { { Vector3.new(0.1, 1.7, 0.94), -0.3, 0.45, 0 }, { Vector3.new(0.1, 1.7, 0.94), 0.3, 0.45, 0 } },
+	hoops = { { Vector3.new(1.44, 0.3, 0.94), 0, 0.8, 0 }, { Vector3.new(1.44, 0.3, 0.94), 0, 0.1, 0 } },
+	band = { { Vector3.new(1.44, 0.5, 0.94), 0, 0.45, 0 } },
+	halves = { { Vector3.new(0.72, 1.7, 0.94), 0.35, 0.45, 0 } },
+	sash = { { Vector3.new(0.3, 2, 0.94), 0, 0.45, 40 } },
+	chevron = { { Vector3.new(0.25, 0.9, 0.94), -0.3, 0.7, 55 }, { Vector3.new(0.25, 0.9, 0.94), 0.3, 0.7, -55 } },
+}
+local HIDDEN = CFrame.new(0, -60, 0)
+
+-- Tenue reçue du serveur ({ pattern, shirt = {r,g,b}, detail = {r,g,b} }),
+-- ou tenue unie à la couleur `fallback` (ancien format de replay).
+local function readKit(kit, fallback: Color3)
+	if type(kit) ~= "table" then
+		return { pattern = "plain", shirt = fallback, detail = Color3.fromRGB(245, 245, 245) }
+	end
+	return {
+		pattern = if type(kit.pattern) == "string" and PATTERN_STRIPS[kit.pattern] then kit.pattern else "plain",
+		shirt = toColor(kit.shirt, fallback),
+		detail = toColor(kit.detail, Color3.fromRGB(245, 245, 245)),
+	}
+end
+
 local LINE_SHIFT = { Offensive = 6, Pressing = 9, Defensive = -7, Counter = -4, Balanced = 0 }
 
 local function setupPlayers(state)
@@ -313,6 +344,23 @@ local function setupPlayers(state)
 			color = if team == "home" then Color3.fromRGB(250, 200, 40) else Color3.fromRGB(120, 220, 90)
 		end
 		parts.body.Color = color
+		-- Motif : seulement pour les joueurs de champ (le gardien reste uni).
+		local kit = if team == "home" then state.homeKit else state.awayKit
+		local strips = if slot[3] == "GK" then {} else PATTERN_STRIPS[kit.pattern] or {}
+		parts.shorts.Color = if slot[3] == "GK" then Color3.fromRGB(30, 30, 36) else kit.detail
+		local offsets = {}
+		for i, part in { parts.d1, parts.d2 } do
+			local strip = strips[i]
+			if strip then
+				part.Size = strip[1]
+				part.Color = kit.detail
+				part.Transparency = 0
+				offsets[i] = CFrame.new(strip[2], strip[3], 0) * CFrame.Angles(0, 0, math.rad(strip[4]))
+			else
+				part.Transparency = 1
+				part.CFrame = state.origin * HIDDEN
+			end
+		end
 		local slotX = slot[1] + (if slot[3] == "GK" then 0 else shifts[team])
 		local member = {
 			parts = parts,
@@ -323,6 +371,7 @@ local function setupPlayers(state)
 			x = slotX * dir,
 			z = slot[2] * dir,
 			facing = CFrame.Angles(0, if team == "home" then -math.pi / 2 else math.pi / 2, 0),
+			strips = offsets,
 		}
 		table.insert(state.squad, member)
 	end
@@ -469,6 +518,13 @@ local function step(dt: number)
 		local base = state.origin * CFrame.new(m.x, TURF_Y + 1.3, m.z) * m.facing
 		m.parts.body.CFrame = base
 		m.parts.head.CFrame = base * CFrame.new(0, 1.85, 0)
+		m.parts.shorts.CFrame = base * CFrame.new(0, -0.86, 0)
+		if m.strips[1] then
+			m.parts.d1.CFrame = base * m.strips[1]
+		end
+		if m.strips[2] then
+			m.parts.d2.CFrame = base * m.strips[2]
+		end
 	end
 
 	-- Public : debout et qui saute après un but (sinon immobile, aucun calcul).
@@ -588,6 +644,8 @@ function MatchReplayController.Play(replay, options): boolean
 			homeColor = toColor(replay.homeColor, Color3.fromRGB(200, 40, 50)),
 			awayColor = toColor(replay.awayColor, Color3.fromRGB(240, 240, 240)),
 		}
+		state.homeKit = readKit(replay.homeKit, state.homeColor)
+		state.awayKit = readKit(replay.awayKit, state.awayColor)
 		setupPlayers(state)
 		placeCrowd(state)
 		p.board.CFrame = origin * CFrame.new(0, 26, HALF_W + 30)

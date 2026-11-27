@@ -58,6 +58,7 @@ local VipLounge = require(World:WaitForChild("VipLounge"))
 local Entrance = require(World:WaitForChild("Entrance"))
 local Prestige = require(World:WaitForChild("Prestige"))
 local Cosmetics = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Cosmetics"))
+local ClubIdentity = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ClubIdentity"))
 
 type BuildContext = PartUtil.BuildContext
 export type Levels = { [string]: number }
@@ -69,6 +70,8 @@ export type Style = {
 	decor: { [string]: any }?,
 	trophies: { any }?,
 	titles: number?,
+	-- Identité choisie (ClubIdentity.Choices) : couleurs, motif, écusson.
+	identity: { primary: Color3?, secondary: Color3?, pattern: string?, crest: number? }?,
 }
 type FacilityBuilder = (parent: Instance, origin: CFrame, level: number, ctx: BuildContext) -> Model
 
@@ -122,14 +125,33 @@ local function cosmetic(id: any, category: string): any
 	return nil
 end
 
--- Couleurs du club : celles de l'emplacement, ou la palette achetée (attribut « Colors »).
-local function makeContext(slotIndex: number, clubName: string, colorsId: any): BuildContext
-	local colors = cosmetic(colorsId, "colors") or WorldConfig.CLUB_COLORS[slotIndex] or WorldConfig.CLUB_COLORS[1]
+-- Couleurs du club : palette achetée (attribut « Colors »), sinon identité
+-- choisie (attributs ClubPrimary / ClubSecondary / Crest / Pattern), sinon
+-- couleurs de l'emplacement (voir ClubIdentity.ResolveColors).
+local function makeContext(slotIndex: number, clubName: string, colorsId: any, identity: any): BuildContext
+	identity = identity or {}
+	local primary, secondary = ClubIdentity.ResolveColors(slotIndex, cosmetic(colorsId, "colors"), identity)
 	return {
 		slotIndex = slotIndex,
 		clubName = clubName,
-		primary = colors.primary,
-		secondary = colors.secondary,
+		primary = primary,
+		secondary = secondary,
+		crest = if ClubIdentity.ValidCrest(identity.crest) then identity.crest else nil,
+		pattern = if ClubIdentity.Pattern(identity.pattern) then identity.pattern else nil,
+	}
+end
+
+-- Identité relue sur un terrain déjà construit (reconstruction d'une installation).
+local function identityFromPlot(plot: Model)
+	local function color(name: string): Color3?
+		local value = plot:GetAttribute(name)
+		return if typeof(value) == "Color3" then value else nil
+	end
+	return {
+		primary = color("IdentityPrimary"),
+		secondary = color("IdentitySecondary"),
+		crest = plot:GetAttribute("Crest"),
+		pattern = plot:GetAttribute("Pattern"),
 	}
 end
 
@@ -211,7 +233,7 @@ end
 
 -- Salle des trophées, statue, décorations, éclairage et tenue (purement visuels).
 local function buildPrestige(plot: Model, slotIndex: number, look: Style, ctx: BuildContext)
-	local kit = Prestige.resolveKit(cosmetic(look.kit, "kit"), ctx)
+	local kit = ClubIdentity.ResolveKit(cosmetic(look.kit, "kit"), ctx.primary, ctx.secondary, ctx.pattern)
 	Prestige.buildTrophyRoom(plot, facilityOrigin(slotIndex, "TrophyRoom"), look.trophies or {}, look.titles or 0, kit, ctx)
 	local statue = cosmetic(look.statue, "statue")
 	if statue then
@@ -285,7 +307,15 @@ function WorldBuilder.buildPlot(slotIndex: number, levelsOrOptions: { [string]: 
 		ClubName = finalName,
 		Colors = if cosmetic(look.colors, "colors") then look.colors else nil,
 	})
-	local ctx = makeContext(slotIndex, finalName, look.colors)
+	local identity = look.identity or {}
+	local ctx = makeContext(slotIndex, finalName, look.colors, identity)
+	-- Identité gardée sur le terrain (reconstruction d'une installation, tests).
+	plot:SetAttribute("IdentityPrimary", identity.primary)
+	plot:SetAttribute("IdentitySecondary", identity.secondary)
+	plot:SetAttribute("Crest", ctx.crest)
+	plot:SetAttribute("Pattern", ctx.pattern)
+	plot:SetAttribute("ClubPrimary", ctx.primary)
+	plot:SetAttribute("ClubSecondary", ctx.secondary)
 
 	buildGround(plot, slotIndex)
 	Entrance.build(plot, facilityOrigin(slotIndex, "Entrance"), ctx)
@@ -309,7 +339,7 @@ function WorldBuilder.setFacilityLevel(plot: Model, facilityId: string, level: n
 		return nil
 	end
 	local clubName = plot:GetAttribute("ClubName")
-	local ctx = makeContext(slotIndex, if typeof(clubName) == "string" then clubName else WorldConfig.DEFAULT_CLUB_NAME, plot:GetAttribute("Colors"))
+	local ctx = makeContext(slotIndex, if typeof(clubName) == "string" then clubName else WorldConfig.DEFAULT_CLUB_NAME, plot:GetAttribute("Colors"), identityFromPlot(plot))
 
 	local old = plot:FindFirstChild(facilityId)
 	if old then

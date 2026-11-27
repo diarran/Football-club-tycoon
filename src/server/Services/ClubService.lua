@@ -16,6 +16,7 @@ local TextService = game:GetService("TextService")
 
 local Shared = ReplicatedStorage.Shared
 local Buildings = require(Shared.Buildings)
+local ClubIdentity = require(Shared.ClubIdentity)
 local Config = require(Shared.Config)
 local ClubNames = require(Shared.ClubNames)
 local Divisions = require(Shared.Divisions)
@@ -135,6 +136,8 @@ local function styleOf(data)
 		lighting = equipped.lighting,
 		statue = equipped.statue,
 		kit = equipped.kit,
+		-- Identité choisie (ClubIdentity) : couleurs, motif, écusson.
+		identity = ClubIdentity.Choices(data),
 		decor = decor, -- WorldBuilder ne garde que les décorations
 		trophies = Trophies.Earned(data.club.division, data.club.stats, data.trophies.titles),
 		titles = data.trophies.titles,
@@ -192,6 +195,7 @@ function ClubService.GetClubList()
 	for slotIndex, player in slots do
 		local data = PlayerDataService.GetData(player)
 		if data then
+			local look = ClubIdentity.Resolve(data, slotIndex)
 			table.insert(list, {
 				id = "player:" .. player.UserId,
 				ownerName = player.DisplayName,
@@ -206,6 +210,12 @@ function ClubService.GetClubList()
 				buildings = table.clone(data.buildings),
 				trophies = #Trophies.Earned(data.club.division, data.club.stats, data.trophies.titles),
 				titles = data.trophies.titles,
+				-- Identité visible par les autres joueurs (couleurs, écusson).
+				colors = {
+					primary = ClubIdentity.ToArray(look.primary),
+					secondary = ClubIdentity.ToArray(look.secondary),
+					crest = look.crest,
+				},
 			})
 		end
 	end

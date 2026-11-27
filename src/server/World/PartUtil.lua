@@ -33,6 +33,8 @@ export type BuildContext = {
 	clubName: string,
 	primary: Color3, -- couleur principale du club
 	secondary: Color3, -- couleur secondaire du club
+	crest: number?, -- écusson choisi (1 à 6), sinon celui de l'emplacement
+	pattern: string?, -- motif du maillot choisi (ClubIdentity), sinon uni
 }
 
 -- Crée un Model nommé, avec des Attributes facultatifs.
