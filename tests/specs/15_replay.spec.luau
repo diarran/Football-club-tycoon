@@ -88,6 +88,30 @@ H.test("chronologie : de 0 à 14 buts, toujours entre 30 et 60 secondes", functi
 	end
 end)
 
+H.test("chronologie : buts et occasions en fin de match, tout se joue avant le coup de sifflet", function()
+	for goals = 0, 12 do
+		local events = {}
+		for i = 1, goals do
+			table.insert(events, { minute = 78 + (i % 13), side = if i % 2 == 0 then "away" else "home", scorer = "J" .. i })
+		end
+		table.sort(events, function(a, b)
+			return a.minute < b.minute
+		end)
+		local home, away = 0, 0
+		for _, e in events do
+			if e.side == "home" then
+				home += 1
+			else
+				away += 1
+			end
+		end
+		for seed = 1, 30 do
+			local tactics = { home = "Offensive", away = "Pressing" }
+			checkTimeline(R.Build(events, seed * 7919 + goals, tactics), events, home, away, goals .. " buts tardifs")
+		end
+	end
+end)
+
 H.test("le replay n'a aucun effet sur le résultat", function()
 	-- 1) Il ne touche ni aux événements ni au tirage aléatoire des matchs.
 	local events = { { minute = 12, side = "home", scorer = "A" }, { minute = 70, side = "away", scorer = "B" } }
