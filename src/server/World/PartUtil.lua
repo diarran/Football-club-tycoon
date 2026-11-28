@@ -532,4 +532,55 @@ function PartUtil.countParts(root: Instance): number
 	return count
 end
 
+-- Allège un décor fini pour les téléphones (appelé une fois après chaque construction) :
+--   - personne n'utilise l'événement Touched sur le décor : CanTouch coupé partout
+--     (sauf sièges et points d'apparition, qui en ont besoin) ;
+--   - une pièce qu'on traverse n'a pas besoin d'être visée par les rayons : CanQuery coupé ;
+--   - les détails (masquables) ne bloquent plus le joueur ni la caméra ;
+--   - pas d'ombre pour les petites pièces, le néon (il éclaire) et le verre.
+-- Les pièces non ancrées (véhicules, personnages) ne sont pas touchées.
+PartUtil.SMALL_SHADOW = 1.5 -- studs : en dessous (plus grande dimension), pas d'ombre
+
+local function needsTouch(part: BasePart): boolean
+	return part:IsA("Seat") or part:IsA("VehicleSeat") or part:IsA("SpawnLocation")
+end
+
+local function hasPrompt(part: BasePart): boolean
+	return part:FindFirstChildWhichIsA("ProximityPrompt") ~= nil or part:FindFirstChildWhichIsA("ClickDetector") ~= nil
+end
+
+function PartUtil.optimize(root: Instance?): number
+	if not root then
+		return 0
+	end
+	local changed = 0
+	local list = root:GetDescendants()
+	if root:IsA("BasePart") then
+		table.insert(list, root)
+	end
+	for _, part in list do
+		if not part:IsA("BasePart") or part.Anchored ~= true or needsTouch(part) then
+			continue
+		end
+		changed += 1
+		part.CanTouch = false
+		if part:GetAttribute("Detail") == true then
+			part.CanCollide = false
+			part.CastShadow = false
+		end
+		if part.CanCollide == false and not hasPrompt(part) then
+			part.CanQuery = false
+		end
+		local size = part.Size
+		if
+			math.max(size.X, size.Y, size.Z) < PartUtil.SMALL_SHADOW
+			or part.Material == Enum.Material.Neon
+			or part.Material == Enum.Material.Glass
+		then
+			part.CastShadow = false
+		end
+	end
+	return changed
+end
+
 return PartUtil
