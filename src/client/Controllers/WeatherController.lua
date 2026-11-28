@@ -11,6 +11,8 @@
 	- Paramètres > « Effets météo » : coupe la pluie, la neige et le brouillard.
 	  Le jour/nuit et les projecteurs restent (ils ne coûtent presque rien).
 	- Pendant un replay : projecteurs plus forts, allumés aussi par mauvais temps.
+	- Projecteurs loin de la caméra (plus de 600 studs, 320 sur téléphone) :
+	  éteints pour ce joueur seulement.
 ]]
 
 local Lighting = game:GetService("Lighting")
@@ -70,10 +72,41 @@ local function isFloodlight(instance: Instance): boolean
 	return parent ~= nil and LIGHT_PARTS[parent.Name] == true
 end
 
-local function applyLight(light, on: boolean)
-	light.Enabled = on
+-- Projecteurs loin de la caméra : éteints pour ce joueur (on ne voit pas leur
+-- lumière de si loin, et chaque lumière allumée coûte au rendu, surtout sur téléphone).
+local LIGHT_FAR_DESKTOP = 600
+local LIGHT_FAR_MOBILE = 320
+
+local function cameraPosition(): Vector3?
+	local camera = workspace.CurrentCamera
+	local ok, position = pcall(function()
+		return camera.CFrame.Position
+	end)
+	return if ok then position else nil
+end
+
+local function isFar(light, cameraPos: Vector3?): boolean
+	local part = light.Parent
+	if not cameraPos or not (part and part:IsA("BasePart")) then
+		return false
+	end
+	local limit = if isMobile() then LIGHT_FAR_MOBILE else LIGHT_FAR_DESKTOP
+	local ok, far = pcall(function()
+		return (part.Position - cameraPos).Magnitude > limit
+	end)
+	return ok and far == true
+end
+
+local function applyLight(light, on: boolean, cameraPos: Vector3?)
+	local enabled = on and not isFar(light, cameraPos)
+	if light.Enabled ~= enabled then
+		light.Enabled = enabled
+	end
 	local base = lights[light] or 1
-	light.Brightness = if on and matchMode then base * MATCH_BRIGHTNESS else base
+	local brightness = if enabled and matchMode then base * MATCH_BRIGHTNESS else base
+	if light.Brightness ~= brightness then
+		light.Brightness = brightness
+	end
 end
 
 local function track(instance: Instance)
@@ -81,7 +114,7 @@ local function track(instance: Instance)
 		lights[instance] = instance.Brightness or 1
 		lightCount += 1
 		if current.lightsOn ~= nil then
-			applyLight(instance, current.lightsOn)
+			applyLight(instance, current.lightsOn, cameraPosition())
 		end
 	end
 end
@@ -205,11 +238,13 @@ function WeatherController.Update(force: boolean?)
 	end
 
 	local lightsOn = lightsWanted(kind, night)
-	if force or lightsOn ~= current.lightsOn then
+	-- Lumières allumées : on revoit aussi lesquelles sont trop loin (la caméra bouge).
+	if force or lightsOn ~= current.lightsOn or lightsOn then
 		current.lightsOn = lightsOn
+		local cameraPos = cameraPosition()
 		for light in lights do
 			if light.Parent then
-				applyLight(light, lightsOn)
+				applyLight(light, lightsOn, cameraPos)
 			end
 		end
 	end

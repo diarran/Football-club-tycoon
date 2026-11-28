@@ -269,7 +269,9 @@ function WorldBuilder.buildDistrict(parent: Instance?): Model
 	if existing and existing:IsA("Model") then
 		return existing
 	end
-	return District.build(target)
+	local district = District.build(target)
+	PartUtil.optimize(district)
+	return district
 end
 
 function WorldBuilder.getPlot(slotIndex: number): Model?
@@ -331,6 +333,7 @@ function WorldBuilder.buildPlot(slotIndex: number, levelsOrOptions: { [string]: 
 	end
 	buildPrestige(plot, slotIndex, look, ctx)
 	CampusZone.build(plot, WorldConfig.getPlotCFrame(slotIndex), look.campus, ctx, { trophies = look.trophies or {}, titles = look.titles or 0 })
+	PartUtil.optimize(plot) -- allègement téléphone (contacts, rayons, petites ombres)
 
 	plot.Parent = Workspace
 	return plot
@@ -353,7 +356,9 @@ function WorldBuilder.setFacilityLevel(plot: Model, facilityId: string, level: n
 	if old then
 		old:Destroy()
 	end
-	return buildFacility(plot, slotIndex, facilityId, clampLevel(level), ctx)
+	local model = buildFacility(plot, slotIndex, facilityId, clampLevel(level), ctx)
+	PartUtil.optimize(model)
+	return model
 end
 
 function WorldBuilder.setClubName(plot: Model, clubName: string)

@@ -1,4 +1,4 @@
-# Tester le jeu (environ 40 minutes)
+# Tester le jeu (environ 45 minutes)
 
 ## 1. Récupérer le fichier du jeu
 
@@ -31,7 +31,7 @@ Onglet **Test** > dans la zone **Clients and Servers**, choisis **Local Server**
 Joue dans les fenêtres des joueurs. Pour finir : **Cleanup** (ou Stop) dans la fenêtre
 principale.
 
-## 5. Ce qu'il faut vérifier (24 points, environ 40 minutes)
+## 5. Ce qu'il faut vérifier (25 points, environ 45 minutes)
 
 Note ✅ ou ❌ pour chaque point, avec son numéro. Si c'est ❌, fais une capture
 d'écran. Pendant tout le test, la fenêtre **Sortie** ne doit montrer **aucune ligne
@@ -42,8 +42,8 @@ rouge**.
 1. **Base** (déjà validée le 26/11) : ton personnage apparaît sur ton terrain, le haut
    de l'écran montre l'écusson, le club, **D7** et **2 500 FC** ; le bouton **Club**
    ouvre le menu.
-2. **Début de partie** : les **8 onglets** sont visibles, mais **Gestion**,
-   **Classement** et **Prestige** ont un cadenas 🔒 (un clic explique quand ils
+2. **Début de partie** : les **9 onglets** sont visibles, mais **Gestion**,
+   **Création**, **Classement** et **Prestige** ont un cadenas 🔒 (un clic explique quand ils
    s'ouvrent). Le bouton **Club** et l'onglet à utiliser sont en **doré**. Suis le
    bandeau vert du tutoriel jusqu'au bout : un message annonce « Nouvel onglet
    débloqué : Gestion », puis le bandeau montre **Objectif de départ 1/6**. Fais une
@@ -109,51 +109,61 @@ rouge**.
 13. **Gestion** : **Embaucher** le Médecin fait baisser le solde (ou reste à ∞ avec le
     code admin) ; **Signer le contrat** d'un sponsor le fait passer dans « Les contrats
     de sponsoring ».
-14. **Prestige** : la salle des trophées et les objets de personnalisation s'affichent
+14. **Mode Création** : onglet **Création** (ouvert grâce au code admin). En haut,
+    **« Parcelles débloquées : 0 / 12 »** et une grille de 12 parcelles 🔒. Il faut
+    être au moins en **D6** : si ton club est encore en D7, gagne encore quelques
+    matchs. Clique **1 🔒**, puis **Débloquer** : la parcelle devient libre. Clique
+    **Construire sur la parcelle 1** : le bâtiment apparaît en 3D derrière ton stade.
+    Dans sa fiche, **Tourner** le fait pivoter et **Déplacer** l'envoie sur une autre
+    parcelle débloquée (débloques-en une 2e). **Améliorer** le fait monter jusqu'au
+    niveau 3.
+15. **Prestige** : la salle des trophées et les objets de personnalisation s'affichent
     (la boutique Robux reste cachée tant que ses numéros ne sont pas renseignés).
-15. **Succès** : gagne un match : un message annonce **« Succès débloqué : Première
+16. **Succès** : gagne un match : un message annonce **« Succès débloqué : Première
     victoire »** et l'**Accueil** montre une carte dorée avec **Voir mes succès**. Ce
     bouton ouvre **Prestige**, où la carte **Succès : 1/20** liste les 20 succès avec
     leur progression (ex. « Progression : 1/10 »). **Récupérer 100 FC** ajoute 100 FC
     et la ligne passe à « Récompense déjà récupérée ». (Les badges Roblox ne se donnent
     pas dans Studio : c'est normal, voir GUIDE_BADGES.md.)
-16. **Couleurs et maillot du club** : dans **Prestige**, tout en haut, la carte
+17. **Couleurs et maillot du club** : dans **Prestige**, tout en haut, la carte
     **Identité du club**. Clique une pastille de **Couleur principale** (par exemple
     violet) : un ✓ apparaît, l'aperçu du maillot change, et ton terrain (sièges des
     tribunes, drapeaux, portique) se repeint. Choisis un **Motif du maillot**
     (Moitié-moitié est gratuit) puis un **Écusson** (1 à 6) : l'écusson du HUD change.
     Lance un match : tes joueurs portent le motif et un short à ta couleur secondaire.
     **Tout remettre d'origine** remet tout comme avant.
-17. **Classement** : la carte **Classement mondial** et ses 3 boutons (Cette semaine,
+18. **Classement** : la carte **Classement mondial** et ses 3 boutons (Cette semaine,
     Meilleurs clubs, Trophées) ; dans Studio elle dit « Mode test : seulement les clubs
     de ce serveur ». Sur la place, le grand panneau **CLASSEMENT MONDIAL** change de
     tableau toutes les 12 secondes.
-18. **Langue et son** : dans **Paramètres**, 4 boutons de langue. **English**,
+19. **Langue et son** : dans **Paramètres**, 4 boutons de langue. **English**,
     **Español** puis **Português** traduisent tout le menu et les panneaux du stade
     (aucun mot français), puis remets **Français**. **Volume du son** sur **Muet**
     coupe les sons.
-19. **Téléphone** : onglet **Test** > **Device**, choisis un téléphone. Les onglets
-    passent sur **2 rangées de 4**, tous lisibles, et le contenu reste dessous. Dans
+20. **Téléphone** : onglet **Test** > **Device**, choisis un téléphone. Les onglets
+    passent sur **2 rangées**, tous lisibles, et le contenu reste dessous. Dans
     **Matchs**, le premier bouton **Jouer** arrive avant la Coupe nationale. Joue un
     match : si la fenêtre de résultat est plus haute que l'écran, on peut la faire
-    défiler et le bouton **Continuer** reste atteignable.
+    défiler et le bouton **Continuer** reste atteignable. Marche ensuite jusqu'au
+    terrain le plus éloigné : le décor se charge pendant que tu avances, et une fois
+    arrivé rien ne manque (bâtiments, arbres, panneaux).
 
 **À 2 joueurs (Local Server, 2 Players)**
 
-20. **Deux clubs** : chaque joueur a son terrain et voit l'autre dans **Classement**.
-21. **Défi** : dans **Matchs**, le joueur 1 clique **Défier** ; le joueur 2 accepte :
+21. **Deux clubs** : chaque joueur a son terrain et voit l'autre dans **Classement**.
+22. **Défi** : dans **Matchs**, le joueur 1 clique **Défier** ; le joueur 2 accepte :
     les deux voient le résultat.
-22. **Visiteur et tournoi** : le joueur 2 va sur le terrain du joueur 1, qui lance un
+23. **Visiteur et tournoi** : le joueur 2 va sur le terrain du joueur 1, qui lance un
     match : le joueur 2 voit le match se jouer, sans que sa caméra bouge. Environ
     **3 minutes** après le Start, inscris les deux joueurs au **tournoi** dans
     **Matchs** ; un vainqueur est annoncé.
 
-23. **Couleurs vues par l'autre** : le joueur 1 change ses couleurs dans **Prestige** ;
+24. **Couleurs vues par l'autre** : le joueur 1 change ses couleurs dans **Prestige** ;
     le joueur 2 voit le terrain du joueur 1 se repeindre.
 
 **Dans le jeu publié (sauvegarde active)**
 
-24. **Retour au jeu** : joue un peu, quitte, attends **5 minutes** et reviens : ton
+25. **Retour au jeu** : joue un peu, quitte, attends **5 minutes** et reviens : ton
     solde, ton staff, tes contrats, tes titulaires, ta coupe et tes couleurs sont toujours là, et une
     fenêtre **« Pendant ton absence… »** indique ce que ton club a rapporté.
 

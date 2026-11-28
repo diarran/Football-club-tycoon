@@ -352,6 +352,7 @@ function LeaderboardService.BuildBoard()
 		local p = Instance.new("Part")
 		p.Name = name
 		p.Anchored = true
+		p.CanTouch = false -- décor : aucun contact à calculer (téléphone)
 		p.Size = size
 		p.CFrame = CFrame.new(base + offset)
 		p.Color = color
