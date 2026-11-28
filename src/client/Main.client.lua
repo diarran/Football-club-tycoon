@@ -18,6 +18,9 @@ local MatchReplayController = require(Controllers.MatchReplayController)
 local SoundController = require(Controllers.SoundController)
 local WeatherController = require(Controllers.WeatherController)
 local DetailController = require(Controllers.DetailController)
+local CityController = require(Controllers.CityController)
+local CarController = require(Controllers.CarController)
+local TrafficController = require(Controllers.TrafficController)
 
 -- Chaque contrôleur démarre séparément : si l'un échoue (caméra, tutoriel…),
 -- le menu et le HUD restent utilisables et l'erreur s'affiche dans la sortie.
@@ -34,6 +37,10 @@ start("TutorialController", TutorialController.Init, UIController.GetScreenGui()
 start("WorldTextController", WorldTextController.Init)
 start("WeatherController", WeatherController.Init)
 start("DetailController", DetailController.Init)
+-- Centre-ville : boutons « Ma voiture » / « Ville », guichets, conduite, circulation.
+start("CityController", CityController.Init, UIController.GetScreenGui())
+start("CarController", CarController.Init, UIController.GetScreenGui())
+start("TrafficController", TrafficController.Init)
 start("SoundController", function()
 	SoundController.Init()
 	-- Son de clic sur tous les boutons (menus, replay, tutoriel…).
@@ -77,12 +84,14 @@ UIController.OnSettingChanged = function(settingId, value)
 		WeatherController.SetEffectsEnabled(value)
 	elseif settingId == "details" then
 		DetailController.SetEnabled(value)
+		TrafficController.SetDetails(value)
 	end
 end
 
 UIController.OnLanguageChanged = function()
 	TutorialController.RefreshLanguage()
 	WorldTextController.RefreshAll()
+	CityController.Refresh()
 end
 
 -- Ambiance du replay 3D : public, clameur et son de but.
@@ -102,6 +111,7 @@ end
 
 local function onProfile(profile)
 	UIController.SetProfile(profile)
+	CityController.SetProfile(profile)
 	TutorialController.Update(profile)
 end
 

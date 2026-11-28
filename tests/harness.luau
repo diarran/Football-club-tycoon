@@ -314,6 +314,15 @@ local function newInstance(className: string)
 		inst.PivotTo = function(self, cf)
 			self._pivot = cf
 		end
+	elseif className == "VehicleSeat" then
+		-- Siège de voiture (CityService) : Occupant observable comme dans Roblox.
+		local changed = {}
+		inst.GetPropertyChangedSignal = function(_self, prop)
+			changed[prop] = changed[prop] or H.newSignal()
+			return changed[prop]
+		end
+		inst.ThrottleFloat = 0
+		inst.SteerFloat = 0
 	elseif className == "Sound" then
 		inst.SoundId = ""
 		inst.IsPlaying = false

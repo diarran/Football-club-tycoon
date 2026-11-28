@@ -6,7 +6,8 @@
 
 	  WorldBuilder.buildDistrict(parent: Instance?): Model
 	      Construit le quartier partagé (sol, route, place, SpawnLocation,
-	      emplacements numérotés). Parent par défaut : Workspace.
+	      emplacements numérotés) et, à côté, le centre-ville (Model « City »,
+	      World/Downtown.lua). Parent par défaut : Workspace.
 	      Idempotent : si le quartier existe déjà, il est renvoyé tel quel.
 
 	  WorldBuilder.buildPlot(slotIndex: number, levels: Levels?, clubName: string?): Model
@@ -60,6 +61,7 @@ local Entrance = require(World:WaitForChild("Entrance"))
 local Prestige = require(World:WaitForChild("Prestige"))
 local Landscape = require(World:WaitForChild("Landscape"))
 local CampusZone = require(World:WaitForChild("CampusZone"))
+local Downtown = require(World:WaitForChild("Downtown"))
 local Cosmetics = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Cosmetics"))
 local ClubIdentity = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("ClubIdentity"))
 
@@ -269,7 +271,14 @@ function WorldBuilder.buildDistrict(parent: Instance?): Model
 	if existing and existing:IsA("Model") then
 		return existing
 	end
-	return District.build(target)
+	local district = District.build(target)
+	-- Centre-ville commerçant à l'est du quartier (concessionnaire, hôtel, banque…).
+	-- Une erreur ici ne doit jamais empêcher les clubs de s'installer.
+	local ok, err = pcall(Downtown.build, target)
+	if not ok then
+		warn("[World] Centre-ville non construit : " .. tostring(err))
+	end
+	return district
 end
 
 function WorldBuilder.getPlot(slotIndex: number): Model?

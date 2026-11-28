@@ -118,6 +118,10 @@ CF.__mul = function(a, b)
 	end
 	return a.p + matvec(a.R, b)
 end
+-- CFrame + Vector3 : même orientation, position décalée (comme dans Roblox).
+CF.__add = function(a, b)
+	return mkcf(a.p + b, a.R)
+end
 function CFrame.new(x: any?, y: number?, z: number?)
 	if x == nil then
 		return mkcf(Vector3.zero, IDENTITY)

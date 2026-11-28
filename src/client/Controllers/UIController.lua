@@ -3323,6 +3323,12 @@ function UIController.ShowMatchResult(result)
 			TextXAlignment = Enum.TextXAlignment.Center,
 		}))
 	end
+	if (rewards.loanRepaid or 0) > 0 then
+		add(label(T("result.loanRepaid", { coins = formatCoins(rewards.loanRepaid) }), {
+			TextColor3 = COLORS.muted,
+			TextXAlignment = Enum.TextXAlignment.Center,
+		}))
+	end
 	if (rewards.campus or 0) > 0 then
 		add(label(T("result.campus", { coins = formatCoins(rewards.campus) }), {
 			TextColor3 = COLORS.gold,
